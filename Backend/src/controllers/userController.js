@@ -20,9 +20,10 @@ export const registerUser = async (req, res) => {
   if (userExists) {
     return res.status(400).json({ message: "Email or phone number already in use" });
   }
-
+  console.log("Password before hashing:", password);
   // ✅ Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
+  console.log("Hashed Password before storing:", hashedPassword);
 
   // ✅ Always assign "passenger" role unless created by an admin
   const user = await User.create({
@@ -48,16 +49,29 @@ export const authUser = async (req, res) => {
   // Check if the user exists
   const user = await User.findOne({ email });
 
-  if (user && (await bcrypt.compare(password, user.password))) {
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      token: jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" }), // ✅ Generate JWT
-    });
-  } else {
-    res.status(401).json({ message: "Invalid email or password" });
+  if (!user) {
+    return res.status(401).json({ message: "User not found" }); // Debugging log
   }
+
+  console.log("Stored password in DB:", user.password);
+  console.log("Input password:", password);
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  
+  if (!isMatch) {
+    console.log("Password mismatch ❌");
+    return res.status(401).json({ message: "Invalid email or password" });
+  }
+
+  console.log("Password matched ✅");
+
+  res.json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    token: jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" }), 
+  });
 };
+
