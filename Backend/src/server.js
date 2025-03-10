@@ -7,6 +7,8 @@ import bodyParser from "body-parser";
 import userRoutes from "./routes/userRoutes.js"; // ✅ Import user routes
 import notificationRoutes from "./routes/notificationRoutes.js"; // ✅ Import notification routes
 import seatRoutes from "./routes/seatRoutes.js"; // ✅ Import seat routes
+import bookingRoutes from "./routes/bookingRoutes.js"; // ✅ Import booking routes
+
 
 dotenv.config();
 connectDB();
@@ -27,7 +29,7 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRoutes); // User-related routes
 app.use("/api/notifications", notificationRoutes); // Notification routes
 app.use("/api/seats", seatRoutes); // Seat routes
-
+app.use("/api/bookings", bookingRoutes); // Booking routes
 
 const PORT = process.env.PORT || 5001;
 
