@@ -15,3 +15,4 @@ router.delete("/cancel/:bookingId", cancelBooking);
 router.get("/occupancy/:busId", monitorSeatOccupancy); // Add this line
 
 export default router;
+

@@ -9,13 +9,18 @@ import notificationRoutes from "./routes/notificationRoutes.js"; // ✅ Import n
 import seatRoutes from "./routes/seatRoutes.js"; // ✅ Import seat routes
 import bookingRoutes from "./routes/bookingRoutes.js"; // ✅ Import booking routes
 
+
 dotenv.config();
 connectDB();
 
 const app = express();
+
+// ✅ Middleware
 app.use(express.json());
 app.use(cors());
+app.use(bodyParser.json());
 
+// ✅ Test Route
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
