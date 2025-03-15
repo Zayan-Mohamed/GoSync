@@ -3,8 +3,8 @@ import Bus from "../models/bus.js";
 // Create a new bus
 export const createBus = async (req, res) => {
   try {
-    const { busNumber, busType, capacity, status, routeId, Price } = req.body;
-    const bus = new Bus({ busNumber, busType, capacity, status, routeId, Price });
+    const { busNumber, busType, capacity, status, routeId, Price, OperatorName, OperatorPhone,} = req.body;
+    const bus = new Bus({ busNumber, busType, capacity, status, routeId, Price, Operator:{OperatorName, OperatorPhone} });
     await bus.save();
     res.status(201).json(bus);
   } catch (error) {

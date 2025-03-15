@@ -33,11 +33,23 @@ const busSchema = new mongoose.Schema({
     ref: "Route",  // Reference to the Route model 
     required: true,
   },
-  Price: {
+  price: {
     type: Number,
     required: true,
     min: 1,
-  }
+  },
+  operator: {
+    operatorName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    operatorPhone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+  },
 }, {
   timestamps: true,
 });
