@@ -34,4 +34,5 @@ app.use("/api/bookings", bookingRoutes); // Booking routes
 const PORT = process.env.PORT || 5001;
 
 // ✅ Start the server AFTER defining routes
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`)
+);
