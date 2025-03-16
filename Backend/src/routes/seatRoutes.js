@@ -3,7 +3,7 @@ import express from "express";
 import {
   checkSeatAvailability,
   bookSeats,
-  cancelBooking,
+  cancelSeatBooking,
   monitorSeatOccupancy,
 } from "../controllers/seatController.js";
 
@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.get("/availability/:busId", checkSeatAvailability);
 router.post("/book", bookSeats);
-router.delete("/cancel/:bookingId", cancelBooking);
+router.delete("/cancel/:bookingId", cancelSeatBooking);
 router.get("/occupancy/:busId", monitorSeatOccupancy); // Add this line
 
 export default router;
