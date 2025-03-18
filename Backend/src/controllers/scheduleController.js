@@ -1,7 +1,7 @@
 import Schedule from "../models/scheduleModel.js";
 import asyncHandler from "express-async-handler";
 import { v4 as uuidv4 } from "uuid";
-import Route from "../models/routes.model.js";
+import Route from "../models/routeModel.js";
 
 // ✅ Create a new schedule
 export const createSchedule = asyncHandler(async (req, res) => {

@@ -36,7 +36,7 @@ app.use("/api/notifications", notificationRoutes); // Notification routes
 app.use("/api/seats", seatRoutes); // Seat routes
 app.use("/api/bookings", bookingRoutes);// Booking routes
 app.use("/api/routes" , routeRoutes ); // Route routes
-app.use("/api/stops" , stopRoutes ); // Stop routes
+app.use("/api/stops" , stopRoutes ); // Stop routes/
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/buses", busRoutes);
 

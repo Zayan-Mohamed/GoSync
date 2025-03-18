@@ -55,6 +55,31 @@ export const getStop = async (req, res) => {
   }
 };
 
+// Get all stops
+export const getAllStops = async (req, res) => {
+  try {
+    // Retrieve all stops
+    const stops = await Stop.find();
+
+    // Check if there are any stops
+    if (stops.length === 0) {
+      return res.status(404).json({ message: "No stops found" });
+    }
+
+    // Respond with the list of stops
+    res.status(200).json({
+      message: "Stops retrieved successfully",
+      stops
+    });
+  } catch (error) {
+    // Handle error
+    res.status(500).json({
+      error: "Error retrieving stops",
+      details: error.message
+    });
+  }
+};
+
 // Delete a stop
 export const deleteStop = async (req, res) => {
   const { stopId } = req.params;

@@ -50,6 +50,7 @@ const routeSchema = new mongoose.Schema({
   stops: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Stop',
+    required: false,
   }],
 });
 
