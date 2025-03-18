@@ -55,7 +55,7 @@ export const getStop = async (req, res) => {
   }
 };
 
-// Get all stops
+//TODO: Get all stops
 export const getAllStops = async (req, res) => {
   try {
     // Retrieve all stops
