@@ -9,6 +9,7 @@ export default {
         brightYellow: "#FFC300",
         lightYellow: "#FFF3CD",
         darkCharcoal: "#333333",
+        softPeach: "#FFE082",
       },
     },
   },
