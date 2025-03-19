@@ -24,6 +24,7 @@ const AppRoutes = () => {
 
         {/* ✅ Catch-all for unauthorized access */}
         <Route path="/unauthorized" element={<h1>Access Denied</h1>} />
+        <Route path="/" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );
