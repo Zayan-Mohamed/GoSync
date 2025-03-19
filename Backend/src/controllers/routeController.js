@@ -40,6 +40,12 @@ export const addStopToRoute = async (req, res) => {
     const stop = await Stop.findOne({ stopId });
     if (!stop) return res.status(404).json({ error: 'Stop not found' });
 
+    // Check if the stop is already in the route
+    const stopExists = route.stops.some((existingStop) => existingStop.toString() === stop._id.toString());
+    if (stopExists) {
+      return res.status(400).json({ error: 'Stop is already under this route, cannot add again.' });
+    }
+
     // Add the stop to the route
     route.stops.push(stop._id);
     await route.save();
@@ -270,5 +276,35 @@ export const deleteRoute = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ error: "Error deleting route", details: error.message });
+  }
+};
+
+// Update Stop and Reflect Changes in Routes
+export const updateStop = async (req, res) => {
+  try {
+    const { stopId } = req.params; // Get stop ID from URL params
+    const updateData = req.body; // Get updated data from request body
+
+    // Find and update the stop
+    const updatedStop = await Stop.findOneAndUpdate({ stopId }, updateData, { new: true });
+
+    if (!updatedStop) {
+      return res.status(404).json({ message: 'Stop not found' });
+    }
+
+    // Find all routes that contain this stop
+    const routesToUpdate = await Route.find({ 'stops.stopId': stopId });
+
+    // Update stop details in each route
+    for (const route of routesToUpdate) {
+      route.stops = route.stops.map((stop) =>
+        stop.stopId === stopId ? { ...stop, ...updateData } : stop
+      );
+      await route.save(); // Save the updated route
+    }
+
+    res.status(200).json({ message: 'Stop and associated routes updated successfully', updatedStop });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

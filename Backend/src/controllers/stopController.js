@@ -58,27 +58,27 @@ export const getStop = async (req, res) => {
 //TODO: Get all stops
 export const getAllStops = async (req, res) => {
   try {
-    // Retrieve all stops
     const stops = await Stop.find();
+    console.log("Stops retrieved:", stops); // Debugging
 
-    // Check if there are any stops
     if (stops.length === 0) {
+      console.log("No stops found"); // Debugging
       return res.status(404).json({ message: "No stops found" });
     }
 
-    // Respond with the list of stops
     res.status(200).json({
       message: "Stops retrieved successfully",
       stops
     });
   } catch (error) {
-    // Handle error
+    console.error("Error retrieving stops:", error); // Debugging
     res.status(500).json({
       error: "Error retrieving stops",
       details: error.message
     });
   }
 };
+
 
 // Delete a stop
 export const deleteStop = async (req, res) => {
