@@ -10,3 +10,28 @@ body {
 .container {
   @apply max-w-7xl mx-auto px-4;
 }
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px; /* Make scrollbar thinner */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #ffecb3; /* Light yellow background */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #ffb300; /* Darker yellow for contrast */
+  border-radius: 10px;
+  transition: background 0.3s;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ff9800; /* Orange when hovered */
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #ffb300 #ffecb3; /* Thumb and Track color */
+}

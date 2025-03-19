@@ -6,7 +6,7 @@ import { BsGraphUp , BsGraphUpArrow } from "react-icons/bs";
 import { MdAutoGraph } from "react-icons/md";
 import { SlGraph } from "react-icons/sl";
 import { GoGraph } from "react-icons/go";
-import { VscGraphLine, VscGraphScatter  } from "react-icons/vsc";
+import { VscGraphLine, VscGraphScatter } from "react-icons/vsc";
 import { Link } from "react-router-dom";
 import SidebarSection from "./SidebarSection";
 
@@ -16,7 +16,7 @@ const Sidebar = () => {
   const sections = [
     {
       title: "Dashboard",
-      links: [{ to: "/", label: "GoSync Dashboard", icon: <FiHome /> }],
+      links: [{ to: "/admin", label: "GoSync Dashboard", icon: <FiHome /> }],
     },
     {
       title: "Stop and Route Management",
@@ -75,19 +75,19 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className={`bg-[#FFE082] h-screen flex flex-col transition-all ${collapsed ? "w-16" : "w-60"}`}>
+    <div className={`bg-[#FFE082] h-screen flex flex-col transition-all ${collapsed ? "w-16" : "w-70"}`}>
       {/* Top Section: Logo & Toggle Button */}
       <div className="flex items-center p-4">
         <button onClick={() => setCollapsed(!collapsed)} className="mr-3">
           <FiMenu size={24} />
         </button>
         {!collapsed && (
-          <img src="/assets/GoSync-Logo_Length.png" alt="GoSync Logo" className="h-8 w-auto" />
+          <img src="/assets/GoSync-Logo_Length2.png" alt="GoSync Logo" className="h-12 w-auto ml-8" />
         )}
       </div>
 
       {/* Middle Section: Sidebar Links (Grows to push Settings/Logout to Bottom) */}
-      <div className="flex-grow overflow-y-auto p-4 space-y-6">
+      <div className="flex-grow overflow-y-auto p-4 space-y-6 custom-scrollbar">
         {sections.map((section, index) => (
           <SidebarSection key={index} title={section.title} links={section.links} collapsed={collapsed} />
         ))}
