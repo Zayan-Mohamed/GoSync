@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.0.14",
     "axios": "^1.8.3",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.5.0",
     "frontend": "file:",
     "lodash": "^4.17.21",
     "react": "^19.0.0",

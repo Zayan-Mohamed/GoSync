@@ -10,3 +10,19 @@ body {
 .container {
   @apply max-w-7xl mx-auto px-4;
 }
+
+@keyframes flicker {
+  0% { opacity: 0.1; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+.neon-glow {
+  text-shadow: 0 0 10px #fff, 0 0 20px #ffd600, 0 0 30px #e65100, 0 0 40px #ff8f00;
+  animation: flicker 1.5s infinite alternate;
+}
+
+.soft-glow {
+  text-shadow: 0 0 10px rgba(255, 214, 0, 0.4), 0 0 20px rgba(230, 81, 0, 0.2);
+}
+
