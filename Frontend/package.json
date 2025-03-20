@@ -10,11 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "frontend": "file:",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-=======
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.7",
@@ -32,19 +27,12 @@
     "recharts": "^2.15.1",
     "styled-components": "^6.1.15",
     "zustand": "^5.0.3"
->>>>>>> ffa0c25cf741d4c1810dd113651a10bc407405a0
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
-<<<<<<< HEAD
-    "eslint": "^9.21.0",
-    "eslint-plugin-react-hooks": "^5.1.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
-    "globals": "^15.15.0",
-=======
     "autoprefixer": "^10.4.21",
     "eslint": "^9.22.0",
     "eslint-plugin-react-hooks": "^5.1.0",
@@ -53,7 +41,6 @@
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
     "tailwindcss": "^3.4.17",
->>>>>>> ffa0c25cf741d4c1810dd113651a10bc407405a0
     "vite": "^6.2.0"
   }
 }
