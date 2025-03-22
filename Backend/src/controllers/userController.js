@@ -43,35 +43,65 @@ export const registerUser = async (req, res) => {
   });
 };
 
+export const protect = async (req, res, next) => {
+  let token = req.headers.authorization;
+
+  if (!token || !token.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized, no token" });
+  }
+
+  try {
+    token = token.split(" ")[1]; // Remove "Bearer "
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id).select("-password");
+
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Unauthorized, invalid token" });
+  }
+};
+
+
+// ✅ Login user & set token in an HTTP-only cookie
 export const authUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // Check if the user exists
   const user = await User.findOne({ email });
-
-  if (!user) {
-    return res.status(401).json({ message: "User not found" }); // Debugging log
-  }
-
-  console.log("Stored password in DB:", user.password);
-  console.log("Input password:", password);
+  if (!user) return res.status(401).json({ message: "User not found" });
 
   const isMatch = await bcrypt.compare(password, user.password);
-  
-  if (!isMatch) {
-    console.log("Password mismatch ❌");
-    return res.status(401).json({ message: "Invalid email or password" });
-  }
+  if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-  console.log("Password matched ✅");
+  // Generate token
+  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+
+  // ✅ Store token in a secure HTTP-only cookie
+  res.cookie("jwt", token, {
+    httpOnly: true, // ✅ Prevents XSS attacks
+    secure: process.env.NODE_ENV === "production", // ✅ Use only in HTTPS in production
+    sameSite: "Strict", // ✅ Helps prevent CSRF
+    maxAge: 30 * 24 * 60 * 60 * 1000, // ✅ Expires in 30 days
+  });
 
   res.json({
     _id: user._id,
     name: user.name,
     email: user.email,
-    phone: user.phone,
     role: user.role,
-    token: jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" }), 
+    token: token,
+    
   });
 };
+
+// ✅ Logout User by Clearing the Cookie
+export const logoutUser = async (req, res) => {
+  res.cookie("jwt", "", {
+    httpOnly: true,
+    expires: new Date(0), // ✅ Expire immediately
+  });
+  res.json({ message: "Logged out successfully" });
+};
+
 
