@@ -6,7 +6,6 @@ import AdminDashboard from "../pages/AdminDashboard";
 import PassengerDashboard from "../pages/PassengerDashboard";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
-import UserSettings from "../pages/UserSettings";
 
 const AppRoutes = () => {
 
@@ -30,13 +29,12 @@ const AppRoutes = () => {
         {/* ✅ Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/settings" element={<UserSettings />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
           <Route path="/passenger" element={<PassengerDashboard />} />
         </Route>
-
+       
         {/* ✅ Catch-all for unauthorized access */}
         <Route path="/unauthorized" element={<h1>Access Denied</h1>} />
         <Route path="/" element={<AdminDashboard />} />
