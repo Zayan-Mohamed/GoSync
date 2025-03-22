@@ -6,6 +6,10 @@ import AdminDashboard from "../pages/AdminDashboard";
 import PassengerDashboard from "../pages/PassengerDashboard";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
+import UserSettings from "../pages/UserSettings";
+import Notification from "../pages/Notification";
+import AddNotification from "../pages/AddNotification";
+import UpdateNotification from "../pages/UpdateNotification";
 
 const AppRoutes = () => {
 
@@ -29,11 +33,16 @@ const AppRoutes = () => {
         {/* ✅ Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboard />} />
+
+          <Route path="/notification-management" element={<Notification />} />
+          <Route path="/add-notification" element={<AddNotification />} />
+          <Route path="/update-notification/:id" element={<UpdateNotification />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
           <Route path="/passenger" element={<PassengerDashboard />} />
         </Route>
+        <Route path="/settings" element={<UserSettings/>} />
        
         {/* ✅ Catch-all for unauthorized access */}
         <Route path="/unauthorized" element={<h1>Access Denied</h1>} />

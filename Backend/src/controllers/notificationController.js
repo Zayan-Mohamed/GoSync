@@ -1,6 +1,6 @@
 import Notification from "../models/notificationModel.js";
 import User from "../models/user.js";
-import { io  } from "../server.js";
+import io  from "../server.js";
 
 
 export const create = async (req, res) => {

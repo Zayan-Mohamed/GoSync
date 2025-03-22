@@ -19,13 +19,19 @@ const useAuthStore = create(
         }
       },
 
-      logout: () => {
-        set({ user: null, token: null, isAuthenticated: false });
+      logout: async () => {
+        try {
+          await API.post("/api/users/logout"); // ✅ Send request to clear the cookie
+        } catch (error) {
+          console.error("Logout failed:", error);
+        } finally {
+          set({ user: null, isAuthenticated: false });
+        }
       },
 
       updateUserState: (updatedUser) => {
         set((state) => ({
-          user: { ...state.user, ...updatedUser }, 
+          user: { ...state.user, ...updatedUser, phone: updatedUser.phone  }, 
         }));
       },
     }),

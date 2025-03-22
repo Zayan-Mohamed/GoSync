@@ -108,3 +108,13 @@ export const updateUser = async (req, res) => {
   await user.save();
   res.json({ message: "Profile updated successfully", user });
 };
+
+export const logout = async (req, res) => {
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // Ensure secure in production
+    sameSite: "strict",
+  });
+
+  res.status(200).json({ message: "Logged out successfully" });
+};

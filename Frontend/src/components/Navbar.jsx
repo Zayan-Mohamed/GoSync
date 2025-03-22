@@ -1,13 +1,25 @@
 import { useEffect, useState } from "react";
 import { FiBell, FiSearch, FiSettings, FiUser, FiLogOut } from "react-icons/fi";
-import io from "socket.io-client";  // Import socket.io-client
+import io from "socket.io-client"; // Import socket.io-client
+import useAuthStore from "../store/authStore";
+import { useNavigate } from "react-router-dom";
+import AdminModal from "./AdminModal";
 
 // Initialize socket connection (use your backend URL here)
 const socket = io("http://localhost:5000"); // Replace with your server URL
 
 const Navbar = () => {
+  const { logout } = useAuthStore();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  const [isAdminModalOpen, setAdminModalOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   // Fetch initial notifications from the backend
   useEffect(() => {
@@ -42,10 +54,13 @@ const Navbar = () => {
 
       {/* Right Section - Icons and Buttons */}
       <div className="flex items-center space-x-4">
-        <button className="bg-deepOrange text-white px-4 py-2 rounded-lg hover:bg-sunsetOrange transition">
+        <button
+          onClick={() => setAdminModalOpen(true)}
+          className="bg-deepOrange text-white px-4 py-2 rounded-lg hover:bg-sunsetOrange transition"
+        >
           Add an Admin
         </button>
-        
+
         {/* Bell Icon - Notifications */}
         <div className="relative">
           <button onClick={toggleDropdown}>
@@ -75,15 +90,27 @@ const Navbar = () => {
           )}
         </div>
 
-        <button><FiSettings size={24} /></button>
+        <button>
+          <FiSettings size={24} />
+        </button>
         <button className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
           <FiUser size={24} />
         </button>
-        <button className="flex items-center space-x-2 text-red-500 hover:text-red-700">
+        <button
+          onClick={handleLogout}
+          className="flex items-center space-x-2 text-red-500 hover:text-red-700"
+        >
           <FiLogOut size={20} />
           <span>Logout</span>
         </button>
       </div>
+      {/* Admin Modal */}
+      {isAdminModalOpen && (
+        <AdminModal
+          isOpen={isAdminModalOpen}
+          onClose={() => setAdminModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

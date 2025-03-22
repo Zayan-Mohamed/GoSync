@@ -7,56 +7,71 @@ import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
 
-import scheduleRoutes from "./routes/scheduleRoutes.js"; // ✅ Import schedule routes
-import userRoutes from "./routes/userRoutes.js"; // ✅ Import user routes
-import notificationRoutes from "./routes/notificationRoutes.js"; // ✅ Import notification routes
-import seatRoutes from "./routes/seatRoutes.js"; // ✅ Import seat routes
-import stopRoutes from "./routes/stopRoutes.js"; // ✅ Import booking routes
-import routeRoutes from "./routes/routeRoutes.js"; // ✅ Import route routes
-import bookingRoutes from "./routes/bookingRoutes.js"; // ✅ Import booking routes
-import busRoutes from "./routes/busRoutes.js"; // ✅ Import bus routes
-
-
+import scheduleRoutes from "./routes/scheduleRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import seatRoutes from "./routes/seatRoutes.js";
+import stopRoutes from "./routes/stopRoutes.js";
+import routeRoutes from "./routes/routeRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
+import busRoutes from "./routes/busRoutes.js";
 
 dotenv.config();
 connectDB();
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    credentials: true,
+  },
+});
 
+// ✅ Handle WebSocket Connections
+io.on("connection", (socket) => {
+  console.log(`A user connected: ${socket.id}`);
 
+  socket.emit("serverMessage", "Connected to WebSocket Server!");
+
+  socket.on("disconnect", () => {
+    console.log(`User disconnected: ${socket.id}`);
+  });
+});
 
 // ✅ Middleware
 app.use(cookieParser());
 app.use(express.json());
-
-app.use(cors({
-  origin: "http://localhost:5173", 
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"], 
-  allowedHeaders: ["Content-Type", "Authorization"], 
-}));
-
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(bodyParser.json());
 
+// ✅ Attach io to app
 app.set("io", io);
+
 // ✅ Test Route
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
 // ✅ Routes
-app.use("/api/users", userRoutes); // User-related routes
-app.use("/api/notifications", notificationRoutes); // Notification routes
-app.use("/api/seats", seatRoutes); // Seat routes
-app.use("/api/bookings", bookingRoutes);// Booking routes
-app.use("/api/routes" , routeRoutes ); // Route routes
-app.use("/api/stops" , stopRoutes ); // Stop routes/
+app.use("/api/users", userRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/seats", seatRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/routes", routeRoutes);
+app.use("/api/stops", stopRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/buses", busRoutes);
 
+// ✅ Start Server using `server.listen`, NOT `app.listen`
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-export { io };
+export default io;
