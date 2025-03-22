@@ -19,14 +19,14 @@ const useAuthStore = create(
         }
       },
 
-      // ✅ Logout function (call backend to clear cookies)
-      logout: async () => {
-        try {
-          await API.post("/api/users/logout"); // Backend should handle clearing cookies
-          set({ user: null, isAuthenticated: false });
-        } catch (error) {
-          console.error("Logout failed:", error);
-        }
+      logout: () => {
+        set({ user: null, token: null, isAuthenticated: false });
+      },
+
+      updateUserState: (updatedUser) => {
+        set((state) => ({
+          user: { ...state.user, ...updatedUser }, 
+        }));
       },
     }),
     { name: "auth-storage" }

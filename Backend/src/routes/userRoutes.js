@@ -1,16 +1,13 @@
 import express from "express";
-import { registerUser, authUser } from "../controllers/userController.js";
 import { registerAdmin } from "../controllers/adminController.js";
-import { protect, adminOnly } from "../middlewares/authMiddleware.js";
-import { logoutUser } from "../controllers/userController.js";
+import { registerUser, authUser, updateUser } from "../controllers/userController.js"; // ✅ Import login function
+import { protect, adminOnly } from "../middlewares/authMiddleware.js"; // ✅ Middleware for security
 
 const router = express.Router();
 
-// Passenger registration & login
-router.post("/register", registerUser);
-router.post("/login", authUser);
-router.post("/logout", logoutUser);
-// Admin-specific routes
-router.post("/admin/register", protect, adminOnly, registerAdmin);
+router.post("/register", registerUser); // Normal passenger registration
+router.post("/admin/register", protect, adminOnly, registerAdmin); // ✅ Admin registration
+router.post("/login", authUser); // ✅ Added login route
+router.put("/update", protect, updateUser); // Update user profile
 
 export default router;

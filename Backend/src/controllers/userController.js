@@ -95,13 +95,16 @@ export const authUser = async (req, res) => {
   });
 };
 
-// ✅ Logout User by Clearing the Cookie
-export const logoutUser = async (req, res) => {
-  res.cookie("jwt", "", {
-    httpOnly: true,
-    expires: new Date(0), // ✅ Expire immediately
-  });
-  res.json({ message: "Logged out successfully" });
+export const updateUser = async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  user.name = req.body.name || user.name;
+  user.phone = req.body.phone || user.phone;
+
+  await user.save();
+  res.json({ message: "Profile updated successfully", user });
 };
-
-
