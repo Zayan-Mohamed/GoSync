@@ -84,7 +84,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className={`bg-[#FFE082] h-screen flex flex-col transition-all ${collapsed ? "w-16" : "w-70"}`}>
+    <div className={`bg-[#FFE082] h-screen flex flex-col transition-all overflow-hidden ${collapsed ? "w-16" : "w-70"}`}>
       {/* Top Section: Logo & Toggle Button */}
       <div className="flex items-center p-4">
         <button onClick={() => setCollapsed(!collapsed)} className="mr-3 mt-6">

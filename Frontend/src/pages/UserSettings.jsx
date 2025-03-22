@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import useAuthStore from "../store/authStore";
 import API from "../services/authService";
+import AdminLayout from "../layouts/AdminLayout";
 
 const UserSettings = () => {
   const { user, isAuthenticated, updateUserState } = useAuthStore();
@@ -47,6 +48,7 @@ const handleSubmit = async (e) => {
   }
 
   return (
+    <AdminLayout>
     <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-semibold mb-4">User Settings</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -86,6 +88,7 @@ const handleSubmit = async (e) => {
         </button>
       </form>
     </div>
+    </AdminLayout>
   );
 };
 
