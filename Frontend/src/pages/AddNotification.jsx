@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import "../styles/AddNoti.css";
 import { useNavigate } from "react-router-dom";
+import AdminLayout from "../layouts/AdminLayout";
 const AddNotification = () => {
     const [type, setType] = useState("");
     const [message, setMessage] = useState("");
@@ -42,6 +43,7 @@ const AddNotification = () => {
         }
     };
     return (
+        <AdminLayout>
         <div className="notification-form-container">
             <h2>Create Notification</h2>
             <form onSubmit={handleSubmit}>
@@ -77,6 +79,7 @@ const AddNotification = () => {
                 </button>
             </form>
         </div>
+        </AdminLayout>
     );
 };
 
