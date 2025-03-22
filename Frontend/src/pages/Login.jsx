@@ -20,7 +20,7 @@ const Login = () => {
     if (!response.success) {
       setError(response.message);
     } else {
-      const userRole = useAuthStore.getState().user?.role; // ✅ Get user role
+      const userRole = useAuthStore.getState().user?.role; // ✅ Get user role admin passeger
       console.log("User Role:", userRole); // Debugging
 
       if (userRole === "admin") {
@@ -32,7 +32,7 @@ const Login = () => {
       }
     }
   };
-
+//class, id  
   return (
     <div className="flex justify-center items-center min-h-screen bg-lightGray">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
