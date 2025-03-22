@@ -85,7 +85,7 @@ export const getRouteById = async (req, res) => {
 export const updateRoute = async (req, res) => {
   try {
     const { routeId } = req.params;
-    const { routeName, startLocation, endLocation, totalDistance, startLocationCoordinates, endLocationCoordinates, stops } = req.body;
+    const { routeName, startLocation, endLocation, totalDistance, startLocationCoordinates, endLocationCoordinates, status, stops } = req.body;
 
     // Check if routeId is valid
     if (!mongoose.Types.ObjectId.isValid(routeId)) {
@@ -110,6 +110,7 @@ export const updateRoute = async (req, res) => {
         totalDistance,
         startLocationCoordinates,
         endLocationCoordinates,
+        status,
         stops: stopObjectIds
       },
       { new: true, runValidators: true } // Return updated document

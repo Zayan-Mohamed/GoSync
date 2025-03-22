@@ -6,6 +6,7 @@ import AdminDashboard from "../pages/AdminDashboard";
 import PassengerDashboard from "../pages/PassengerDashboard";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
+import CurrentRoutes from "../pages/CurrentRoutes";
 
 const AppRoutes = () => {
 
@@ -29,6 +30,11 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboard />} />
         </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route path="/current-routes" element={<CurrentRoutes />} />
+        </Route>
+        
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
           <Route path="/passenger" element={<PassengerDashboard />} />
