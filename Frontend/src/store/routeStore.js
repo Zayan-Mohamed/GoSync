@@ -1,21 +1,16 @@
 import { create } from "zustand";
-import { getRoutes, updateRoute, deleteRoute } from "../services/routeService";
+import axios from "axios";
 
 const useRouteStore = create((set) => ({
   routes: [],
-  loading: false,
-  error: null,
-
   fetchRoutes: async () => {
-    set({ loading: true });
     try {
-      const data = await getRoutes();
-      set({ routes: data, loading: false });
+      const response = await axios.get("http://localhost:5000/api/routes/routes");
+      set({ routes: response.data });
     } catch (error) {
-      set({ error: error.message, loading: false });
+      console.error("Error fetching routes:", error);
     }
   },
-
   editRoute: async (routeId, updatedData) => {
     try {
       const updatedRoute = await updateRoute(routeId, updatedData);
@@ -28,15 +23,14 @@ const useRouteStore = create((set) => ({
       set({ error: error.message });
     }
   },
-
-  removeRoute: async (routeId) => {
+  deleteRoute: async (id) => {
     try {
-      await deleteRoute(routeId);
+      await axios.delete(`http://localhost:5000/api/routes/${id}`);
       set((state) => ({
-        routes: state.routes.filter((route) => route._id !== routeId),
+        routes: state.routes.filter((route) => route._id !== id),
       }));
     } catch (error) {
-      set({ error: error.message });
+      console.error("Error deleting route:", error);
     }
   },
 }));

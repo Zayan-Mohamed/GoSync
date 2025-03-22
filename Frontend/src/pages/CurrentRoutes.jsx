@@ -1,94 +1,67 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
+import axios from "axios"; // ✅ Import axios
 import useRouteStore from "../store/routeStore";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import Button from "../components/Button"; 
+import Table from "../components/Table"; 
 import { Trash2, Edit } from "lucide-react";
-import { toast } from "react-toastify";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 
 const CurrentRoutes = () => {
-  const { routes, fetchRoutes, editRoute, removeRoute, loading, error } = useRouteStore();
+  const { routes, fetchRoutes, deleteRoute } = useRouteStore();
 
   useEffect(() => {
-    fetchRoutes();
-  }, []);
+    fetchRoutes(); // ✅ Use the store function
+  }, [fetchRoutes]);
 
-  const handleDelete = async (routeId) => {
-    if (window.confirm("Are you sure you want to delete this route?")) {
-      try {
-        await removeRoute(routeId);
-        toast.success("Route deleted successfully!");
-      } catch (err) {
-        toast.error("Failed to delete route.");
-      }
-    }
-  };
-
-  const handleEdit = async (routeId) => {
-    const newRouteName = prompt("Enter new route name:");
-    if (newRouteName) {
-      try {
-        await editRoute(routeId, { name: newRouteName });
-        toast.success("Route updated successfully!");
-      } catch (err) {
-        toast.error("Failed to update route.");
-      }
-    }
-  };
+  // Ensure routes is always an array
+  if (!Array.isArray(routes)) {
+    console.error("routes is not an array:", routes);
+    return <div>Loading routes...</div>;
+  }
 
   return (
-<div className="flex">
-  <Sidebar />
-    <div className="flex-1 bg-[#F5F5F5] min-h-screen">
-        <Navbar />
-    <div className="p-4">
+    <div className="p-6 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-semibold mb-4">Current Routes</h2>
-
-      {loading && <p>Loading routes...</p>}
-      {error && <p className="text-red-500">Error: {error}</p>}
-
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Route ID</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {routes.length > 0 ? (
-            routes.map((route) => (
-              <TableRow key={route._id}>
-                <TableCell>{route._id}</TableCell>
-                <TableCell>{route.name}</TableCell>
-                <TableCell>
-                  <Button
-                    onClick={() => handleEdit(route._id)}
-                    variant="outline"
-                    className="mr-2"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    onClick={() => handleDelete(route._id)}
-                    variant="destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan="3" className="text-center">
+        <thead>
+          <tr>
+            <th className="p-2 border-b text-left">Route ID</th>
+            <th className="p-2 border-b text-left">Start Location</th>
+            <th className="p-2 border-b text-left">End Location</th>
+            <th className="p-2 border-b text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {routes.length === 0 ? (
+            <tr>
+              <td colSpan="4" className="text-center p-4">
                 No routes available.
-              </TableCell>
-            </TableRow>
+              </td>
+            </tr>
+          ) : (
+            routes.map((route) => (
+              <tr key={route._id} className="hover:bg-gray-100">
+                <td className="p-2 border-b">{route._id}</td>
+                <td className="p-2 border-b">{route.startLocation}</td>
+                <td className="p-2 border-b">{route.endLocation}</td>
+                <td className="p-2 border-b flex gap-2">
+                  <Button onClick={() => console.log("Edit route", route._id)}>
+                    <Edit size={16} />
+                  </Button>
+                  <Button
+                    className="bg-red-500 hover:bg-red-600 text-white"
+                    onClick={() => deleteRoute(route._id)}
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </td>
+              </tr>
+            ))
           )}
-        </TableBody>
+        </tbody>
       </Table>
-      </div>
     </div>
-</div>
   );
 };
 
