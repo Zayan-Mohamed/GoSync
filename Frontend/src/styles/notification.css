@@ -1,0 +1,62 @@
+.notificationTable {
+    width: 80%;
+    margin: 150px auto; /* Centering */
+    background-color: #ffffff; /* White background */
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #F5F5F5; /* Light gray border */
+}
+
+.notificationTable table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    border: 2px solid black; /* Black table border */
+}
+
+.notificationTable table thead th {
+    background-color: #ef6b25; /* Deep Orange */
+    color: white;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid black; /* Black border */
+}
+
+.notificationTable table tbody td {
+    padding: 12px;
+    text-align: center;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    vertical-align: middle;
+    border: 2px solid black; /* Black border */
+    color: #212121; /* Dark text */
+}
+
+.actionButtons {
+    display: flex; /* Using Flexbox to align buttons side by side */
+    justify-content: space-evenly; /* Distributes buttons evenly with space in between */
+    gap: 10px; /* Adds some space between the buttons */
+    align-items: center; /* Ensures the buttons are vertically centered */
+}
+
+.actionButtons button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.actionButtons .approve {
+    background-color: #FF8F00; /* Sunset Orange */
+    color: white;
+}
+
+.actionButtons .reject {
+    background-color: #FFC107; /* Golden Yellow */
+    color: #212121; /* Dark text for contrast */
+}
+
+.actionButtons button:hover {
+    opacity: 0.85;
+}
