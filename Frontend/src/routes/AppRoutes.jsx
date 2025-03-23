@@ -6,6 +6,8 @@ import AdminDashboard from "../pages/AdminDashboard";
 import PassengerDashboard from "../pages/PassengerDashboard";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
+import InsertBus from "../pages/InsertBus";
+import BusList from "../pages/BusList";
 
 const AppRoutes = () => {
 
@@ -28,7 +30,11 @@ const AppRoutes = () => {
         {/* ✅ Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/bus-management" element={<BusList />} />
+          <Route path="/add-bus" element={<InsertBus />} />
         </Route>
+
+
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
           <Route path="/passenger" element={<PassengerDashboard />} />

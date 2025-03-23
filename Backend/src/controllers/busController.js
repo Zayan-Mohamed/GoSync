@@ -1,7 +1,7 @@
 import Bus from "../models/bus.js";
 
 // Create a new bus
-export const createBus = async (req, res) => {
+/*export const createBus = async (req, res) => {
   try {
     const { busNumber, busType, capacity, status, routeId, Price, OperatorName, OperatorPhone,} = req.body;
     const bus = new Bus({ busNumber, busType, capacity, status, routeId, Price, Operator:{OperatorName, OperatorPhone} });
@@ -9,6 +9,50 @@ export const createBus = async (req, res) => {
     res.status(201).json(bus);
   } catch (error) {
     res.status(400).json({ message: "Error creating bus", error });
+  }
+};
+*/
+
+export const createBus = async (req, res) => {
+  try {
+    const {
+      busNumber,
+      busType,
+      capacity,
+      status,
+      routeId,
+      price,
+      operatorName,
+      operatorPhone,
+    } = req.body;
+
+    // Check if busNumber already exists
+    const existingBus = await Bus.findOne({ busNumber });
+    if (existingBus) {
+      return res.status(400).json({ message: "Bus number already exists" });
+    }
+
+    // Create new bus object
+    const newBus = new Bus({
+      busNumber,
+      busType,
+      capacity,
+      status: status || "Active", // Default to "Active" if not provided
+      routeId,
+      price,
+      operatorName,
+      operatorPhone,
+    });
+
+    // Save to database
+    const savedBus = await newBus.save();
+
+    res.status(201).json(savedBus);
+  } catch (error) {
+    console.error("Error creating bus:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -25,7 +69,7 @@ export const getAllBuses = async (req, res) => {
 // Get a single bus by ID
 export const getBusById = async (req, res) => {
   try {
-    const bus = await Bus.findById(req.params.id).populate('routeId');
+    const bus = await Bus.findById(req.params.id).populate("routeId");
     if (!bus) {
       return res.status(404).json({ message: "Bus not found" });
     }
@@ -38,7 +82,9 @@ export const getBusById = async (req, res) => {
 // Update bus details
 export const updateBus = async (req, res) => {
   try {
-    const bus = await Bus.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const bus = await Bus.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
     if (!bus) {
       return res.status(404).json({ message: "Bus not found" });
     }

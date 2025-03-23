@@ -38,7 +38,6 @@ const busSchema = new mongoose.Schema({
     required: true,
     min: 1,
   },
-  operator: {
     operatorName: {
       type: String,
       required: true,
@@ -49,7 +48,7 @@ const busSchema = new mongoose.Schema({
       required: true,
       trim: true,
     },
-  },
+  
 }, {
   timestamps: true,
 });
