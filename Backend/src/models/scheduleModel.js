@@ -30,8 +30,9 @@ const scheduleSchema = new mongoose.Schema(
       required: true,
     },
     busId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Bus",
+      type:Number,
+      // type: mongoose.Schema.Types.ObjectId,
+      // ref: "Bus",
       required: true,
     },
   },

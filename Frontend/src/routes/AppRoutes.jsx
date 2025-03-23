@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import AdminDashboard from "../pages/AdminDashboard";
-import PassengerDashboard from "../pages/PassengerDashboard";
+import PassengerHomepage from "../pages/PassengerHomepage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
 import UserSettings from "../pages/UserSettings";
@@ -44,6 +44,7 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
           <Route path="/passenger" element={<PassengerDashboard />} />
           <Route path="/seat-selection" element={<SeatSelection />} />
+          <Route path="/passenger" element={<PassengerHomepage />} />
         </Route>
         <Route path="/settings" element={<UserSettings/>} />
        
