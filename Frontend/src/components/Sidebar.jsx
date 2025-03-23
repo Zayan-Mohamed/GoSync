@@ -7,11 +7,20 @@ import { MdAutoGraph } from "react-icons/md";
 import { SlGraph } from "react-icons/sl";
 import { GoGraph } from "react-icons/go";
 import { VscGraphLine, VscGraphScatter } from "react-icons/vsc";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import useAuthStore from "../store/authStore";
 import SidebarSection from "./SidebarSection";
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+
+  const { logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   const sections = [
     {
@@ -75,14 +84,14 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className={`bg-[#FFE082] h-screen flex flex-col transition-all ${collapsed ? "w-16" : "w-70"}`}>
+    <div className={`bg-[#FFE082] h-screen flex flex-col transition-all overflow-hidden ${collapsed ? "w-16" : "w-70"}`}>
       {/* Top Section: Logo & Toggle Button */}
       <div className="flex items-center p-4">
-        <button onClick={() => setCollapsed(!collapsed)} className="mr-3">
+        <button onClick={() => setCollapsed(!collapsed)} className="mr-3 mt-6">
           <FiMenu size={24} />
         </button>
         {!collapsed && (
-          <img src="/assets/GoSync-Logo_Length2.png" alt="GoSync Logo" className="h-12 w-auto ml-8" />
+          <img src="/assets/GoSync-Logo_Length2.png" alt="GoSync Logo" className="h-10 w-auto ml-8 mt-3" />
         )}
       </div>
 
@@ -103,7 +112,7 @@ const Sidebar = () => {
             </Link>
           </li>
           <li>
-            <button className="flex items-center space-x-3">
+            <button onClick={handleLogout} className="flex items-center space-x-3">
               <FiLogOut size={20} />
               {!collapsed && <span>Logout</span>}
             </button>
