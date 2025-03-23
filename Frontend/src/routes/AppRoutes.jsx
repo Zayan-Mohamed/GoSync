@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import AdminDashboard from "../pages/AdminDashboard";
-import PassengerDashboard from "../pages/PassengerDashboard";
+import PassengerHomepage from "../pages/PassengerHomepage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
 
@@ -24,6 +24,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        
 
         {/* ✅ Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
@@ -31,7 +32,7 @@ const AppRoutes = () => {
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
-          <Route path="/passenger" element={<PassengerDashboard />} />
+          <Route path="/passenger" element={<PassengerHomepage />} />
         </Route>
 
         {/* ✅ Catch-all for unauthorized access */}
