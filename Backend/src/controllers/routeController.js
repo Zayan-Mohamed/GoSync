@@ -18,6 +18,7 @@ export const createRoute = async (req, res) => {
       startLocationCoordinates,
       endLocationCoordinates,
       stops,
+      status: 'active', // Set default status
     });
 
     await newRoute.save();
@@ -56,16 +57,36 @@ export const addStopToRoute = async (req, res) => {
   }
 };
 
-// Get all routes with populated stops
+// Get all routes with populated stops - UPDATED VERSION
 export const getAllRoutes = async (req, res) => {
   try {
-    const routes = await Route.find().populate('stops'); // Populate stops to get full details
-    res.status(200).json({ routes });
+    const routes = await Route.find().populate('stops');
+
+    // Format the routes to match the expected frontend structure
+    const formattedRoutes = routes.map(route => {
+      // Convert mongoose document to plain object
+      const routeObj = route.toObject();
+      
+      return {
+        _id: routeObj._id,
+        routeId: routeObj.routeId,
+        routeName: routeObj.routeName,
+        startLocation: routeObj.startLocation,
+        endLocation: routeObj.endLocation,
+        totalDistance: routeObj.totalDistance,
+        status: routeObj.status || 'active',
+        startLocationCoordinates: routeObj.startLocationCoordinates || { lat: null, lng: null },
+        endLocationCoordinates: routeObj.endLocationCoordinates || { lat: null, lng: null },
+        stops: routeObj.stops || [],
+      };
+    });
+
+    res.status(200).json({ routes: formattedRoutes });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Error fetching routes', details: error.message });
   }
 };
-
 
 // Get route details by routeId, including stops
 export const getRouteById = async (req, res) => {
@@ -166,8 +187,8 @@ export const updateStopInRoute = async (req, res) => {
       updatedStop 
     });
   } catch (error) {
-    res.status(500).json({ error: "Error updating stop", details: error.message });
-  }
+    res.status(500).json({ error: "Error updating stop", details: error.message });
+  }
 };
 
 //Getting all the stops for a specific route
@@ -255,7 +276,6 @@ export const deleteStopFromRoute = async (req, res) => {
 };
 
 // delete a route
-
 export const deleteRoute = async (req, res) => {
   try {
     const { routeId } = req.params;

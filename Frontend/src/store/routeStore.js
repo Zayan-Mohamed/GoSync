@@ -2,11 +2,11 @@ import { create } from "zustand";
 import axios from "axios";
 
 const useRouteStore = create((set) => ({
-  routes: [],
+  routes: [], // Store as an array
   fetchRoutes: async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/routes/routes");
-      set({ routes: response.data });
+      set({ routes: response.data.routes }); // ✅ Extract only the array
     } catch (error) {
       console.error("Error fetching routes:", error);
     }
@@ -34,5 +34,6 @@ const useRouteStore = create((set) => ({
     }
   },
 }));
+
 
 export default useRouteStore;
