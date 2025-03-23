@@ -43,9 +43,9 @@ const busRoutes = [
         </LoadScript>
       </div>
 
-      <div className="main-content">
-        <div className="booking-container">
-          <div className="booking-form">
+      <div className="main-content" >
+        <div className="booking-container " >
+          <div className="booking-form w-full   ">
 
             <select 
              id="busRoute"
