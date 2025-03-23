@@ -10,6 +10,7 @@ import UserSettings from "../pages/UserSettings";
 import Notification from "../pages/Notification";
 import AddNotification from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
+import SeatSelection from "../pages/SeatSelection";
 
 const AppRoutes = () => {
 
@@ -37,10 +38,12 @@ const AppRoutes = () => {
           <Route path="/notification-management" element={<Notification />} />
           <Route path="/add-notification" element={<AddNotification />} />
           <Route path="/update-notification/:id" element={<UpdateNotification />} />
+          
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
           <Route path="/passenger" element={<PassengerDashboard />} />
+          <Route path="/seat-selection" element={<SeatSelection />} />
         </Route>
         <Route path="/settings" element={<UserSettings/>} />
        
