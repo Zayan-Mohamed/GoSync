@@ -3,10 +3,12 @@ import { useState, useEffect } from "react";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import AdminDashboard from "../pages/AdminDashboard";
-import PassengerDashboard from "../pages/PassengerDashboard";
+import PassengerHomepage from "../pages/PassengerHomepage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
 import CurrentRoutes from "../pages/CurrentRoutes";
+import InsertBus from "../pages/InsertBus";
+import BusList from "../pages/BusList";
 import UserSettings from "../pages/UserSettings";
 import Notification from "../pages/Notification";
 import AddNotification from "../pages/AddNotification";
@@ -34,6 +36,8 @@ const AppRoutes = () => {
         {/* ✅ Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/bus-management" element={<BusList />} />
+          <Route path="/add-bus" element={<InsertBus />} />
 
           <Route path="/notification-management" element={<Notification />} />
           <Route path="/add-notification" element={<AddNotification />} />
@@ -46,7 +50,7 @@ const AppRoutes = () => {
         
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
-          <Route path="/passenger" element={<PassengerDashboard />} />
+          <Route path="/passenger" element={<PassengerHomepage />} />
         </Route>
         <Route path="/settings" element={<UserSettings/>} />
        
