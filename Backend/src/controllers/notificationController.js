@@ -1,6 +1,6 @@
 import Notification from "../models/notificationModel.js";
 import User from "../models/user.js";
-
+import io  from "../server.js";
 
 
 export const create = async (req, res) => {
@@ -21,6 +21,8 @@ export const create = async (req, res) => {
     
     // Save the new notification to the database
     const savedNotification = await newNotification.save();
+     
+     io.emit("newNotification",savedNotification);
     
     // Respond with the saved notification
     res.status(201).json({ success: true, data: savedNotification });
@@ -37,7 +39,7 @@ export const create = async (req, res) => {
 
 export const getAllNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find(); // Fetch all notifications
+    const notifications = await Notification.find().sort({ createdAt: -1 }); // Fetch all notifications
     res.status(200).json(notifications);
   } catch (error) {
     console.error(error);
@@ -80,6 +82,7 @@ export const update = async (req, res) => {
       req.body,  // Update data
       { new: true }  // Return the updated document
     );
+      io.emit("updateNotification", updatedNotification);
 
     res.status(200).json(updatedNotification);
   } catch (error) {
@@ -98,7 +101,9 @@ export const deleteNotification = async (req, res) => {
     if (!notification) {
       return res.status(404).json({ message: "Notification not found" });
     }   
-    await Notification.findOneAndDelete(id);
+    await Notification.findOneAndDelete({ notificationId: id});
+    io.emit("deleteNotification", id);
+
     res.status(200).json({message:"Notification deleted successfuly."});   
    } catch (error) {
     res.status(500).json({ errorMessage: error.message, message: 'Server Error' });
