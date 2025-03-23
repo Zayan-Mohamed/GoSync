@@ -6,15 +6,12 @@ import AdminDashboard from "../pages/AdminDashboard";
 import PassengerHomepage from "../pages/PassengerHomepage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
-<<<<<<< HEAD
 import InsertBus from "../pages/InsertBus";
 import BusList from "../pages/BusList";
-=======
 import UserSettings from "../pages/UserSettings";
 import Notification from "../pages/Notification";
 import AddNotification from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
->>>>>>> 25cdf3b4294eb86000c071e2ca9737fc9394c103
 
 const AppRoutes = () => {
 
@@ -38,15 +35,12 @@ const AppRoutes = () => {
         {/* ✅ Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboard />} />
-<<<<<<< HEAD
           <Route path="/bus-management" element={<BusList />} />
           <Route path="/add-bus" element={<InsertBus />} />
-=======
 
           <Route path="/notification-management" element={<Notification />} />
           <Route path="/add-notification" element={<AddNotification />} />
           <Route path="/update-notification/:id" element={<UpdateNotification />} />
->>>>>>> 25cdf3b4294eb86000c071e2ca9737fc9394c103
         </Route>
 
 

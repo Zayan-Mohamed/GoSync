@@ -21,12 +21,8 @@
     "@mui/material": "^6.4.7",
     "@react-google-maps/api": "^2.20.6",
     "@tailwindcss/vite": "^4.0.14",
-<<<<<<< HEAD
-    "axios": "^1.8.4",
-=======
     "axios": "^1.8.3",
     "bootstrap": "^5.3.3",
->>>>>>> 25cdf3b4294eb86000c071e2ca9737fc9394c103
     "date-fns": "^4.1.0",
     "font-awesome": "^4.7.0",
     "framer-motion": "^12.5.0",
