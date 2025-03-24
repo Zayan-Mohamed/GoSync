@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import "../styles/PassengerHomepage.css";
 import Navbar1 from "../components/Navbar1";
+import { useNavigate } from "react-router-dom";
 
 const mapContainerStyle = {
   width: "100vw",
@@ -21,9 +22,16 @@ const center = {
 const PassengerHomepage = () => {
   const [selectedRoute, setSelectedRoute] = useState("");
   const [journeyDate, setJourneyDate] = useState("");
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const findBuses = () => {
+    // Log data for debugging
     console.log({ selectedRoute, journeyDate });
+    
+    // Navigate to BusSearchResults page with the form data
+    navigate('/bus-search-results', {
+      state: { selectedRoute, journeyDate }
+    });
   };
 
 const busRoutes = [
@@ -38,9 +46,9 @@ const busRoutes = [
     <div className="passenger-homepage">
       <Navbar1 />
       <div className="map-container"> 
-        <LoadScript googleMapsApiKey={import.meta.env.VITE_API_GOOGLE_MAPS_KEY}>
+        {/* <LoadScript googleMapsApiKey={import.meta.env.VITE_API_GOOGLE_MAPS_KEY}>
           <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={7} />
-        </LoadScript>
+        </LoadScript> */}
       </div>
 
       <div className="main-content" >

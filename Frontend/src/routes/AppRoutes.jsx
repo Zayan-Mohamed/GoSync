@@ -13,6 +13,7 @@ import UserSettings from "../pages/UserSettings";
 import Notification from "../pages/Notification";
 import AddNotification from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
+import BusSearchResults from "../pages/BusSearchResults";
 
 const AppRoutes = () => {
 
@@ -42,15 +43,17 @@ const AppRoutes = () => {
           <Route path="/notification-management" element={<Notification />} />
           <Route path="/add-notification" element={<AddNotification />} />
           <Route path="/update-notification/:id" element={<UpdateNotification />} />
-        </Route>
-
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/current-routes" element={<CurrentRoutes />} />
+          
+
+
         </Route>
         
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
           <Route path="/passenger" element={<PassengerHomepage />} />
+          <Route path="/bus-search-results" element={<BusSearchResults />} />
+          
         </Route>
         <Route path="/settings" element={<UserSettings/>} />
        
