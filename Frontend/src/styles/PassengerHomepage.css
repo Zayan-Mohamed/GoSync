@@ -320,6 +320,91 @@ body {
   transform: scale(1.05);
 }
 
+/* Styles for input fields with icons */
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  background-color: #f4f4f4;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  width: 100%;
+  
+}
+
+
+
+.input-with-icon .input-icon {
+  margin-right: 10px;
+  color: #666;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.input-with-icon input {
+  flex-grow: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  outline: none;
+  font-size: 16px;
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .input-with-icon {
+    padding: 8px;
+  }
+
+  .input-with-icon .input-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
+
+  .input-with-icon input {
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .input-with-icon {
+    padding: 6px;
+  }
+
+  .input-with-icon .input-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+  }
+
+  .input-with-icon input {
+    font-size: 12px;
+  }
+}
+
+/* Error Message Styling */
+.error-message {
+  background-color: #ffdddd;
+  color: #ff0000;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Disable State for Inputs */
+input:disabled,
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+
 /* Responsive Adjustments */
 @media (max-width: 992px) {
   .booking-form {
