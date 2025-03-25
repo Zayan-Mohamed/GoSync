@@ -6,11 +6,15 @@ import AdminDashboard from "../pages/AdminDashboard";
 import PassengerHomepage from "../pages/PassengerHomepage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
+import CurrentRoutes from "../pages/CurrentRoutes";
+import InsertBus from "../pages/InsertBus";
+import BusList from "../pages/BusList";
 import UserSettings from "../pages/UserSettings";
 import Notification from "../pages/Notification";
 import AddNotification from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
 import SeatSelection from "../pages/SeatSelection";
+import BusSearchResults from "../pages/BusSearchResults";
 
 const AppRoutes = () => {
 
@@ -34,17 +38,26 @@ const AppRoutes = () => {
         {/* ✅ Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/bus-management" element={<BusList />} />
+          <Route path="/add-bus" element={<InsertBus />} />
 
           <Route path="/notification-management" element={<Notification />} />
           <Route path="/add-notification" element={<AddNotification />} />
           <Route path="/update-notification/:id" element={<UpdateNotification />} />
           
+          <Route path="/current-routes" element={<CurrentRoutes />} />
+          
+
+
         </Route>
+        
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
           <Route path="/passenger" element={<PassengerHomepage />} />
           <Route path="/seat-selection" element={<SeatSelection />} />
           <Route path="/passenger" element={<PassengerHomepage />} />
+          <Route path="/bus-search-results" element={<BusSearchResults />} />
+          
         </Route>
         <Route path="/settings" element={<UserSettings/>} />
        

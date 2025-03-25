@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import "../styles/PassengerHomepage.css";
 import Navbar1 from "../components/Navbar1";
+import { useNavigate } from "react-router-dom";
+import Footer1 from "../components/Footer1";
 
 const mapContainerStyle = {
   width: "100vw",
@@ -21,9 +23,16 @@ const center = {
 const PassengerHomepage = () => {
   const [selectedRoute, setSelectedRoute] = useState("");
   const [journeyDate, setJourneyDate] = useState("");
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const findBuses = () => {
+    // Log data for debugging
     console.log({ selectedRoute, journeyDate });
+    
+    // Navigate to BusSearchResults page with the form data
+    navigate('/bus-search-results', {
+      state: { selectedRoute, journeyDate }
+    });
   };
 
 const busRoutes = [
@@ -38,9 +47,9 @@ const busRoutes = [
     <div className="passenger-homepage">
       <Navbar1 />
       <div className="map-container"> 
-        <LoadScript googleMapsApiKey={import.meta.env.VITE_API_GOOGLE_MAPS_KEY}>
+        {/* <LoadScript googleMapsApiKey={import.meta.env.VITE_API_GOOGLE_MAPS_KEY}>
           <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={7} />
-        </LoadScript>
+        </LoadScript> */}
       </div>
 
       <div className="main-content" >
@@ -138,52 +147,7 @@ const busRoutes = [
           </ul>
         </div>
       </div>
-
-      <footer className="site-footer">
-        <div className="footer-container">
-          <div className="footer-section">
-            <h3>About Us</h3>
-            <p>Sri Lanka's premier online bus booking platform. Book your journey across the island with ease and convenience.</p>
-          </div>
-          
-          <div className="footer-section">
-            <h3>Quick Links</h3>
-            <ul>
-              <li><a href="#">Home</a></li>
-              <li><a href="#">Bus Routes</a></li>
-              <li><a href="#">My Bookings</a></li>
-              <li><a href="#">Contact Us</a></li>
-              <li><a href="#">FAQ</a></li>
-            </ul>
-          </div>
-          
-          <div className="footer-section">
-            <h3>Bus Operators</h3>
-            <ul>
-              <li><a href="#">Sri Lanka Transport Board</a></li>
-              <li><a href="#">Luxury Bus Services</a></li>
-              <li><a href="#">Express Services</a></li>
-              <li><a href="#">Register as Operator</a></li>
-            </ul>
-          </div>
-          
-          <div className="footer-section">
-            <h3>Contact Us</h3>
-            <p>Email: support@busbooking.lk</p>
-            <p>Phone: +94 11 234 5678</p>
-            <p>Office Hours: 8am - 8pm (Daily)</p>
-            <div className="social-icons">
-              <a href="#" className="social-icon">FB</a>
-              <a href="#" className="social-icon">IG</a>
-              <a href="#" className="social-icon">TW</a>
-            </div>
-          </div>
-        </div>
-        
-        <div className="footer-bottom">
-          <p>&copy; 2025 Bus Booking System. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer1/>
     </div>
   );
 };
