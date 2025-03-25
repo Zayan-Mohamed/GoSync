@@ -4,7 +4,7 @@ import "../styles/PassengerHomepage.css";
 import Navbar1 from "../components/Navbar1";
 import { useNavigate } from "react-router-dom";
 import Footer1 from "../components/Footer1";
-import useStopStore from "../store/stopStore.js"; // Import the Zustand store
+import useStopStore from "../store/stopStore.js";
 
 const PassengerHomepage = () => {
   const [fromLocation, setFromLocation] = useState("");
@@ -12,14 +12,11 @@ const PassengerHomepage = () => {
   const [journeyDate, setJourneyDate] = useState("");
   const navigate = useNavigate();
 
-  
-  // Get stops from Zustand store
   const { stops, loading, error, fetchStops } = useStopStore();
 
-  // Fetch stops when the component mounts
   useEffect(() => {
     fetchStops();
-  }, [fetchStops]); // Fetch only when `fetchStops` function reference changes
+  }, [fetchStops]);
 
   const findBuses = () => {
     if (!fromLocation || !toLocation) {
@@ -36,13 +33,13 @@ const PassengerHomepage = () => {
     });
   };
 
-  // Filter and sort active stops
-  const locations = loading || error
-    ? []
-    : stops
-        ?.filter((stop) => stop.status === "active")
-        .map((stop) => stop.stopName)
-        .sort();
+  const locations =
+    loading || error
+      ? []
+      : stops
+          ?.filter((stop) => stop.status === "active")
+          .map((stop) => stop.stopName)
+          .sort();
 
   return (
     <div className="passenger-homepage">
@@ -50,7 +47,6 @@ const PassengerHomepage = () => {
       <div className="main-content">
         <div className="booking-container">
           <div className="booking-form">
-            {/* From Location Input */}
             <div className="input-with-icon">
               <Bus className="input-icon" />
               <input
@@ -69,7 +65,6 @@ const PassengerHomepage = () => {
               </datalist>
             </div>
 
-            {/* To Location Input */}
             <div className="input-with-icon">
               <Bus className="input-icon" />
               <input
@@ -88,7 +83,6 @@ const PassengerHomepage = () => {
               </datalist>
             </div>
 
-            {/* Journey Date Input */}
             <input
               type="date"
               value={journeyDate}
@@ -98,11 +92,13 @@ const PassengerHomepage = () => {
               placeholder="Journey Date"
             />
 
-            <button onClick={findBuses} disabled={loading}>
+            <button
+              onClick={findBuses}
+              disabled={loading || !fromLocation || !toLocation}
+            >
               {loading ? "Loading Stops..." : "Find Buses"}
             </button>
 
-            {/* Error Handling */}
             {error && (
               <div className="error-message">
                 Failed to load available stops. Please try again later.
@@ -111,7 +107,6 @@ const PassengerHomepage = () => {
           </div>
         </div>
 
-        {/* Rest of the existing content remains the same */}
         <div className="popular-routes-section">
           <h2>Popular Bus Routes in Sri Lanka</h2>
           <div className="routes-grid">

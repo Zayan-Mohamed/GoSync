@@ -4,11 +4,11 @@ import Navbar from "../components/Navbar";
 
 const BookingLayout = ({ children }) => {
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       {/* Sidebar - Can be hidden if not needed */}
       <Sidebar />
       
-      <div className="flex-1 flex flex-col bg-gray-100">
+      <div className="flex-1 flex flex-col bg-gray-100 h-screen overflow-hidden">
         {/* Navbar */}
         <Navbar />
         
