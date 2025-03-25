@@ -12,6 +12,7 @@ const PassengerHomepage = () => {
   const [journeyDate, setJourneyDate] = useState("");
   const navigate = useNavigate();
 
+  
   // Get stops from Zustand store
   const { stops, loading, error, fetchStops } = useStopStore();
 
@@ -154,4 +155,4 @@ const PassengerHomepage = () => {
   );
 };
 
-export default PassengerHomepage;
+export default PassengerHomepage ;
