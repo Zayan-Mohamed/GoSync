@@ -7,7 +7,7 @@ const Footer1 = () => {
       <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Logo Section */}
         <div className="flex flex-col items-start">
-          <img src="/assets/GoSync.png" alt="GoSync Logo" className="h-14" />
+          <img src="/assets/GoSync.png" alt="GoSync Logo" className="w-15 h-auto" />
         </div>
 
         {/* About Us Section */}
@@ -34,7 +34,7 @@ const Footer1 = () => {
         {/* Contact Us Section */}
         <div>
           <h3 className="text-lg font-semibold text-orange-600 mb-4">Contact Us</h3>
-          <p className="text-sm text-gray-600">Email: support@busbooking.lk</p>
+          <p className="text-sm text-gray-600">Email: support@gosync.lk</p>
           <p className="text-sm text-gray-600">Phone: +94 11 234 5678</p>
           <p className="text-sm text-gray-600">Office Hours: 8am - 8pm (Daily)</p>
           <div className="flex gap-3 mt-3">

@@ -1,24 +1,24 @@
 import React, { useState } from "react";
-import { GoogleMap, LoadScript } from "@react-google-maps/api";
+// import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import "../styles/PassengerHomepage.css";
 import Navbar1 from "../components/Navbar1";
 import { useNavigate } from "react-router-dom";
 import Footer1 from "../components/Footer1";
 
-const mapContainerStyle = {
-  width: "100vw",
-  height: "100vh",
-  position: "absolute",
-  top: 0,
-  left: 0,
-  zIndex: -1,
-  opacity: 0.4,
-};
+// const mapContainerStyle = {
+//   width: "100vw",
+//   height: "100vh",
+//   position: "absolute",
+//   top: 0,
+//   left: 0,
+//   zIndex: -1,
+//   opacity: 0.4,
+// };
 
-const center = {
-  lat: 7.8731, // Sri Lanka's latitude
-  lng: 80.7718, // Sri Lanka's longitude
-};
+// const center = {
+//   lat: 7.8731, // Sri Lanka's latitude
+//   lng: 80.7718, // Sri Lanka's longitude
+// };
 
 const PassengerHomepage = () => {
   const [selectedRoute, setSelectedRoute] = useState("");
@@ -54,7 +54,7 @@ const busRoutes = [
 
       <div className="main-content" >
         <div className="booking-container " >
-          <div className="booking-form w-full   ">
+          <div className="booking-form w-full">
 
             <select 
              id="busRoute"
