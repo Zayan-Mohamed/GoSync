@@ -42,7 +42,7 @@ const AppRoutes = () => {
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
-          <Route path="/passenger" element={<PassengerDashboard />} />
+          <Route path="/passenger" element={<PassengerHomepage />} />
           <Route path="/seat-selection" element={<SeatSelection />} />
           <Route path="/passenger" element={<PassengerHomepage />} />
         </Route>
