@@ -1,89 +1,109 @@
-import React, { useState } from "react";
-// import { GoogleMap, LoadScript } from "@react-google-maps/api";
+import React, { useState, useEffect } from "react";
+import { Bus } from "lucide-react";
 import "../styles/PassengerHomepage.css";
 import Navbar1 from "../components/Navbar1";
 import { useNavigate } from "react-router-dom";
 import Footer1 from "../components/Footer1";
-
-// const mapContainerStyle = {
-//   width: "100vw",
-//   height: "100vh",
-//   position: "absolute",
-//   top: 0,
-//   left: 0,
-//   zIndex: -1,
-//   opacity: 0.4,
-// };
-
-// const center = {
-//   lat: 7.8731, // Sri Lanka's latitude
-//   lng: 80.7718, // Sri Lanka's longitude
-// };
+import useStopStore from "../store/stopStore.js";
 
 const PassengerHomepage = () => {
-  const [selectedRoute, setSelectedRoute] = useState("");
+  const [fromLocation, setFromLocation] = useState("");
+  const [toLocation, setToLocation] = useState("");
   const [journeyDate, setJourneyDate] = useState("");
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+
+  const { stops, loading, error, fetchStops } = useStopStore();
+
+  useEffect(() => {
+    fetchStops();
+  }, [fetchStops]);
 
   const findBuses = () => {
-    // Log data for debugging
-    console.log({ selectedRoute, journeyDate });
-    
-    // Navigate to BusSearchResults page with the form data
-    navigate('/bus-search-results', {
-      state: { selectedRoute, journeyDate }
+    if (!fromLocation || !toLocation) {
+      alert("Please select both from and to locations");
+      return;
+    }
+
+    navigate("/bus-search-results", {
+      state: {
+        fromLocation,
+        toLocation,
+        journeyDate,
+      },
     });
   };
 
-const busRoutes = [
-    "Colombo - Jaffna",
-    "Kandy - Galle",
-    "Gampaha - Anuradhapura",
-    "Negombo - Badulla",
-    "Matara - Batticaloa"
-  ];
+  const locations =
+    loading || error
+      ? []
+      : stops
+          ?.filter((stop) => stop.status === "active")
+          .map((stop) => stop.stopName)
+          .sort();
 
   return (
     <div className="passenger-homepage">
       <Navbar1 />
-      <div className="map-container"> 
-        {/* <LoadScript googleMapsApiKey={import.meta.env.VITE_API_GOOGLE_MAPS_KEY}>
-          <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={7} />
-        </LoadScript> */}
-      </div>
+      <div className="main-content">
+        <div className="booking-container">
+          <div className="booking-form">
+            <div className="input-with-icon">
+              <Bus className="input-icon" />
+              <input
+                type="text"
+                list="fromLocations"
+                value={fromLocation}
+                onChange={(e) => setFromLocation(e.target.value)}
+                placeholder="From"
+                required
+                disabled={loading}
+              />
+              <datalist id="fromLocations">
+                {locations?.map((location) => (
+                  <option key={location} value={location} />
+                ))}
+              </datalist>
+            </div>
 
-      <div className="main-content" >
-        <div className="booking-container " >
-          <div className="booking-form w-full">
+            <div className="input-with-icon">
+              <Bus className="input-icon" />
+              <input
+                type="text"
+                list="toLocations"
+                value={toLocation}
+                onChange={(e) => setToLocation(e.target.value)}
+                placeholder="To"
+                required
+                disabled={loading}
+              />
+              <datalist id="toLocations">
+                {locations?.map((location) => (
+                  <option key={location} value={location} />
+                ))}
+              </datalist>
+            </div>
 
-            <select 
-             id="busRoute"
-             value={selectedRoute}
-             onChange={(e) => setSelectedRoute(e.target.value)}
-             className="route-dropdown"
-            >
-             <option value="">Select a route</option>
-          {busRoutes.map((route, index) => (
-            <option key={index} value={route}>
-              {route}
-            </option>
-          ))}
-            </select>
-            
-            
-            
-            <input 
-              type="date" 
-              value={journeyDate} 
-              onChange={(e) => setJourneyDate(e.target.value)} 
-              min={new Date().toISOString().split('T')[0]}
+            <input
+              type="date"
+              value={journeyDate}
+              onChange={(e) => setJourneyDate(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
               required
               placeholder="Journey Date"
             />
-            
-            
-            
-            <button onClick={findBuses}>Find Buses</button>
+
+            <button
+              onClick={findBuses}
+              disabled={loading || !fromLocation || !toLocation}
+            >
+              {loading ? "Loading Stops..." : "Find Buses"}
+            </button>
+
+            {error && (
+              <div className="error-message">
+                Failed to load available stops. Please try again later.
+              </div>
+            )}
           </div>
         </div>
 
@@ -110,26 +130,6 @@ const busRoutes = [
               <p>Hill Country Express</p>
               <button>View Schedule</button>
             </div>
-            <div className="route-card">
-              <h3>Colombo - Anuradhapura</h3>
-              <p>Cultural Triangle Route</p>
-              <button>View Schedule</button>
-            </div>
-            <div className="route-card">
-              <h3>Colombo - Batticaloa</h3>
-              <p>East Coast Express</p>
-              <button>View Schedule</button>
-            </div>
-            <div className="route-card">
-              <h3>Negombo - Colombo</h3>
-              <p>Airport Transfer Route</p>
-              <button>View Schedule</button>
-            </div>
-            <div className="route-card">
-              <h3>Colombo - Trincomalee</h3>
-              <p>Luxury Service Available</p>
-              <button>View Schedule</button>
-            </div>
           </div>
         </div>
 
@@ -142,12 +142,10 @@ const busRoutes = [
             <li>Negombo - Colombo</li>
             <li>Kandy - Nuwara Eliya</li>
             <li>Colombo - Galle</li>
-            <li>Colombo - Anuradhapura</li>
-            <li>Kurunegala - Colombo</li>
           </ul>
         </div>
       </div>
-      <Footer1/>
+      <Footer1 />
     </div>
   );
 };
