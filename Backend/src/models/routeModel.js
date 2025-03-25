@@ -47,11 +47,19 @@ const routeSchema = new mongoose.Schema({
     enum: ['active', 'inactive'],
     default: 'active',
   },
-  stops: [{
+  // In routeModel.js
+stops: [{
+  stop: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Stop',
-    required: false,
-  }],
+    required: true
+  },
+  order: {
+    type: Number,
+    required: true
+  },
+  _id: false // This prevents MongoDB from creating an _id for each subdocument
+}],
 });
 
 const Route = mongoose.model('Route', routeSchema);

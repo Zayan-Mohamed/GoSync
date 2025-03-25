@@ -3,22 +3,106 @@ import generateStopId from '../utils/generateStopId.js';
 
 // Create a new stop
 export const createStop = async (req, res) => {
-  const { stopName, stopOrder, status } = req.body;
+  const { stopName, status } = req.body;
 
-  const stopId = generateStopId();
+  // Normalize stopName by trimming and converting to lowercase
+  const normalizedStopName = stopName.trim().toLowerCase();
 
   try {
-    const stop = new Stop({ stopId, stopName, stopOrder, status });
+    // Check for existing stop with the same name (case-insensitive)
+    const existingStop = await Stop.findOne({ 
+      stopName: { 
+        $regex: new RegExp(`^${normalizedStopName}$`, 'i') 
+      } 
+    });
+
+    // If stop already exists, return an error
+    if (existingStop) {
+      return res.status(409).json({ 
+        error: 'Stop with this name already exists',
+        existingStop: existingStop.stopName
+      });
+    }
+
+    // Generate unique stopId
+    const stopId = generateStopId();
+
+    // Create and save new stop
+    const stop = new Stop({ 
+      stopId, 
+      stopName: stopName.trim(), // Preserve original casing
+      status 
+    });
+
     await stop.save();
     res.status(201).json(stop);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    // Handle potential validation errors
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ 
+        error: 'Validation failed',
+        details: Object.values(err.errors).map(e => e.message)
+      });
+    }
+    
+    // Generic error handler
+    res.status(500).json({ 
+      error: 'An error occurred while creating the stop',
+      details: err.message 
+    });
   }
 };
 
+export const createMultipleStops = async (req, res) => {
+  try {
+    // Normalize and validate incoming stops
+    const stopsToInsert = [];
+    const duplicateStops = [];
+
+    for (const stop of req.body) {
+      const normalizedStopName = stop.stopName.trim().toLowerCase();
+      
+      // Check if stop already exists
+      const existingStop = await Stop.findOne({ 
+        stopName: { 
+          $regex: new RegExp(`^${normalizedStopName}$`, 'i') 
+        } 
+      });
+
+      if (existingStop) {
+        duplicateStops.push({
+          originalName: stop.stopName,
+          existingName: existingStop.stopName
+        });
+      } else {
+        stopsToInsert.push({
+          stopId: generateStopId(),
+          stopName: stop.stopName.trim(),
+          status: stop.status || 'active'
+        });
+      }
+    }
+
+    // Insert non-duplicate stops
+    const insertedStops = await Stop.insertMany(stopsToInsert);
+
+    return res.status(201).json({
+      message: `Successfully inserted ${insertedStops.length} stops`,
+      insertedStops,
+      duplicates: duplicateStops.length > 0 ? duplicateStops : undefined
+    });
+  } catch (error) {
+    console.error('Error in createMultipleStops:', error);
+    
+    return res.status(500).json({
+      error: "Error inserting stops",
+      details: error.message
+    });
+  }
+};
 // Edit an existing stop
 export const editStop = async (req, res) => {
-  const { stopId, stopName, stopOrder, status } = req.body;
+  const { stopId, stopName, status } = req.body;
 
   try {
     const stop = await Stop.findOne({ stopId });
@@ -28,7 +112,6 @@ export const editStop = async (req, res) => {
     }
 
     stop.stopName = stopName || stop.stopName;
-    stop.stopOrder = stopOrder || stop.stopOrder;
     stop.status = status || stop.status;
 
     await stop.save();
@@ -92,25 +175,6 @@ export const deleteStop = async (req, res) => {
     }
 
     res.status(200).json({ message: 'Stop deleted successfully' });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
-
-// Toggle stop status (active/inactive)
-export const toggleStopStatus = async (req, res) => {
-  const { stopId } = req.params;
-
-  try {
-    const stop = await Stop.findOne({ stopId });
-
-    if (!stop) {
-      return res.status(404).json({ error: 'Stop not found' });
-    }
-
-    stop.status = stop.status === 'active' ? 'inactive' : 'active';
-    await stop.save();
-    res.status(200).json(stop);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

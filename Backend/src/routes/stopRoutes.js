@@ -1,17 +1,18 @@
 import express from 'express';
 import {
   createStop,
+  createMultipleStops,
   editStop,
   deleteStop,
   getStop,
-  getAllStops,
-  toggleStopStatus
+  getAllStops
 } from '../controllers/stopController.js';
-import { updateStop } from '../controllers/routeController.js';
+import { updateStop,toggleStopStatus } from '../controllers/routeController.js';
 
 const router = express.Router();
 
 router.post('/create', createStop);
+router.post('/stops/bulk', createMultipleStops);
 router.put('/edit', editStop);
 router.delete('/:stopId', deleteStop);
 router.get('/get', getAllStops);
