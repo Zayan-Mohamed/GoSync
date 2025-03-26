@@ -5,6 +5,9 @@ import connectDB from "./config/db.js";
 import bodyParser from "body-parser";
 import http from "http";
 import { Server } from "socket.io";
+import cron from 'node-cron';
+
+
 
 import scheduleRoutes from "./routes/scheduleRoutes.js"; // ✅ Import schedule routes
 import userRoutes from "./routes/userRoutes.js"; // ✅ Import user routes
@@ -14,6 +17,7 @@ import stopRoutes from "./routes/stopRoutes.js"; // ✅ Import booking routes
 import routeRoutes from "./routes/routeRoutes.js"; // ✅ Import route routes
 import bookingRoutes from "./routes/bookingRoutes.js"; // ✅ Import booking routes
 import busRoutes from "./routes/busRoutes.js"; // ✅ Import bus routes
+import shedRoutes from "./routes/shedRoutes.js";
 
 
 
@@ -46,6 +50,11 @@ app.use("/api/routes" , routeRoutes ); // Route routes
 app.use("/api/stops" , stopRoutes ); // Stop routes/
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/buses", busRoutes);
+app.use("/api/shed", shedRoutes);
+
+
+
+
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

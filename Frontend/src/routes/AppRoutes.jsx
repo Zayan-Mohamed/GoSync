@@ -9,6 +9,8 @@ import SplashScreen from "../pages/SplashScreen";
 import Notification from "../pages/Notification"; 
 import  AddNotification  from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
+import ShedTable from "../pages/shedTable";
+import AddMessage from "../pages/AddMessage";
 
 const AppRoutes = () => {
 
@@ -36,6 +38,9 @@ const AppRoutes = () => {
             
             <Route path="/add-notification" element={<AddNotification/>} />
             <Route path="/update-notification/:id" element={<UpdateNotification />} />
+            <Route path="/Schedule-notification" element={<ShedTable/>} />
+            <Route path="/add-message" element={<AddMessage/>} />
+
 
 
         </Route>
