@@ -3,14 +3,22 @@ import { useState, useEffect } from "react";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import AdminDashboard from "../pages/AdminDashboard";
-import PassengerDashboard from "../pages/PassengerDashboard";
+import PassengerHomepage from "../pages/PassengerHomepage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
-import Notification from "../pages/Notification"; 
-import  AddNotification  from "../pages/AddNotification";
+import CurrentRoutes from "../pages/CurrentRoutes";
+import InsertBus from "../pages/InsertBus";
+import BusList from "../pages/BusList";
+import UserSettings from "../pages/UserSettings";
+import Notification from "../pages/Notification";
+import AddNotification from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
+<<<<<<< HEAD
 import ShedTable from "../pages/shedTable";
 import AddMessage from "../pages/AddMessage";
+=======
+import BusSearchResults from "../pages/BusSearchResults";
+>>>>>>> 22430934730fd5c25693537cc2db09d8bd01f2e5
 
 const AppRoutes = () => {
 
@@ -29,11 +37,20 @@ const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        
 
         {/* ✅ Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/bus-management" element={<BusList />} />
+          <Route path="/add-bus" element={<InsertBus />} />
+
+          <Route path="/notification-management" element={<Notification />} />
+          <Route path="/add-notification" element={<AddNotification />} />
+          <Route path="/update-notification/:id" element={<UpdateNotification />} />
+          <Route path="/current-routes" element={<CurrentRoutes />} />
           
+<<<<<<< HEAD
             <Route path="/notification-management" element={<Notification />} />
             
             <Route path="/add-notification" element={<AddNotification/>} />
@@ -41,13 +58,19 @@ const AppRoutes = () => {
             <Route path="/Schedule-notification" element={<ShedTable/>} />
             <Route path="/add-message" element={<AddMessage/>} />
 
+=======
+>>>>>>> 22430934730fd5c25693537cc2db09d8bd01f2e5
 
 
         </Route>
+        
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
-          <Route path="/passenger" element={<PassengerDashboard />} />
+          <Route path="/passenger" element={<PassengerHomepage />} />
+          <Route path="/bus-search-results" element={<BusSearchResults />} />
+          
         </Route>
+        <Route path="/settings" element={<UserSettings/>} />
        
         {/* ✅ Catch-all for unauthorized access */}
         <Route path="/unauthorized" element={<h1>Access Denied</h1>} />

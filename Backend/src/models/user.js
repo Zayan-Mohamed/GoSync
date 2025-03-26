@@ -12,7 +12,7 @@ const userSchema = mongoose.Schema(
       unique: true
     },
     phone: {
-      type: Number,
+      type: String,
       required: true, // ✅ Make phone number mandatory
       unique: true
     },

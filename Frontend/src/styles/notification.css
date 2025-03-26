@@ -1,62 +1,101 @@
 .notificationTable {
-    width: 80%;
-    margin: 150px auto; /* Centering */
-    background-color: #ffffff; /* White background */
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #F5F5F5; /* Light gray border */
+  width: 80%;
+  margin: auto; /* Centering */
+  background-color: #ffffff; /* White background */
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f5f5f5; /* Light gray border */
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 150px); /* Prevents overflow */
+  overflow: hidden; /* Hide excess content */
 }
 
+/* Make table wrapper scrollable instead of the whole page */
+.table-container {
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+/* Table Styles */
 .notificationTable table {
-    width: 100%;
-    margin-top: 20px;
-    border-collapse: collapse;
-    border: 2px solid black; /* Black table border */
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid black; /* Black table border */
 }
 
-.notificationTable table thead th {
-    background-color: #ef6b25; /* Deep Orange */
-    color: white;
-    padding: 12px;
-    text-align: center;
-    border: 1px solid black; /* Black border */
+.notificationTable thead th {
+  background-color: #ef6b25; /* Deep Orange */
+  color: white;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid black;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-.notificationTable table tbody td {
-    padding: 12px;
-    text-align: center;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    vertical-align: middle;
-    border: 2px solid black; /* Black border */
-    color: #212121; /* Dark text */
+/* Table Body */
+.notificationTable tbody td {
+  padding: 12px;
+  text-align: center;
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  vertical-align: middle;
+  border: 2px solid black;
+  color: #212121; /* Dark text */
 }
 
+/* Action Buttons */
 .actionButtons {
-    display: flex; /* Using Flexbox to align buttons side by side */
-    justify-content: space-evenly; /* Distributes buttons evenly with space in between */
-    gap: 10px; /* Adds some space between the buttons */
-    align-items: center; /* Ensures the buttons are vertically centered */
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  align-items: center;
 }
 
 .actionButtons button {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
+/* Approve & Reject Buttons */
 .actionButtons .approve {
-    background-color: #FF8F00; /* Sunset Orange */
-    color: white;
+  background-color: #ff8f00; /* Sunset Orange */
+  color: white;
 }
 
 .actionButtons .reject {
-    background-color: #FFC107; /* Golden Yellow */
-    color: #212121; /* Dark text for contrast */
+  background-color: #ffc107; /* Golden Yellow */
+  color: #212121; /* Dark text for contrast */
 }
 
+/* Hover Effect */
 .actionButtons button:hover {
-    opacity: 0.85;
+  opacity: 0.85;
+}
+
+/* Responsive Fixes */
+@media (max-width: 1024px) {
+  .notificationTable {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .notificationTable table {
+    font-size: 14px;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .actionButtons button {
+    width: 100%;
+    padding: 6px;
+  }
 }

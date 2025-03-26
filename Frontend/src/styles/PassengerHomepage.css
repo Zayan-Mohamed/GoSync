@@ -1,0 +1,482 @@
+/* General Styling */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5; /* Light Gray */
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.passenger-homepage {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+}
+
+/* Map Container */
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+}
+
+/* Main Content Section */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+  padding-bottom: 100px; /* Space for footer */
+}
+
+/* Enhanced Booking Form Container */
+.booking-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0px 0;
+  margin-top: 50px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Enhanced Booking Form Styling */
+.booking-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    rgba(254, 248, 228, 0.95),
+    rgba(255, 193, 7, 0.85)
+  ); /* Gradient background */
+  padding: 30px;
+  border-radius: 0px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: auto;
+  z-index: 10;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative elements for the booking form */
+.booking-form::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(
+    to right,
+    #e65100,
+    #ff8f00,
+    #ffd600
+  ); /* Tri-color top border */
+}
+
+/* Form elements styling */
+.booking-form select,
+.booking-form input,
+.booking-form button {
+  margin: 0 12px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-width: 180px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.booking-form select,
+.booking-form input {
+  background-color: white;
+  color: #212121;
+  font-weight: 500;
+  position: relative;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23E65100%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 12px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-right: 30px; /* Space for the custom arrow */
+}
+
+/* Remove default arrow from Firefox */
+.booking-form select::-ms-expand {
+  display: none;
+}
+
+.booking-form input[type="date"] {
+  background-image: none;
+  padding-right: 15px;
+}
+
+.booking-form input:focus,
+.booking-form select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #e65100;
+  transform: translateY(-2px);
+}
+
+/* Stylish placeholder text */
+.booking-form select option:first-child {
+  color: #757575;
+  font-style: italic;
+}
+
+.booking-form input::placeholder {
+  color: #757575;
+  font-style: italic;
+}
+
+/* Enhanced button styling */
+.booking-form button {
+  background: linear-gradient(to right, #e65100, #ff8f00); /* Gradient button */
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  min-width: 150px;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.4s ease;
+}
+
+.booking-form button:hover {
+  background: linear-gradient(
+    to right,
+    #ff8f00,
+    #e65100
+  ); /* Reverse gradient on hover */
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(230, 81, 0, 0.4);
+}
+
+.booking-form button:active {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(230, 81, 0, 0.4);
+}
+
+/* Ripple effect for the button */
+.booking-form button::after {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition:
+    transform 0.5s,
+    opacity 1s;
+}
+
+.booking-form button:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* Popular Routes Section */
+.popular-routes-section {
+  margin: 60px auto;
+  width: 85%;
+  max-width: 1200px;
+  text-align: center;
+}
+
+.popular-routes-section h2 {
+  color: #212121; /* Dark Charcoal */
+  font-size: 2rem;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.popular-routes-section h2:after {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 3px;
+  background-color: #e65100; /* Deep Orange */
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.routes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.route-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  border-top: 3px solid #ffd600; /* Bright Yellow */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.route-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.route-card h3 {
+  color: #e65100; /* Deep Orange */
+  margin-top: 0;
+}
+
+.route-card p {
+  color: #212121; /* Dark Charcoal */
+  margin-bottom: 15px;
+}
+
+.route-card button {
+  background-color: #f5f5f5; /* Light Gray */
+  color: #e65100; /* Deep Orange */
+  border: 1px solid #e65100; /* Deep Orange */
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: auto; /* Pushes the button to the bottom */
+  align-self: center; /* Centers the button horizontally */
+}
+
+.route-card button:hover {
+  background-color: #e65100; /* Deep Orange */
+  color: white;
+}
+
+/* Top Routes Section - Updated */
+.top-routes {
+  width: 100%;
+  background: linear-gradient(
+    to right,
+    #e65100,
+    #ff8f00
+  ); /* Deep Orange to Sunset Orange gradient */
+  padding: 30px 0;
+  text-align: center;
+  margin-top: 20px;
+  border-top: 3px solid #ffd600; /* Bright Yellow */
+}
+
+.top-routes h2 {
+  color: white;
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+.top-routes ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 25px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.top-routes li {
+  padding: 8px 16px;
+  font-weight: bold;
+  font-size: 1rem;
+  background: #ffd600; /* Bright Yellow */
+  color: #212121; /* Dark Charcoal */
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.top-routes li:hover {
+  background: white;
+  color: #e65100; /* Deep Orange */
+  transform: scale(1.05);
+}
+
+/* Styles for input fields with icons */
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  background-color: #f4f4f4;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  width: 100%;
+  
+}
+
+
+
+.input-with-icon .input-icon {
+  margin-right: 10px;
+  color: #666;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.input-with-icon input {
+  flex-grow: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  outline: none;
+  font-size: 16px;
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .input-with-icon {
+    padding: 8px;
+  }
+
+  .input-with-icon .input-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
+
+  .input-with-icon input {
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .input-with-icon {
+    padding: 6px;
+  }
+
+  .input-with-icon .input-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+  }
+
+  .input-with-icon input {
+    font-size: 12px;
+  }
+}
+
+/* Error Message Styling */
+.error-message {
+  background-color: #ffdddd;
+  color: #ff0000;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Disable State for Inputs */
+input:disabled,
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+  .booking-form {
+    flex-wrap: wrap;
+    width: 90%;
+    padding: 25px 20px;
+  }
+
+  .booking-form select,
+  .booking-form input,
+  .booking-form button {
+    margin: 8px;
+    min-width: 200px;
+    flex: 1 1 40%;
+  }
+
+  .booking-form button {
+    min-width: 200px;
+  }
+
+  .footer-section {
+    flex: 0 0 calc(50% - 30px);
+  }
+}
+
+@media (max-width: 768px) {
+  .booking-form {
+    flex-direction: column;
+    padding: 25px 20px;
+  }
+
+  .booking-form select,
+  .booking-form input,
+  .booking-form button {
+    width: 100%;
+    margin: 8px 0;
+    min-width: unset;
+  }
+
+  .routes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+
+  .footer-section {
+    flex: 0 0 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .top-routes ul {
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 20px;
+  }
+
+  .top-routes li {
+    width: 100%;
+  }
+}
+
+.route-dropdown {
+  width: 1000px;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+}
+
+.route-dropdown:focus {
+  border-color: #007bff;
+  outline: none;
+}

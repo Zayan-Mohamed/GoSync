@@ -5,24 +5,18 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const protect = async (req, res, next) => {
-  let token;
+  const token = req.cookies.jwt; // ✅ Get token from cookies
 
-  if (req.headers.authorization?.startsWith("Bearer")) {
-    token = req.headers.authorization.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized, no token" });
+  }
 
-    if (!token) {
-      return res.status(401).json({ message: "Not authorized, no token" });
-    }
-
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select("-password");
-      next();
-    } catch (error) {
-      return res.status(401).json({ message: "Not authorized, invalid token" });
-    }
-  } else {
-    return res.status(401).json({ message: "Not authorized, no token" });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id).select("-password"); 
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Unauthorized, invalid token" });
   }
 };
 

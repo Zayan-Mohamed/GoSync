@@ -2,8 +2,9 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
-import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 import http from "http";
+<<<<<<< HEAD
 import { Server } from "socket.io";
 import cron from 'node-cron';
 
@@ -19,35 +20,55 @@ import bookingRoutes from "./routes/bookingRoutes.js"; // ✅ Import booking rou
 import busRoutes from "./routes/busRoutes.js"; // ✅ Import bus routes
 import shedRoutes from "./routes/shedRoutes.js";
 
+=======
+import { setupWebSocket } from "./websocket.js"; // ✅ Move WebSocket logic to a separate file
+>>>>>>> 22430934730fd5c25693537cc2db09d8bd01f2e5
 
+import scheduleRoutes from "./routes/scheduleRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import seatRoutes from "./routes/seatRoutes.js";
+import stopRoutes from "./routes/stopRoutes.js";
+import routeRoutes from "./routes/routeRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
+import busRoutes from "./routes/busRoutes.js";
 
 dotenv.config();
 connectDB();
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
 
-
+// ✅ Setup WebSocket
+const io = setupWebSocket(server);
 
 // ✅ Middleware
+app.use(cookieParser());
 app.use(express.json());
-app.use(cors());
-app.use(bodyParser.json());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173", // ✅ Use environment variable
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
+// ✅ Attach io to app for WebSocket access in controllers
 app.set("io", io);
+
 // ✅ Test Route
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
 // ✅ Routes
-app.use("/api/users", userRoutes); // User-related routes
-app.use("/api/notifications", notificationRoutes); // Notification routes
-app.use("/api/seats", seatRoutes); // Seat routes
-app.use("/api/bookings", bookingRoutes);// Booking routes
-app.use("/api/routes" , routeRoutes ); // Route routes
-app.use("/api/stops" , stopRoutes ); // Stop routes/
+app.use("/api/users", userRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/seats", seatRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/routes", routeRoutes);
+app.use("/api/stops", stopRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/buses", busRoutes);
 app.use("/api/shed", shedRoutes);
@@ -56,7 +77,8 @@ app.use("/api/shed", shedRoutes);
 
 
 
+// ✅ Start Server
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
-export { io };
+export default io;
