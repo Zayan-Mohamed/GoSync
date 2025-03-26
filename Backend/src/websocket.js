@@ -1,3 +1,4 @@
+// src/websocket.js
 import { Server } from "socket.io";
 
 export const setupWebSocket = (server) => {
@@ -10,18 +11,8 @@ export const setupWebSocket = (server) => {
 
   io.on("connection", (socket) => {
     console.log(`🔗 User connected: ${socket.id}`);
-
     socket.emit("serverMessage", "Connected to WebSocket Server!");
-
-    socket.on("disconnect", () => {
-      console.log(`❌ User disconnected: ${socket.id}`);
-    });
-
-    // ✅ Handle real-time events (Example: seat booking update)
-    socket.on("seatBooked", (data) => {
-      io.emit("updateSeats", data); // Broadcast update to all clients
-    });
+    socket.on("disconnect", () => console.log(`❌ User disconnected: ${socket.id}`));
   });
-
   return io;
 };

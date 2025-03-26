@@ -4,6 +4,7 @@ import io from "socket.io-client"; // Import socket.io-client
 import useAuthStore from "../store/authStore";
 import { useNavigate } from "react-router-dom";
 import AdminModal from "./AdminModal";
+import axios from "axios";
 
 const socket = io("http://localhost:5000"); // Replace with your backend URL
 
