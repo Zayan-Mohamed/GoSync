@@ -13,12 +13,7 @@ import UserSettings from "../pages/UserSettings";
 import Notification from "../pages/Notification";
 import AddNotification from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
-<<<<<<< HEAD
-import ShedTable from "../pages/shedTable";
-import AddMessage from "../pages/AddMessage";
-=======
 import BusSearchResults from "../pages/BusSearchResults";
->>>>>>> 22430934730fd5c25693537cc2db09d8bd01f2e5
 
 const AppRoutes = () => {
 
@@ -50,16 +45,6 @@ const AppRoutes = () => {
           <Route path="/update-notification/:id" element={<UpdateNotification />} />
           <Route path="/current-routes" element={<CurrentRoutes />} />
           
-<<<<<<< HEAD
-            <Route path="/notification-management" element={<Notification />} />
-            
-            <Route path="/add-notification" element={<AddNotification/>} />
-            <Route path="/update-notification/:id" element={<UpdateNotification />} />
-            <Route path="/Schedule-notification" element={<ShedTable/>} />
-            <Route path="/add-message" element={<AddMessage/>} />
-
-=======
->>>>>>> 22430934730fd5c25693537cc2db09d8bd01f2e5
 
 
         </Route>
