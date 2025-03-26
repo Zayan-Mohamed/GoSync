@@ -3,7 +3,7 @@ import { Server } from "socket.io";
 export const setupWebSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:5173",
+      origin: import.meta.env.CLIENT_URL || "http://localhost:5173",
       credentials: true,
     },
   });
