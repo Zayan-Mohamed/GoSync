@@ -1,14 +1,10 @@
 import { useEffect, useState } from "react";
 import { FiBell, FiSearch, FiSettings, FiUser, FiLogOut } from "react-icons/fi";
-<<<<<<< HEAD
-import io from "socket.io-client";
-import axios from "axios";
-=======
 import io from "socket.io-client"; // Import socket.io-client
 import useAuthStore from "../store/authStore";
 import { useNavigate } from "react-router-dom";
 import AdminModal from "./AdminModal";
->>>>>>> 22430934730fd5c25693537cc2db09d8bd01f2e5
+import axios from "axios";
 
 const socket = io("http://localhost:5000"); // Replace with your backend URL
 
@@ -19,8 +15,6 @@ const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
 
-<<<<<<< HEAD
-=======
   const [isAdminModalOpen, setAdminModalOpen] = useState(false);
 
   const handleLogout = () => {
@@ -29,7 +23,6 @@ const Navbar = () => {
   };
 
   // Fetch initial notifications from the backend
->>>>>>> 22430934730fd5c25693537cc2db09d8bd01f2e5
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -95,10 +88,7 @@ const Navbar = () => {
           Add an Admin
         </button>
 
-<<<<<<< HEAD
-=======
         {/* Bell Icon - Notifications */}
->>>>>>> 22430934730fd5c25693537cc2db09d8bd01f2e5
         <div className="relative">
           <button onClick={toggleDropdown}>
             <FiBell size={24} />

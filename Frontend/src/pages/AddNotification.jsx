@@ -2,11 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import "../styles/AddNoti.css";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
-
-=======
 import AdminLayout from "../layouts/AdminLayout";
->>>>>>> 22430934730fd5c25693537cc2db09d8bd01f2e5
 const AddNotification = () => {
     const [type, setType] = useState("");
     const [message, setMessage] = useState("");
@@ -65,11 +61,7 @@ const AddNotification = () => {
                 </button>
             </form>
         </div>
-<<<<<<< HEAD
-        
-=======
         </AdminLayout>
->>>>>>> 22430934730fd5c25693537cc2db09d8bd01f2e5
     );
 };
 
