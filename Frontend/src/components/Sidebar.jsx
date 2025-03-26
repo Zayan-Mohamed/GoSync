@@ -69,6 +69,7 @@ const Sidebar = () => {
       title: "Notification Management",
       links: [
         { to: "/notification-management", label: "Current Notifications", icon: <FiBell /> },
+        { to: "/Schedule-notification", label: "Schedule Notifications", icon: <FiBell /> },
         { to: "/add-notification", label: "Add Notification", icon: <FiPlus /> },
         { to: "/notification-analytics", label: "Notification Analytics", icon: <GoGraph /> },
       ],

@@ -6,7 +6,7 @@ import AdminLayout from "../layouts/AdminLayout";
 const AddNotification = () => {
     const [type, setType] = useState("");
     const [message, setMessage] = useState("");
-    const [status, setStatus] = useState("sent"); // Default status is 'sent'
+    const [status] = useState("sent"); // Default to 'sent', no need for a state update
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -22,7 +22,6 @@ const AddNotification = () => {
             
             setType("");
             setMessage("");
-            setStatus("sent"); // Reset status to 'sent' after submission
             navigate('/notification-management');
         } catch (error) {
             console.error("Error sending notification:", error);
@@ -31,17 +30,7 @@ const AddNotification = () => {
             setLoading(false);
         }
     };
-      
-    const handleDelete = async (id) => {
-        try {
-            await axios.delete(`http://localhost:5000/api/notifications/${id}`);
-            setNotifications(notifications.filter(notification => notification._id !== id)); // Update state to remove deleted notification
-            alert("Notification deleted successfully!");
-        } catch (error) {
-            console.error("Error deleting notification", error);
-            alert("Failed to delete notification.");
-        }
-    };
+
     return (
         <AdminLayout>
         <div className="notification-form-container">
@@ -67,13 +56,6 @@ const AddNotification = () => {
                         required
                     />
                 </div>
-                <div className="form-group">
-                    <label>Status</label>
-                    <select value={status} onChange={(e) => setStatus(e.target.value)} required>
-                        <option value="sent">Sent</option>
-                        <option value="failed">Failed</option>
-                    </select>
-                </div>
                 <button type="submit" className="send-btn" disabled={loading}>
                     {loading ? "Sending..." : "Send Notification"}
                 </button>
@@ -84,4 +66,3 @@ const AddNotification = () => {
 };
 
 export default AddNotification;
-

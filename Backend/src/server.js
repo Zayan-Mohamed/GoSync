@@ -14,6 +14,7 @@ import stopRoutes from "./routes/stopRoutes.js";
 import routeRoutes from "./routes/routeRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import busRoutes from "./routes/busRoutes.js";
+import shedRoutes from "./routes/shedRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -23,6 +24,7 @@ const server = http.createServer(app);
 
 // ✅ Setup WebSocket
 const io = setupWebSocket(server);
+app.set("io", io);
 
 // ✅ Middleware
 app.use(cookieParser());
@@ -36,8 +38,6 @@ app.use(
   })
 );
 
-// ✅ Attach io to app for WebSocket access in controllers
-app.set("io", io);
 
 // ✅ Test Route
 app.get("/", (req, res) => {
@@ -53,6 +53,7 @@ app.use("/api/routes", routeRoutes);
 app.use("/api/stops", stopRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/buses", busRoutes);
+app.use("/api/shed", shedRoutes);
 
 // ✅ Start Server
 const PORT = process.env.PORT || 5001;
