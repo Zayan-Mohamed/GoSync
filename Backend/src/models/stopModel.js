@@ -10,10 +10,6 @@ const stopSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  stopOrder: {
-    type: Number,
-    required: true,
-  },
   status: {
     type: String,
     enum: ['active', 'inactive'],

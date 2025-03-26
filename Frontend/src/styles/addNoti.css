@@ -1,0 +1,65 @@
+.notification-form-container {
+    max-width:500px;
+    margin: 50px auto;
+    padding: 25px;
+    background: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    text-align: center;
+    
+    
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: xx-large;
+    
+}
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+textarea {
+    height: 100px;
+    resize: none;
+}
+
+.send-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    background: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.send-btn:hover {
+    background: #0056b3;
+}
+
+.send-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
