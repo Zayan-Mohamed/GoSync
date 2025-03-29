@@ -1,7 +1,7 @@
 .notification-form-container {
     max-width:500px;
     margin: 50px auto;
-    padding: 25px;
+    padding: 45px;
     background: #ffffff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     border-radius: 10px;
@@ -14,6 +14,7 @@ h2 {
     color: #333;
     margin-bottom: 20px;
     font-size: xx-large;
+    font-family:sans-serif;
     
 }
 
