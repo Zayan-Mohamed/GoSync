@@ -92,13 +92,7 @@ const Navbar = () => {
         <div className="relative">
           <button onClick={toggleDropdown}>
             <FiBell size={24} />
-<<<<<<< HEAD
-            
-            {/* Show the notification count if there are new notifications */}
-            {notifications.length > 0 && (
-=======
             {hasUnread && (
->>>>>>> f6bc17066e8a99bae9dc24f455b7339a9fc9e739
               <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                 {notifications.length}
               </span>

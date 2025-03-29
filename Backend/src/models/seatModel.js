@@ -21,7 +21,7 @@ const seatSchema = mongoose.Schema(
       default: null,
     },
     bookingId: {
-      type: String,
+      type: String, 
       unique: true,
       default: null,
     },
