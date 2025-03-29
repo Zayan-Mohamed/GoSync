@@ -13,6 +13,7 @@ import UserSettings from "../pages/UserSettings";
 import Notification from "../pages/Notification";
 import AddNotification from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
+import SeatSelection from "../pages/SeatSelection";
 import ShedTable from "../pages/shedTable";
 import AddMessage from "../pages/AddMessage";
 import BusSearchResults from "../pages/BusSearchResults";
@@ -45,6 +46,7 @@ const AppRoutes = () => {
           <Route path="/notification-management" element={<Notification />} />
           <Route path="/add-notification" element={<AddNotification />} />
           <Route path="/update-notification/:id" element={<UpdateNotification />} />
+          
           <Route path="/current-routes" element={<CurrentRoutes />} />
           
             <Route path="/notification-management" element={<Notification />} />
@@ -57,6 +59,8 @@ const AppRoutes = () => {
         
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
+          <Route path="/passenger" element={<PassengerHomepage />} />
+          <Route path="/seat-selection" element={<SeatSelection />} />
           <Route path="/passenger" element={<PassengerHomepage />} />
           <Route path="/bus-search-results" element={<BusSearchResults />} />
           
