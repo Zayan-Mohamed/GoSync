@@ -44,6 +44,16 @@ const PassengerHomepage = () => {
   return (
     <div className="passenger-homepage">
       <Navbar1 />
+<<<<<<< HEAD
+     {/* <div className="map-container"> 
+        <LoadScript googleMapsApiKey={import.meta.env.VITE_API_GOOGLE_MAPS_KEY}>
+          <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={7} />
+        </LoadScript>
+      </div> 
+      */}
+
+=======
+>>>>>>> f6bc17066e8a99bae9dc24f455b7339a9fc9e739
       <div className="main-content">
         <div className="booking-container">
           <div className="booking-form">

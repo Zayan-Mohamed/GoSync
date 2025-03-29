@@ -1,6 +1,12 @@
 import React from "react";
+<<<<<<< HEAD
+import { Link } from "react-router-dom";
+import gosyncLogo from "/assets/GoSync-Logo_Length2.png";
+import { FiBell} from "react-icons/fi";
+=======
 import { useNavigate } from "react-router-dom";
 import { FiXCircle, FiLogOut, FiBell, FiSettings, FiUser } from "react-icons/fi";
+>>>>>>> f6bc17066e8a99bae9dc24f455b7339a9fc9e739
 
 const Navbar1 = () => {
   const navigate = useNavigate();
@@ -15,6 +21,19 @@ const Navbar1 = () => {
   };
 
   return (
+<<<<<<< HEAD
+    <nav className="navbar">
+
+      <img src={gosyncLogo} alt="GoSync Logo" className="w-28 mb-2 ml-2 mt-3" />
+      <span className="text-3xl text-start">An Online Bus Ticket Booking System</span>
+      <div className="nav-links">
+
+      
+        
+        <Link to="/send-ticket">Send Ticket</Link>
+        <Link to="/transfer-ticket">Transfer Ticket</Link>
+        <Link to="/cancel-ticket">Cancel Ticket</Link>
+=======
     <nav className="flex justify-between items-center p-4 bg-white shadow-md">
       {/* Left: Logo */}
       <div className="flex items-center space-x-3">
@@ -56,6 +75,7 @@ const Navbar1 = () => {
           <FiLogOut size={20} />
           <span>Logout</span>
         </button>
+>>>>>>> f6bc17066e8a99bae9dc24f455b7339a9fc9e739
       </div>
     </nav>
   );
