@@ -37,11 +37,12 @@ const busRoutes = [
   return (
     <div className="passenger-homepage">
       <Navbar1 />
-      <div className="map-container"> 
+     {/* <div className="map-container"> 
         <LoadScript googleMapsApiKey={import.meta.env.VITE_API_GOOGLE_MAPS_KEY}>
           <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={7} />
         </LoadScript>
-      </div>
+      </div> 
+      */}
 
       <div className="main-content">
         <div className="booking-container">
