@@ -44,7 +44,7 @@ const PassengerHomepage = () => {
   return (
     <div className="passenger-homepage">
       <Navbar1 />
-     {/* <div className="map-container"> 
+      {/* <div className="map-container"> 
         <LoadScript googleMapsApiKey={import.meta.env.VITE_API_GOOGLE_MAPS_KEY}>
           <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={7} />
         </LoadScript>
@@ -92,7 +92,11 @@ const PassengerHomepage = () => {
 
             <input
               type="date"
-              value={journeyDate}
+              value={
+                journeyDate
+                  ? new Date(journeyDate).toISOString().split("T")[0]
+                  : ""
+              }
               onChange={(e) => setJourneyDate(e.target.value)}
               min={new Date().toISOString().split("T")[0]}
               required
@@ -157,4 +161,4 @@ const PassengerHomepage = () => {
   );
 };
 
-export default PassengerHomepage ;
+export default PassengerHomepage;
