@@ -48,16 +48,7 @@ const busSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    operatorName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    operatorPhone: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+  
   },
   {
     timestamps: true,

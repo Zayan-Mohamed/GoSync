@@ -12,9 +12,7 @@ const InsertBus = () => {
     status: "Active",
     routeId: "",
     fareAmount: "",
-    operatorName: "",
-    operatorPhone: "",
-    travelName: "", // ✅ Ensure Travel Name is included
+    travelName: "",// ✅ Ensure Travel Name is included
   });
 
   const [routes, setRoutes] = useState([]); // ✅ Store fetched routes
@@ -192,34 +190,6 @@ const InsertBus = () => {
                 type="number"
                 name="fareAmount"
                 value={formData.fareAmount}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-              />
-            </div>
-
-            {/* Operator Name */}
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">
-                Operator Name
-              </label>
-              <input
-                type="text"
-                name="operatorName"
-                value={formData.operatorName}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-              />
-            </div>
-
-            {/* Operator Phone */}
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">
-                Operator Phone
-              </label>
-              <input
-                type="text"
-                name="operatorPhone"
-                value={formData.operatorPhone}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md"
               />
