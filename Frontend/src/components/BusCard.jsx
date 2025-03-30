@@ -7,7 +7,7 @@ const BusCard = ({ bus, onViewSeat }) => {
       {/* Bus route header */}
       <div className="bg-brightYellow text-darkCharcoal p-3">
         <h2 className="text-xl font-semibold">
-          {bus.route} | Route No {bus.routeNumber} via Airport
+          {bus.route} | Route No {bus.routeNumber} 
         </h2>
       </div>
       {/* Bus details */}
@@ -52,7 +52,7 @@ const BusCard = ({ bus, onViewSeat }) => {
         </div>
         
         {/* Travel information */}
-        <div>
+        <div  className="ml-10 flex flex-col items-start">
           <p className="text-sm text-gray-600">Travel Name</p>
           <p className="text-xl font-bold text-deepOrange">{bus.travel.name}</p>
           <p className="text-sm text-gray-600">Bus Number</p>
