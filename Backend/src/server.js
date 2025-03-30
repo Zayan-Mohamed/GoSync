@@ -15,6 +15,7 @@ import routeRoutes from "./routes/routeRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import busRoutes from "./routes/busRoutes.js";
 import shedRoutes from "./routes/shedRoutes.js";
+import busOperatorRoutes from "./routes/busOperatorRoutes.js"; // Import bus operator routes
 
 dotenv.config();
 connectDB();
@@ -54,6 +55,7 @@ app.use("/api/stops", stopRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/buses", busRoutes);
 app.use("/api/shed", shedRoutes);
+app.use("/api/operator", busOperatorRoutes); // Use bus operator routes
 
 // ✅ Start Server
 const PORT = process.env.PORT || 5001;

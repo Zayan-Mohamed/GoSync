@@ -30,9 +30,7 @@ export const createBus = async (req, res) => {
       routeId,
       busRouteNumber,
       fareAmount,
-      travelName,
-      operatorName,
-      operatorPhone,
+      travelName
     });
 
     // Save to database
