@@ -121,6 +121,54 @@ export const addStopToRoute = async (req, res) => {
   }
 };
 
+export const addMultipleStopsToRoute = async (req, res) => {
+  try {
+    const { routeId, stops } = req.body; // stops is an array of { stopId, order }
+
+    // Find the route
+    const route = await Route.findOne({ routeId });
+    if (!route) return res.status(404).json({ error: 'Route not found' });
+
+    // Fetch all stops from the database
+    const stopIds = stops.map(s => s.stopId);
+    const foundStops = await Stop.find({ stopId: { $in: stopIds } });
+
+    if (foundStops.length !== stopIds.length) {
+      return res.status(400).json({ error: 'Some stops do not exist in the database' });
+    }
+
+    // Convert stopId to ObjectId for comparison
+    const existingStopIds = route.stops.map(s => s.stop.toString());
+
+    const newStops = [];
+    stops.forEach((stop, index) => {
+      const stopDoc = foundStops.find(s => s.stopId === stop.stopId);
+      if (!stopDoc) return;
+
+      if (!existingStopIds.includes(stopDoc._id.toString())) {
+        newStops.push({
+          stop: stopDoc._id,
+          order: stop.order || route.stops.length + newStops.length + 1
+        });
+      }
+    });
+
+    if (newStops.length === 0) {
+      return res.status(400).json({ error: 'No new stops were added (either already exist or invalid data)' });
+    }
+
+    // Add new stops and sort by order
+    route.stops = [...route.stops, ...newStops].sort((a, b) => a.order - b.order);
+
+    await route.save();
+
+    res.status(200).json({ message: 'Stops added successfully', route });
+  } catch (error) {
+    res.status(500).json({ error: 'Error adding stops to route', details: error.message });
+  }
+};
+
+
 // Update getAllRoutes function
 export const getAllRoutes = async (req, res) => {
   try {
@@ -445,5 +493,68 @@ export const toggleStopStatus = async (req, res) => {
       error: 'Error toggling stop status', 
       details: err.message 
     });
+  }
+};
+
+export const updateStopType = async (req, res) => {
+  try {
+    const { routeId, stopId, stopType } = req.body; // stopType can be 'Boarding' or 'Dropping'
+
+    // Validate stopType
+    if (!['boarding', 'dropping'].includes(stopType)) {
+      return res.status(400).json({ error: 'Invalid stop type. It must be either "Boarding" or "Dropping".' });
+    }
+
+    // Find the route
+    const route = await Route.findOne({ routeId });
+    if (!route) return res.status(404).json({ error: 'Route not found' });
+
+    // Find the stop index in the stops array
+    const stopIndex = route.stops.findIndex(stop => stop.stop.toString() === stopId);
+    if (stopIndex === -1) {
+      return res.status(404).json({ error: 'Stop not found in the specified route' });
+    }
+
+    // Update only the stopType for the specific stop
+    route.stops[stopIndex].stopType = stopType;
+
+    // Save the updated route
+    await route.save();
+
+    res.status(200).json({ message: 'Stop type updated successfully', route });
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating stop type', details: error.message });
+  }
+};
+
+export const updateMultipleStopTypes = async (req, res) => {
+  try {
+    const { routeId, stops } = req.body; // stops should be an array of { stopId, stopType }
+
+    // Validate stop types
+    const validStopTypes = ['boarding', 'dropping'];
+    const invalidStopType = stops.find(stop => !validStopTypes.includes(stop.stopType));
+    if (invalidStopType) {
+      return res.status(400).json({ error: 'Invalid stop type. It must be either "boarding" or "dropping".' });
+    }
+
+    // Find the route
+    const route = await Route.findOne({ routeId });
+    if (!route) return res.status(404).json({ error: 'Route not found' });
+
+    // Loop through each stop and update the stopType
+    for (const stopData of stops) {
+      const stopIndex = route.stops.findIndex(stop => stop.stopId === stopData.stopId);
+      if (stopIndex !== -1) {
+        route.stops[stopIndex].stopType = stopData.stopType;
+      }
+    }
+
+    // Save the updated route
+    await route.save();
+
+    res.status(200).json({ message: 'Stop types updated successfully', route });
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating multiple stop types', details: error.message });
   }
 };

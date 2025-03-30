@@ -41,22 +41,28 @@ export const searchBuses = async (req, res) => {
         const searchResults = buses.map(bus => {
             const route = validRoutes.find(r => r.routeId === bus.routeId); // Match custom routeId
             const schedule = schedules.find(s => s.busId.equals(bus._id));
-
+        
             return {
-                routeName: route?.routeName,
                 busRouteNumber: bus.busRouteNumber,
                 travelName: bus.travelName,
                 busNumber: bus.busNumber,
                 busType: bus.busType,
-                startLocation: route?.startLocation,
-                endLocation: route?.endLocation,
-                departureDate: schedule?.departureDate,
-                arrivalDate: schedule?.arrivalDate,
-                departureTime: schedule?.departureTime,
-                arrivalTime: schedule?.arrivalTime,
-                duration: schedule?.duration
+                fareAmount : bus.fareAmount,
+                route: {
+                    routeName: route?.routeName,
+                    startLocation: route?.startLocation,
+                    endLocation: route?.endLocation
+                },
+                schedule: {
+                    departureDate: schedule?.departureDate,
+                    arrivalDate: schedule?.arrivalDate,
+                    departureTime: schedule?.departureTime,
+                    arrivalTime: schedule?.arrivalTime,
+                    duration: schedule?.duration
+                }
             };
         });
+        
 
         res.status(200).json(searchResults);
 

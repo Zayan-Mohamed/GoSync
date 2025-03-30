@@ -58,6 +58,11 @@ stops: [{
     type: Number,
     required: true
   },
+  stopType: {
+    type: String,
+    enum: ['boarding', 'dropping'],  // Type can be Boarding or Dropping for this route
+    required: false
+  },
   _id: false // This prevents MongoDB from creating an _id for each subdocument
 }],
 });

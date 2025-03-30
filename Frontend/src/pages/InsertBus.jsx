@@ -69,7 +69,7 @@ const InsertBus = () => {
       setFormData({
         busNumber: "",
         busRouteNumber: "", // ✅ Reset field after submit
-        busType: "AC",
+        busType: "",
         capacity: "",
         status: "Active",
         routeId: "",
@@ -140,11 +140,12 @@ const InsertBus = () => {
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md"
               >
+                <option value="">Select Bus Type</option>
                 <option value="AC">Luxury (AC)</option>
-                <option value="Non-AC">Non-AC</option>{" "}
-                {/* ["AC", "Non-AC", "Semi-Luxury"] */}
+                <option value="Non-AC">Non-AC</option>
                 <option value="Semi-Luxury">Semi-Luxury (Non-AC)</option>
               </select>
+
             </div>
 
             {/* Capacity */}
