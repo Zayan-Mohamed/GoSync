@@ -54,7 +54,7 @@ const BusCard = ({ bus, onViewSeat }) => {
 
 
       {/* Arrival */}
-      <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4">
             <img src="/assets/get-off-bus.png" alt="busout" className="h-12" />
             <div>
               <p className="text-sm text-gray-600">Arrival</p>
@@ -109,7 +109,7 @@ const BusCard = ({ bus, onViewSeat }) => {
   );
 };
 
-
+export default BusCard;
 
 
       {/* Bus details */}
@@ -173,4 +173,3 @@ const BusCard = ({ bus, onViewSeat }) => {
           // </div>
 
 
-export default BusCard;

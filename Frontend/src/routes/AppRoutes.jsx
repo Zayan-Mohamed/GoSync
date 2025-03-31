@@ -17,6 +17,8 @@ import SeatSelection from "../pages/SeatSelection";
 import ShedTable from "../pages/shedTable";
 import AddMessage from "../pages/AddMessage";
 import BusSearchResults from "../pages/BusSearchResults";
+import AddStop from "../pages/AddStop.jsx";
+import StopList from "../pages/StopList.jsx";
 
 const AppRoutes = () => {
 
@@ -55,6 +57,8 @@ const AppRoutes = () => {
             <Route path="/update-notification/:id" element={<UpdateNotification />} />
             <Route path="/Schedule-notification" element={<ShedTable/>} />
             <Route path="/add-message" element={<AddMessage/>} />
+            <Route path="/add-stop" element={<AddStop/>} />
+            <Route path="/stop-management" element={<StopList/>} />
         </Route>
         
 

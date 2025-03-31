@@ -55,51 +55,68 @@ export const createStop = async (req, res) => {
 
 export const createMultipleStops = async (req, res) => {
   try {
-    // Normalize and validate incoming stops
+    // Validate input is an array
+    if (!Array.isArray(req.body)) {
+      return res.status(400).json({ 
+        error: "Invalid data format. Expected an array of stops" 
+      });
+    }
+
+    // Process stops
     const stopsToInsert = [];
     const duplicateStops = [];
 
-    for (const stop of req.body) {
-      const normalizedStopName = stop.stopName.trim().toLowerCase();
+    for (const stopData of req.body) {
+      // Validate each stop
+      if (!stopData.stopName || typeof stopData.stopName !== 'string') {
+        return res.status(400).json({
+          error: "Each stop must have a valid stopName"
+        });
+      }
+
+      const normalizedStopName = stopData.stopName.trim().toLowerCase();
       
-      // Check if stop already exists
+      // Check for existing stop (case-insensitive)
       const existingStop = await Stop.findOne({ 
-        stopName: { 
-          $regex: new RegExp(`^${normalizedStopName}$`, 'i') 
-        } 
+        stopName: { $regex: new RegExp(`^${normalizedStopName}$`, 'i') }
       });
 
       if (existingStop) {
-        duplicateStops.push({
-          originalName: stop.stopName,
-          existingName: existingStop.stopName
-        });
+        duplicateStops.push(existingStop.stopName);
       } else {
         stopsToInsert.push({
           stopId: generateStopId(),
-          stopName: stop.stopName.trim(),
-          status: stop.status || 'active'
+          stopName: stopData.stopName.trim(),
+          status: stopData.status || 'active'
         });
       }
     }
 
-    // Insert non-duplicate stops
-    const insertedStops = await Stop.insertMany(stopsToInsert);
+    // If duplicates found, return them
+    if (duplicateStops.length > 0) {
+      return res.status(409).json({
+        error: "Some stops already exist",
+        duplicates: duplicateStops
+      });
+    }
 
-    return res.status(201).json({
-      message: `Successfully inserted ${insertedStops.length} stops`,
-      insertedStops,
-      duplicates: duplicateStops.length > 0 ? duplicateStops : undefined
-    });
-  } catch (error) {
-    console.error('Error in createMultipleStops:', error);
+    // Insert all non-duplicate stops
+    const insertedStops = await Stop.insertMany(stopsToInsert);
     
-    return res.status(500).json({
+    res.status(201).json({
+      message: `Successfully created ${insertedStops.length} stops`,
+      createdCount: insertedStops.length
+    });
+
+  } catch (error) {
+    console.error("Bulk create error:", error);
+    res.status(500).json({
       error: "Error inserting stops",
-      details: error.message
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
+
 // Edit an existing stop
 export const editStop = async (req, res) => {
   const { stopId, stopName, status } = req.body;
