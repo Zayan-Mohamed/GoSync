@@ -311,7 +311,8 @@ export const getStopsForRoute = async (req, res) => {
       .sort((a, b) => a.order - b.order)
       .map(item => ({
         stop: item.stop,
-        order: item.order
+        order: item.order,
+        stopType: item.stopType // Add this line to include stopType in response
       }));
     
     // Return the stops for the route
@@ -324,7 +325,6 @@ export const getStopsForRoute = async (req, res) => {
     res.status(500).json({ error: "Error fetching stops", details: error.message });
   }
 };
-
 // Toggle the status of the route (active/inactive)
 export const toggleRouteStatus = async (req, res) => {
   try {
@@ -529,32 +529,50 @@ export const updateStopType = async (req, res) => {
 
 export const updateMultipleStopTypes = async (req, res) => {
   try {
-    const { routeId, stops } = req.body; // stops should be an array of { stopId, stopType }
-
-    // Validate stop types
+    const { routeId, stops } = req.body;
     const validStopTypes = ['boarding', 'dropping'];
-    const invalidStopType = stops.find(stop => !validStopTypes.includes(stop.stopType));
-    if (invalidStopType) {
-      return res.status(400).json({ error: 'Invalid stop type. It must be either "boarding" or "dropping".' });
-    }
-
-    // Find the route
     const route = await Route.findOne({ routeId });
+
     if (!route) return res.status(404).json({ error: 'Route not found' });
 
-    // Loop through each stop and update the stopType
+    // Debug: Log the stop IDs from the database
+    console.log("Database Stop IDs:", route.stops.map(s => s.stopId || s._id || s.stop));
+
+    const updatedStops = [];
+
     for (const stopData of stops) {
-      const stopIndex = route.stops.findIndex(stop => stop.stopId === stopData.stopId);
+      // Normalize stopType to lowercase
+      const stopType = stopData.stopType?.toLowerCase();
+      if (!validStopTypes.includes(stopType)) {
+        return res.status(400).json({ error: `Invalid stop type for stop ${stopData.stopId}` });
+      }
+
+      // Try multiple ID fields if needed
+      const stopIndex = route.stops.findIndex(s => 
+        String(s.stopId) === String(stopData.stopId) || 
+        String(s._id) === String(stopData.stopId) ||
+        String(s.stop) === String(stopData.stopId)
+      );
+
       if (stopIndex !== -1) {
-        route.stops[stopIndex].stopType = stopData.stopType;
+        route.stops[stopIndex].stopType = stopType;
+        updatedStops.push(route.stops[stopIndex]);
+      } else {
+        console.log("No match for stopId:", stopData.stopId);
       }
     }
 
-    // Save the updated route
-    await route.save();
+    if (updatedStops.length === 0) {
+      return res.status(404).json({ 
+        error: "No matching stops found", 
+        databaseStopIds: route.stops.map(s => s.stopId || s._id || s.stop),
+        requestedStopIds: stops.map(s => s.stopId)
+      });
+    }
 
-    res.status(200).json({ message: 'Stop types updated successfully', route });
+    await route.save();
+    res.status(200).json({ message: `${updatedStops.length} stops updated`, updatedStops });
   } catch (error) {
-    res.status(500).json({ error: 'Error updating multiple stop types', details: error.message });
+    res.status(500).json({ error: 'Update failed', details: error.message });
   }
 };
