@@ -2,16 +2,18 @@ import React from "react";
 import gosyncLogo from "/assets/GoSync-Logo_Length2.png";
 import { useNavigate } from "react-router-dom";
 import { FiXCircle, FiLogOut, FiBell, FiSettings, FiUser } from "react-icons/fi";
+import useAuthStore from "../store/authStore";
 
 const Navbar1 = () => {
   const navigate = useNavigate();
+  const { logout } = useAuthStore()
 
   const handleCancelTicket = () => {
     navigate("/cancel-ticket");
   };
 
   const handleLogout = () => {
-    console.log("Logging out...");
+    logout();
     navigate("/login");
   };
 

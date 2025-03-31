@@ -1,27 +1,47 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import API from "../services/authService";
+import axios from "axios";
 
 const useAuthStore = create(
   persist(
     (set) => ({
-      user: null,
+      user: null, // Will hold { _id, name, email, role }
       isAuthenticated: false,
 
-      // ✅ Login function (cookies will be handled automatically)
       login: async (email, password) => {
         try {
-          const { data } = await API.post("/api/users/login", { email, password });
-          set({ user: data, isAuthenticated: true }); // ✅ No need to store token
+          const { data } = await axios.post(
+            "http://localhost:5000/api/auth/login",
+            { email, password },
+            { withCredentials: true } // Ensures cookie is sent/stored
+          );
+          console.log("Login API response:", data); // Debug response
+          set({
+            user: {
+              _id: data._id,
+              name: data.name,
+              email: data.email,
+              role: data.role,
+            },
+            isAuthenticated: true,
+          });
           return { success: true };
         } catch (error) {
-          return { success: false, message: error.response?.data?.message || "Login failed" };
+          console.error("Login error:", error.response?.data);
+          return {
+            success: false,
+            message: error.response?.data?.message || "Login failed",
+          };
         }
       },
 
       logout: async () => {
         try {
-          await API.post("/api/users/logout"); // ✅ Send request to clear the cookie
+          await axios.post(
+            "http://localhost:5000/api/auth/logout",
+            {},
+            { withCredentials: true }
+          );
         } catch (error) {
           console.error("Logout failed:", error);
         } finally {
@@ -29,11 +49,10 @@ const useAuthStore = create(
         }
       },
 
-      updateUserState: (updatedUser) => {
+      updateUserState: (updatedUser) =>
         set((state) => ({
-          user: { ...state.user, ...updatedUser, phone: updatedUser.phone  }, 
-        }));
-      },
+          user: { ...state.user, ...updatedUser },
+        })),
     }),
     { name: "auth-storage" }
   )

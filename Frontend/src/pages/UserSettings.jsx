@@ -31,7 +31,7 @@ const UserSettings = () => {
 const handleSubmit = async (e) => {
   e.preventDefault();
   try {
-    const { data } = await API.put("/api/users/update", formData);
+    const { data } = await API.put("/api/auth/update", formData);
 
     updateUserState(data.user); // ✅ Update Zustand state with new user data
 

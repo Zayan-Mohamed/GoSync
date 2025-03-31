@@ -17,6 +17,8 @@ import SeatSelection from "../pages/SeatSelection";
 import ShedTable from "../pages/shedTable";
 import AddMessage from "../pages/AddMessage";
 import BusSearchResults from "../pages/BusSearchResults";
+import Payment from "../components/Payment";
+import BookingSummary from "../components/BookingSummary";
 
 const AppRoutes = () => {
 
@@ -63,7 +65,9 @@ const AppRoutes = () => {
           <Route path="/seat-selection" element={<SeatSelection />} />
           <Route path="/passenger" element={<PassengerHomepage />} />
           <Route path="/bus-search-results" element={<BusSearchResults />} />
-          
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/booking-summary" element={<BookingSummary />} />
+          <Route path="/booking-confirmation" element={<div>Booking Confirmed</div>} />
         </Route>
         <Route path="/settings" element={<UserSettings/>} />
        
