@@ -1,36 +1,26 @@
-import mongoose from 'mongoose';
+// src/models/Seat.js
+import mongoose from "mongoose";
 
-const seatSchema = mongoose.Schema(
-  {
-    busId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Bus', // Assuming you have a Bus model to associate with the bus
-      required: true,
-    },
-    seatNumber: {
-      type: String,
-      required: true,
-    },
-    isBooked: {
-      type: Boolean,
-      default: false,
-    },
-    bookedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Reference to the user who booked the seat
-      default: null,
-    },
-    bookingId: {
-      type: String,
-      unique: true,
-      default: null,
-    },
+const seatSchema = new mongoose.Schema({
+  seatNumber: { type: String, required: true },
+  busId: { type: mongoose.Schema.Types.ObjectId, ref: "Bus", required: true },
+  scheduleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Schedule",
+    required: true,
   },
-  {
-    timestamps: true, // Automatically adds createdAt and updatedAt fields
-  }
-);
+  isBooked: { type: Boolean, default: false },
+  reservedUntil: { type: Date, default: null },
+  bookingId: {
+    type: String, // Changed to String to match generateBookingId output
+    default: null,
+  },
+  bookedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+});
 
-const Seat = mongoose.model('Seat', seatSchema);
-
+const Seat = mongoose.model("Seat", seatSchema);
 export default Seat;

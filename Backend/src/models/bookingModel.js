@@ -1,29 +1,31 @@
+// src/models/Booking.js
 import mongoose from "mongoose";
 
-const bookingSchema = mongoose.Schema(
-  {
-    bookingId: { type: String, unique: true, required: true },
-    passenger: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    bus: { type: mongoose.Schema.Types.ObjectId, ref: "Bus", required: true },
-    route: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Route",
-      required: true,
-    },
-    scheduleId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Schedule",
-      required: true,
-    },
-    seatNumbers: [{ type: Number, required: true }],
-    status: { type: String, enum: ["booked", "cancelled"], default: "booked" },
+const bookingSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  busId: { type: mongoose.Schema.Types.ObjectId, ref: "Bus", required: true },
+  scheduleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Schedule",
+    required: true,
   },
-  { timestamps: true }
-);
+  seats: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Seat", required: true },
+  ],
+  fareTotal: { type: Number, required: true },
+  bookingId: { type: String, required: true, unique: true }, // Custom bookingId
+  status: {
+    type: String,
+    enum: ["pending", "confirmed", "cancelled"],
+    default: "pending",
+  },
+  paymentStatus: {
+    type: String,
+    enum: ["pending", "paid", "failed"],
+    default: "pending",
+  },
+  createdAt: { type: Date, default: Date.now },
+});
 
 const Booking = mongoose.model("Booking", bookingSchema);
 export default Booking;

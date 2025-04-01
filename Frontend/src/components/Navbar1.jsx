@@ -1,16 +1,19 @@
 import React from "react";
+import gosyncLogo from "/assets/GoSync-Logo_Length2.png";
 import { useNavigate } from "react-router-dom";
 import { FiXCircle, FiLogOut, FiBell, FiSettings, FiUser } from "react-icons/fi";
+import useAuthStore from "../store/authStore";
 
 const Navbar1 = () => {
   const navigate = useNavigate();
+  const { logout } = useAuthStore()
 
   const handleCancelTicket = () => {
     navigate("/cancel-ticket");
   };
 
   const handleLogout = () => {
-    console.log("Logging out...");
+    logout();
     navigate("/login");
   };
 
@@ -18,7 +21,7 @@ const Navbar1 = () => {
     <nav className="flex justify-between items-center p-4 bg-white shadow-md">
       {/* Left: Logo */}
       <div className="flex items-center space-x-3">
-        <img src="/assets/GoSync-Logo_Length2.png" alt="GoSync Logo" className="h-12" />
+        <img src={gosyncLogo} alt="GoSync Logo" className="h-12" />
         <h1 className="text-lg font-semibold text-gray-700">An Online Bus Ticket Booking System</h1>
       </div>
 

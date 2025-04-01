@@ -1,18 +1,20 @@
-// filepath: /c:/Users/Zayan Mohamed/Documents/ProjectReact/GoSync/Backend/src/routes/seatRoutes.js
+// src/routes/seatRoutes.js
 import express from "express";
 import {
+  getSeatLayout,
+  reserveSeats,
   checkSeatAvailability,
-  bookSeats,
   cancelSeatBooking,
   monitorSeatOccupancy,
 } from "../controllers/seatController.js";
+import { protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/availability/:busId", checkSeatAvailability);
-router.post("/book", bookSeats);
-router.delete("/cancel/:bookingId", cancelSeatBooking);
-router.get("/occupancy/:busId", monitorSeatOccupancy); // Add this line
+router.get("/:busId/schedule/:scheduleId/seats", protect, getSeatLayout);
+router.post("/:busId/schedule/:scheduleId/reserve", protect, reserveSeats);
+router.get("/:busId/schedule/:scheduleId/availability", protect, checkSeatAvailability);
+router.delete("/cancel/:bookingId", protect, cancelSeatBooking);
+router.get("/:busId/schedule/:scheduleId/occupancy", protect, monitorSeatOccupancy);
 
 export default router;
-

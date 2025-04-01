@@ -6,18 +6,16 @@ import Navbar from "../components/Navbar";
 const InsertBus = () => {
   const [formData, setFormData] = useState({
     busNumber: "",
-    busRouteNumber: "",  // ✅ Added busRouteNumber as third field
+    busRouteNumber: "", // ✅ Added busRouteNumber as third field
     busType: "",
     capacity: "",
     status: "Active",
     routeId: "",
     fareAmount: "",
-    operatorName: "",
-    operatorPhone: "",
-    travelName: "", // ✅ Ensure Travel Name is included
+    travelName: "",// ✅ Ensure Travel Name is included
   });
 
-  const [routes, setRoutes] = useState([]);  // ✅ Store fetched routes
+  const [routes, setRoutes] = useState([]); // ✅ Store fetched routes
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -25,12 +23,15 @@ const InsertBus = () => {
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/routes/routes", {
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/routes/routes",
+          {
+            withCredentials: true,
+          }
+        );
 
         if (response.data && Array.isArray(response.data.routes)) {
-          setRoutes(response.data.routes);  // ✅ Extracting routeName from API
+          setRoutes(response.data.routes); // ✅ Extracting routeName from API
         } else {
           console.error("Unexpected API response:", response.data);
           setRoutes([]); // Prevent errors
@@ -67,7 +68,7 @@ const InsertBus = () => {
       setSuccess("Bus added successfully!");
       setFormData({
         busNumber: "",
-        busRouteNumber: "",  // ✅ Reset field after submit
+        busRouteNumber: "", // ✅ Reset field after submit
         busType: "",
         capacity: "",
         status: "Active",
@@ -91,7 +92,9 @@ const InsertBus = () => {
       <div className="flex-1 bg-[#F5F5F5] min-h-screen">
         <Navbar />
         <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-4 text-center">Bus Registration</h2>
+          <h2 className="text-2xl font-bold mb-4 text-center">
+            Bus Registration
+          </h2>
 
           {/* Success and Error Messages */}
           {success && <div className="text-green-500 mb-4">{success}</div>}
@@ -100,7 +103,9 @@ const InsertBus = () => {
           <form onSubmit={handleSubmit}>
             {/* Bus Number */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">Bus Number</label>
+              <label className="block text-sm font-semibold text-gray-700">
+                Bus Number
+              </label>
               <input
                 type="text"
                 name="busNumber"
@@ -112,7 +117,9 @@ const InsertBus = () => {
 
             {/* Bus Route Number (New Field - 3rd Field) */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">Bus Route Number</label>
+              <label className="block text-sm font-semibold text-gray-700">
+                Bus Route Number
+              </label>
               <input
                 type="text"
                 name="busRouteNumber"
@@ -124,22 +131,28 @@ const InsertBus = () => {
 
             {/* Bus Type */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">Bus Type</label>
+              <label className="block text-sm font-semibold text-gray-700">
+                Bus Type
+              </label>
               <select
                 name="busType"
                 value={formData.busType}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md"
               >
+                <option value="">Select Bus Type</option>
                 <option value="AC">Luxury (AC)</option>
+                <option value="Non-AC">Non-AC</option>
                 <option value="Semi-Luxury">Semi-Luxury (Non-AC)</option>
-                <option value="Non-AC">Non-AC</option> {/* ["AC", "Non-AC", "Semi-Luxury"] */}
               </select>
+
             </div>
 
             {/* Capacity */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">Capacity</label>
+              <label className="block text-sm font-semibold text-gray-700">
+                Capacity
+              </label>
               <input
                 type="number"
                 name="capacity"
@@ -151,7 +164,9 @@ const InsertBus = () => {
 
             {/* Route ID (Dropdown) */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">Route</label>
+              <label className="block text-sm font-semibold text-gray-700">
+                Route
+              </label>
               <select
                 name="routeId"
                 value={formData.routeId}
@@ -169,7 +184,9 @@ const InsertBus = () => {
 
             {/* Fare Amount */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">Fare Amount</label>
+              <label className="block text-sm font-semibold text-gray-700">
+                Fare Amount
+              </label>
               <input
                 type="number"
                 name="fareAmount"
@@ -179,33 +196,11 @@ const InsertBus = () => {
               />
             </div>
 
-            {/* Operator Name */}
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">Operator Name</label>
-              <input
-                type="text"
-                name="operatorName"
-                value={formData.operatorName}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-              />
-            </div>
-
-            {/* Operator Phone */}
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">Operator Phone</label>
-              <input
-                type="text"
-                name="operatorPhone"
-                value={formData.operatorPhone}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-              />
-            </div>
-
             {/* Travel Name */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700">Travel Name</label>
+              <label className="block text-sm font-semibold text-gray-700">
+                Travel Name
+              </label>
               <input
                 type="text"
                 name="travelName"

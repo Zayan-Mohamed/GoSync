@@ -19,7 +19,7 @@ const AdminModal = ({ isOpen, onClose }) => {
     setError("");
   
     try {
-      await API.post("/api/users/admin/register", formData, { withCredentials: true }); 
+      await API.post("/api/auth/admin/register", formData, { withCredentials: true }); 
       alert("Admin registered successfully!");
       setFormData({ name: "", email: "", phone: "", password: "" });
       onClose(); // Close modal on success

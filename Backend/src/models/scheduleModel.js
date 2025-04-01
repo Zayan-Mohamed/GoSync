@@ -25,14 +25,20 @@ const scheduleSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    duration: {
-      type: String,
+    
+    arrivalDate: {
+      type: Date,
       required: true,
     },
+    
+    duration: {
+      type: String,
+
+    },
     busId: {
-      type:Number,
-      // type: mongoose.Schema.Types.ObjectId,
-      // ref: "Bus",
+      //type:Number,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bus",
       required: true,
     },
   },
