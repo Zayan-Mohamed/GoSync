@@ -12,11 +12,13 @@ import {
   Select,
   CircularProgress
 } from "@mui/material";
-import { Edit, Delete, Save, Sync } from "@mui/icons-material";
+import { Edit, Delete, Save, Sync, PictureAsPdf } from "@mui/icons-material";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Table from "../components/Table";
 import CustomButton from "../components/Button";
+import { jsPDF } from "jspdf";
+import autoTable from  "jspdf-autotable";
 
 function StopList() {
     const [stops, setStops] = useState([]);
@@ -240,20 +242,83 @@ function StopList() {
     }
   ];
 
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Stops List', 14, 15);
+    
+    // Prepare data for PDF (only first two columns)
+    const pdfData = filteredStops.map(stop => [
+      `${stop.stopName}\nID: ${stop.stopId}`,
+      stop.status
+    ]);
+    
+    // Generate table using autoTable plugin
+    autoTable(doc, {
+      head: [['Stop Name', 'Status']],
+      body: pdfData,
+      startY: 25,
+      styles: {
+        fontSize: 10,
+        cellPadding: 2,
+        valign: 'middle'
+      },
+      columnStyles: {
+        0: { cellWidth: 120 },
+        1: { cellWidth: 40 }
+      },
+      didDrawCell: (data) => {
+        if (data.section === 'body' && data.column.index === 1) {
+          const status = data.cell.raw;
+          doc.setFillColor(status === 'active' ? '#d1fae5' : '#fee2e2');
+          doc.setDrawColor(status === 'active' ? '#10b981' : '#ef4444');
+          doc.rect(
+            data.cell.x,
+            data.cell.y,
+            data.cell.width,
+            data.cell.height,
+            'FD' // Fill and draw
+          );
+          doc.setTextColor(status === 'active' ? '#065f46' : '#991b1b');
+          doc.text(
+            status,
+            data.cell.x + data.cell.width / 2,
+            data.cell.y + data.cell.height / 2 + 2,
+            { align: 'center' }
+          );
+        }
+      }
+    });
+    
+    // Save the PDF
+    doc.save('stops-list.pdf');
+  };
+
   return (
     <AdminLayout>
       <div className="p-6">
         <h2 className="text-xl font-bold mb-4">Current Stops</h2>
 
-        <div className="flex mb-4">
+        <div className="flex mb-4 gap-2">
           <TextField
             label="Search stops by name"
             variant="outlined"
             size="small"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-1/2"
+            className="flex-1"
           />
+          <CustomButton
+            variant="contained"
+            color="primary"
+            starticon={<PictureAsPdf />}
+            onClick={generatePDF}
+            disabled={filteredStops.length === 0}
+          >
+            Generate PDF
+          </CustomButton>
         </div>
 
         {loading ? (
