@@ -6,7 +6,7 @@ import AdminLayout from "../layouts/AdminLayout";
 const AddNotification = () => {
     const [type, setType] = useState("");
     const [message, setMessage] = useState("");
-    const [status] = useState("sent"); // Default to 'sent', no need for a state update
+    const [status] = useState("sent"); 
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -44,11 +44,13 @@ const AddNotification = () => {
                         <option value="promotions">Promotions</option>
                         <option value="discounts">Discounts</option>
                         <option value="alert">Alert</option>
+                        <option value="reminders">reminders</option>
                         <option value="info">Info</option>
                     </select>
                 </div>
                 <div className="form-group">
                     <label>Message</label>
+                    
                     <textarea
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}

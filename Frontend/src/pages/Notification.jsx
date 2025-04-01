@@ -66,7 +66,7 @@ const Notification = () => {
                                     <td>{notification.type}</td>
                                     <td>{notification.message}</td>
                                     <td>{notification.status}</td>
-                                    <td>{notification.createdAt}</td>
+                                    <td>{new Date(notification.createdAt).toLocaleString()}</td> 
                                     <td className="actionButtons">
                                         <Link to={`/update-notification/${notification.notificationId}`} className="btn btn-info">
                                             <i className="fa-solid fa-pen-to-square"></i>

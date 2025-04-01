@@ -10,7 +10,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['travel disruption', 'promotions', 'discounts', 'alert', 'info'],
+    enum: ['travel disruption', 'promotions', 'discounts', 'alert','reminders',  'info'],
     default: 'info',
   },
   message: {

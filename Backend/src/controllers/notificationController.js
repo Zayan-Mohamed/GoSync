@@ -5,26 +5,25 @@ import io  from "../server.js";
 
 export const create = async (req, res) => {
   try {
-    console.log("Received request body:", req.body); // Log the request body
+    console.log("Received request body:", req.body); 
 
-    // Generate a custom notificationId if it's not provided in the request body
+   
     const customNotificationId = req.body.notificationId || `notif-${new Date().getTime()}`;
 
-    // Ensure that notificationId is added to the body if it doesn't exist
     const notificationData = {
       ...req.body,
-      notificationId: customNotificationId, // Add the generated or passed notificationId
+      notificationId: customNotificationId, 
     };
 
-    // Create a new Notification instance with the notificationData
+    
     const newNotification = new Notification(notificationData);
     
-    // Save the new notification to the database
+    
     const savedNotification = await newNotification.save();
      
      io.emit("newNotification",savedNotification);
     
-    // Respond with the saved notification
+    
     res.status(201).json({ success: true, data: savedNotification });
   } catch (error) {
     console.error("Error while creating notification:", error);
@@ -50,9 +49,7 @@ export const getAllNotifications = async (req, res) => {
 
 export const getNotificationById = async (req, res) => {
   try {
-    const { id } = req.params; // Get notificationId from the URL parameter
-
-    // Check if notification exists by notificationId (not the MongoDB _id)
+    const { id } = req.params; 
     const notification = await Notification.findOne({ notificationId: id });
 
     if (!notification) {
@@ -68,9 +65,7 @@ export const getNotificationById = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
-    const { id } = req.params; // Get notificationId from the URL parameter
-
-    // Check if notification exists by notificationId (not the MongoDB _id)
+    const { id } = req.params; 
     const notification = await Notification.findOne({ notificationId: id });
     if (!notification) {
       return res.status(404).json({ message: "Notification not found" });
@@ -78,9 +73,9 @@ export const update = async (req, res) => {
 
     // Update the notification by notificationId
     const updatedNotification = await Notification.findOneAndUpdate(
-      { notificationId: id },  // Match by notificationId
-      req.body,  // Update data
-      { new: true }  // Return the updated document
+      { notificationId: id },  
+      req.body,  
+      { new: true }  
     );
       io.emit("updateNotification", updatedNotification);
 
@@ -93,9 +88,9 @@ export const update = async (req, res) => {
 
 export const deleteNotification = async (req, res) => {
    try {
-    const { id } = req.params; // Get notificationId from the URL parameter
+    const { id } = req.params; 
 
-    // Check if notification exists by notificationId (not the MongoDB _id)
+    
     const notification = await Notification.findOne({ notificationId: id });
 
     if (!notification) {

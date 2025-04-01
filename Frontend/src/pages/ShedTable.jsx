@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "../styles/ShedTable.css";
+import AdminLayout from '../layouts/AdminLayout';
 
 const ShedTable = () => {
   const [messages, setMessages] = useState([]);
@@ -33,6 +34,7 @@ const ShedTable = () => {
   };
 
   return (
+         <AdminLayout>
     <div className="table-container">
       <h2>Scheduled Messages</h2>
       <Link to="/add-message" className="btn btn-primary">
@@ -74,6 +76,7 @@ const ShedTable = () => {
         </tbody>
       </table>
     </div>
+    </AdminLayout>
   );
 };
 

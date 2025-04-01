@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import "../styles/AddMessage.css"; // Your custom CSS
+import "../styles/AddMessage.css"; 
 import axios from "axios";
 
 const AddMessage = () => {

@@ -10,9 +10,9 @@ export const setupWebSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(`🔗 User connected: ${socket.id}`);
+    console.log(`User connected: ${socket.id}`);
     socket.emit("serverMessage", "Connected to WebSocket Server!");
-    socket.on("disconnect", () => console.log(`❌ User disconnected: ${socket.id}`));
+    socket.on("disconnect", () => console.log(` User disconnected: ${socket.id}`));
   });
   return io;
 };

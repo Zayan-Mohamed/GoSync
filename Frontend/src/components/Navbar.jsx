@@ -99,19 +99,20 @@ const Navbar = () => {
             )}
           </button>
 
-          {showDropdown && (
-            <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg overflow-hidden">
-              <div className="p-2">
-                <h3 className="font-semibold text-lg">Notifications</h3>
-                <ul className="space-y-2">
-                  {notifications.map((notif, index) => (
-                    <li key={index} className="border-b py-2">
-                      {notif.message}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+          {showDropdown && ( 
+  <div className="fixed right-4 top-16 w-64 bg-white shadow-lg rounded-lg overflow-hidden z-50 border border-gray-300">
+    <div className="p-2 h-[500px] overflow-y-auto">
+      <h3 className="font-semibold text-lg">Notifications</h3>
+      <ul className="space-y-2">
+        {notifications.map((notif, index) => (
+          <li key={index} className="border-b py-2">
+            {notif.message}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+
           )}
         </div>
 
