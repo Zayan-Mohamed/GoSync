@@ -427,74 +427,74 @@ export const deleteRoute = async (req, res) => {
   }
 };
 
-// Update Stop and Reflect Changes in Routes
-export const updateStop = async (req, res) => {
-  try {
-    const { stopId } = req.params; // Get stop ID from URL params
-    const updateData = req.body; // Get updated data from request body
+// // Update Stop and Reflect Changes in Routes
+// export const updateStop = async (req, res) => {
+//   try {
+//     const { stopId } = req.params; // Get stop ID from URL params
+//     const updateData = req.body; // Get updated data from request body
 
-    // Find and update the stop
-    const updatedStop = await Stop.findOneAndUpdate({ stopId }, updateData, { new: true });
+//     // Find and update the stop
+//     const updatedStop = await Stop.findOneAndUpdate({ stopId }, updateData, { new: true });
 
-    if (!updatedStop) {
-      return res.status(404).json({ message: 'Stop not found' });
-    }
+//     if (!updatedStop) {
+//       return res.status(404).json({ message: 'Stop not found' });
+//     }
 
-    // Find all routes that contain this stop
-    const routesToUpdate = await Route.find({ 'stops.stopId': stopId });
+//     // Find all routes that contain this stop
+//     const routesToUpdate = await Route.find({ 'stops.stopId': stopId });
 
-    // Update stop details in each route
-    for (const route of routesToUpdate) {
-      route.stops = route.stops.map((stop) =>
-        stop.stopId === stopId ? { ...stop, ...updateData } : stop
-      );
-      await route.save(); // Save the updated route
-    }
+//     // Update stop details in each route
+//     for (const route of routesToUpdate) {
+//       route.stops = route.stops.map((stop) =>
+//         stop.stopId === stopId ? { ...stop, ...updateData } : stop
+//       );
+//       await route.save(); // Save the updated route
+//     }
 
-    res.status(200).json({ message: 'Stop and associated routes updated successfully', updatedStop });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+//     res.status(200).json({ message: 'Stop and associated routes updated successfully', updatedStop });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 
 // Toggle stop status (active/inactive)
-export const toggleStopStatus = async (req, res) => {
-  const { stopId } = req.params;
+// export const toggleStopStatus = async (req, res) => {
+//   const { stopId } = req.params;
 
-  try {
-    // Find the stop by stopId and toggle its status
-    const stop = await Stop.findOne({ stopId });
+//   try {
+//     // Find the stop by stopId and toggle its status
+//     const stop = await Stop.findOne({ stopId });
 
-    if (!stop) {
-      return res.status(404).json({ error: 'Stop not found' });
-    }
+//     if (!stop) {
+//       return res.status(404).json({ error: 'Stop not found' });
+//     }
 
-    // Toggle the status
-    stop.status = stop.status === 'active' ? 'inactive' : 'active';
+//     // Toggle the status
+//     stop.status = stop.status === 'active' ? 'inactive' : 'active';
     
-    // Save the updated stop
-    await stop.save();
+//     // Save the updated stop
+//     await stop.save();
 
-    // Find all routes that contain this stop
-    const routesToUpdate = await Route.find({ 'stops.stop': stop._id });
+//     // Find all routes that contain this stop
+//     const routesToUpdate = await Route.find({ 'stops.stop': stop._id });
 
-    // Optionally update the status in associated routes if needed
-    for (const route of routesToUpdate) {
-      await route.save(); // This triggers any pre-save middleware if you have any
-    }
+//     // Optionally update the status in associated routes if needed
+//     for (const route of routesToUpdate) {
+//       await route.save(); // This triggers any pre-save middleware if you have any
+//     }
 
-    res.status(200).json({
-      message: 'Stop status toggled successfully',
-      stop: stop
-    });
-  } catch (err) {
-    console.error('Error toggling stop status:', err);
-    res.status(500).json({ 
-      error: 'Error toggling stop status', 
-      details: err.message 
-    });
-  }
-};
+//     res.status(200).json({
+//       message: 'Stop status toggled successfully',
+//       stop: stop
+//     });
+//   } catch (err) {
+//     console.error('Error toggling stop status:', err);
+//     res.status(500).json({ 
+//       error: 'Error toggling stop status', 
+//       details: err.message 
+//     });
+//   }
+// };
 
 export const updateStopType = async (req, res) => {
   try {
