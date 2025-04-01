@@ -5,17 +5,7 @@ import Table from "../components/Table";
 import { Trash2, Edit, Map } from "lucide-react";
 import AdminLayout from "../layouts/AdminLayout";
 import SplashScreen from "../pages/SplashScreen";
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-
-// Fix for default marker icons in Leaflet
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png"
-});
+import RouteMapModal from "../components/RouteMapModal"; // Import the new component
 
 const CurrentRoutes = () => {
   const { routes, fetchRoutes, deleteRoute } = useRouteStore();
@@ -26,7 +16,7 @@ const CurrentRoutes = () => {
   useEffect(() => {
     fetchRoutes()
       .then(() => {
-        console.log("Routes fetched:", routes);
+        console.log("Routes fetched successfully");
         setLoading(false);
       })
       .catch(error => {
@@ -56,102 +46,19 @@ const CurrentRoutes = () => {
     setShowMapModal(true);
   };
 
-  const RouteMap = ({ route }) => {
-    // Default coordinates for Sri Lanka as fallback
-    const defaultPosition = [7.8731, 80.7718]; // Approximate center of Sri Lanka
-    
-    // Check if route has valid coordinates
-    const hasValidCoordinates = 
-      route.startLocationCoordinates && 
-      route.startLocationCoordinates.lat !== null && 
-      route.endLocationCoordinates && 
-      route.endLocationCoordinates.lat !== null;
-    
-    // If coordinates are missing, show a placeholder map
-    if (!hasValidCoordinates) {
-      return (
-        <div>
-          <p className="text-center mb-4">Route coordinates not available. Showing default map of Sri Lanka.</p>
-          <MapContainer
-            style={{ height: "400px", width: "100%" }}
-            center={defaultPosition}
-            zoom={7}
-            scrollWheelZoom={false}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Marker position={defaultPosition}>
-              <Popup>
-                <strong>Note:</strong> Actual route coordinates not available
-              </Popup>
-            </Marker>
-          </MapContainer>
-        </div>
-      );
-    }
-    
-    // Extract coordinates for start and end locations
-    const startPosition = [
-      route.startLocationCoordinates.lat,
-      route.startLocationCoordinates.lng || route.startLocationCoordinates.lon
-    ];
-
-    const endPosition = [
-      route.endLocationCoordinates.lat,
-      route.endLocationCoordinates.lng || route.endLocationCoordinates.lon
-    ];
-
-    // Calculate a center position to show both markers
-    const centerLat = (startPosition[0] + endPosition[0]) / 2;
-    const centerLng = (startPosition[1] + endPosition[1]) / 2;
-
-    return (
-      <MapContainer
-        style={{ height: "400px", width: "100%" }}
-        center={[centerLat, centerLng]}
-        zoom={9}
-        scrollWheelZoom={false}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        
-        {/* Start marker */}
-        <Marker position={startPosition}>
-          <Popup>Start: {route.startLocation}</Popup>
-        </Marker>
-        
-        {/* End marker */}
-        <Marker position={endPosition}>
-          <Popup>End: {route.endLocation}</Popup>
-        </Marker>
-        
-        {/* Route line */}
-        <Polyline 
-          positions={[startPosition, endPosition]} 
-          color="blue" 
-        />
-      </MapContainer>
-    );
+  const handleCloseMap = () => {
+    setShowMapModal(false);
+    setSelectedRoute(null);
   };
 
-  const MapModal = ({ route, onClose }) => {
-    if (!showMapModal) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-4 rounded-lg w-11/12 md:w-3/4 lg:w-2/3 max-h-screen overflow-y-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold">Route Map: {route.routeName}</h3>
-            <Button onClick={onClose}>Close</Button>
-          </div>
-          <RouteMap route={route} />
-        </div>
-      </div>
-    );
+  const handleDeleteRoute = async (routeId) => {
+    if (window.confirm("Are you sure you want to delete this route?")) {
+      try {
+        await deleteRoute(routeId);
+      } catch (error) {
+        console.error("Error deleting route:", error);
+      }
+    }
   };
 
   return (
@@ -161,11 +68,11 @@ const CurrentRoutes = () => {
         <Table>
           <thead>
             <tr>
-              <th className="p-2 border-b text-left">Route Name</th>
-              <th className="p-2 border-b text-left">Stops</th>
-              <th className="p-2 border-b text-left">Other Details</th>
-              <th className="p-2 border-b text-left">Map</th>
-              <th className="p-2 border-b text-left">Actions</th>
+              <th className="p-2 border-b text-left font-normal text-black">Route Name</th>
+              <th className="p-2 border-b text-left font-normal text-black">Stops</th>
+              <th className="p-2 border-b text-left font-normal text-black">Other Details</th>
+              <th className="p-2 border-b text-left font-normal text-black">Map</th>
+              <th className="p-2 border-b text-left font-normal text-black">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -179,12 +86,23 @@ const CurrentRoutes = () => {
                   {route.stops && route.stops.length > 0 ? (
                     <div className="max-h-32 overflow-y-auto">
                       <ul className="list-disc pl-4">
-                        {route.stops.map((stop, index) => {
-                          if (stop && (stop.name || (typeof stop === 'string'))) {
-                            return <li key={stop._id || index}>{stop.name || stop}</li>;
-                          }
-                          return null;
-                        })}
+                        {route.stops.map((stopItem, index) => (
+                          <li key={stopItem._id || index}>
+                            {stopItem.stop?.stopName || // Use stopName instead of name
+                             (typeof stopItem.stop === 'object' ? stopItem.stop.stopName : null) ||
+                             stopItem.stopName ||
+                             "Unknown Stop"} (Order: {stopItem.order})
+                            {stopItem.stopType && (
+                              <span className={`ml-2 text-xs px-1 py-0.5 rounded ${
+                                stopItem.stopType === 'boarding' 
+                                  ? 'bg-blue-100 text-blue-800' 
+                                  : 'bg-purple-100 text-purple-800'
+                              }`}>
+                                {stopItem.stopType}
+                              </span>
+                            )}
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   ) : (
@@ -192,8 +110,8 @@ const CurrentRoutes = () => {
                   )}
                 </td>
                 <td className="p-2 border-b">
-                  <div><strong>From:</strong> {route.startLocation || route.routeName.split('→')[0]?.trim() || "N/A"}</div>
-                  <div><strong>To:</strong> {route.endLocation || route.routeName.split('→')[1]?.trim() || "N/A"}</div>
+                  <div><strong>From:</strong> {route.startLocation || "N/A"}</div>
+                  <div><strong>To:</strong> {route.endLocation || "N/A"}</div>
                   <div><strong>Distance:</strong> {route.totalDistance || "N/A"} km</div>
                   <div>
                     <strong>Status:</strong>{" "}
@@ -223,7 +141,7 @@ const CurrentRoutes = () => {
                     </Button>
                     <Button
                       className="bg-red-500 hover:bg-red-600 text-white"
-                      onClick={() => deleteRoute(route._id)}
+                      onClick={() => handleDeleteRoute(route._id)}
                     >
                       <Trash2 size={16} />
                     </Button>
@@ -233,17 +151,15 @@ const CurrentRoutes = () => {
             ))}
           </tbody>
         </Table>
-
-        {selectedRoute && (
-          <MapModal 
-            route={selectedRoute} 
-            onClose={() => {
-              setShowMapModal(false);
-              setSelectedRoute(null);
-            }} 
-          />
-        )}
       </div>
+
+      {/* Render the map modal when showMapModal is true */}
+      {showMapModal && selectedRoute && (
+        <RouteMapModal 
+          route={selectedRoute} 
+          onClose={handleCloseMap} 
+        />
+      )}
     </AdminLayout>
   );
 };

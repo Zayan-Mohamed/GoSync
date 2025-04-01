@@ -6,7 +6,17 @@ const useRouteStore = create((set) => ({
   fetchRoutes: async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/routes/routes");
-      set({ routes: response.data.routes }); // ✅ Extract only the array
+      console.log("Raw API response:", response.data);
+      
+      // If first route has stops, log the first stop structure
+      if (response.data.routes && 
+          response.data.routes.length > 0 && 
+          response.data.routes[0].stops && 
+          response.data.routes[0].stops.length > 0) {
+        console.log("Sample stop structure:", response.data.routes[0].stops[0]);
+      }
+      
+      set({ routes: response.data.routes });
     } catch (error) {
       console.error("Error fetching routes:", error);
     }
