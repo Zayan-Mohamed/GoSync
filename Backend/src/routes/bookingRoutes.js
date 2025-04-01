@@ -1,10 +1,12 @@
+// src/routes/bookingRoutes.js
 import express from "express";
-import { bookSeats } from "../controllers/bookingController.js";
-import { protect } from "../middlewares/authMiddleware.js"; 
+import { protect } from "../middlewares/authMiddleware.js";
+import { reserveSeats, confirmBooking, getBookingSummary } from "../controllers/bookingController.js";
 
 const router = express.Router();
 
-// Passenger books a seat
-router.post("/book", protect, bookSeats);
+router.post("/:busId/schedule/:scheduleId/reserve", protect, reserveSeats);
+router.post("/confirm", protect, confirmBooking);
+router.get("/summary/:userId", protect, getBookingSummary);
 
 export default router;

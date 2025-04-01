@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import Navbar1 from "../components/Navbar1";
 import BusCard from "../components/BusCard";
 import Footer1 from "../components/Footer1";
@@ -18,6 +19,30 @@ const BusSearchResults = () => {
   const [sortBy, setSortBy] = useState("departure"); // Default sort
 
   useEffect(() => {
+    const socket = io("http://localhost:5000", {
+      withCredentials: true,
+    });
+  
+    socket.on("connect", () => {
+      busResults.forEach((bus) => {
+        socket.emit("joinTrip", { busId: bus.busId, scheduleId: bus.scheduleId });
+      });
+    });
+  
+    socket.on("seatUpdate", (data) => {
+      setBusResults((prev) =>
+        prev.map((bus) =>
+          bus.busId === data.busId && bus.scheduleId === data.scheduleId
+            ? { ...bus, availableSeats: data.availableSeats }
+            : bus
+        )
+      );
+    });
+  
+    return () => socket.disconnect();
+  }, [busResults]);
+
+  useEffect(() => {
     if (!fromLocation || !toLocation || !journeyDate) {
       navigate("/"); // Redirect to homepage if required data is missing
       return;
@@ -28,7 +53,7 @@ const BusSearchResults = () => {
       setError(null);
 
       try {
-        const response = await fetch("http://localhost:5000/api/search-buses", {
+        const response = await fetch("http://localhost:5000/api/buses/search-buses", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

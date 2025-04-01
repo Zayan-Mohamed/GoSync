@@ -72,7 +72,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/users/register", form);
+      await axios.post("/api/auth/register", form);
       navigate("/login");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
