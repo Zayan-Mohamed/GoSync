@@ -1,13 +1,13 @@
-// src/controllers/shedController.js
 import ShedMessage from "../models/shedModel.js";
 import cron from "node-cron";
 import { setupWebSocket } from "../websocket.js"; 
 
+// WebSocket connection setup
+const io = setupWebSocket();
 
 export const shedMessage = async (req, res) => {
   try {
     const { message, shedDate, shedTime } = req.body;
-    const io = req.app.get("io"); 
 
     const newMessage = new ShedMessage({
       message,
@@ -18,6 +18,7 @@ export const shedMessage = async (req, res) => {
 
     await newMessage.save();
 
+    // Emit WebSocket notification
     io.emit("newNotification", {
       _id: newMessage._id,
       message: `New message scheduled: ${newMessage.message}`,
@@ -31,27 +32,26 @@ export const shedMessage = async (req, res) => {
 
 export const getAllShedMessages = async (req, res) => {
   try {
-    // Fetch all shed messages and sort by creation date (newest first)
-    const messages = await ShedMessage.find().sort({ createdAt: -1 });
+    // Fetch all shed messages and sort by shedDate and shedTime (newest first)
+    const messages = await ShedMessage.find()
+      .sort({ shedDate: -1, shedTime: -1 }); // Sorting by shedDate and shedTime, most recent first
+    
     res.status(200).json({ success: true, data: messages });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 };
 
-
-// Update Shed Message
 export const updateShedMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const io = req.app.get("io"); 
     const updatedMessage = await ShedMessage.findByIdAndUpdate(id, req.body, { new: true });
 
     if (!updatedMessage) {
       return res.status(404).json({ success: false, message: "Message not found!" });
     }
 
-    
+    // Emit WebSocket notification
     io.emit("newNotification", {
       _id: updatedMessage._id,
       message: `Message updated: ${updatedMessage.message}`,
@@ -63,18 +63,16 @@ export const updateShedMessage = async (req, res) => {
   }
 };
 
-// Delete Shed Message
 export const deleteShedMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const io = req.app.get("io"); 
     const deletedMessage = await ShedMessage.findByIdAndDelete(id);
 
     if (!deletedMessage) {
       return res.status(404).json({ success: false, message: "Message not found!" });
     }
 
-    
+    // Emit WebSocket notification
     io.emit("newNotification", {
       _id: deletedMessage._id,
       message: `Message deleted: ${deletedMessage.message}`,
@@ -87,7 +85,6 @@ export const deleteShedMessage = async (req, res) => {
 };
 
 // Cron Job to Send Scheduled Messages
-const io = setupWebSocket(); 
 cron.schedule("* * * * *", async () => {
   try {
     const now = new Date();
@@ -105,6 +102,7 @@ cron.schedule("* * * * *", async () => {
       msg.status = "sent";
       await msg.save();
 
+      // Emit WebSocket notification for each sent message
       if (io) {
         io.emit("newNotification", {
           _id: msg._id,
@@ -116,3 +114,17 @@ cron.schedule("* * * * *", async () => {
     console.error("Error in scheduled job:", error.message);
   }
 });
+export const getShedMessageById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const message = await ShedMessage.findById(id);
+
+    if (!message) {
+      return res.status(404).json({ success: false, message: "Message not found!" });
+    }
+
+    res.status(200).json({ success: true, data: message });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

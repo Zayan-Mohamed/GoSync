@@ -12,7 +12,18 @@ export const setupWebSocket = (server) => {
   io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
     socket.emit("serverMessage", "Connected to WebSocket Server!");
-    socket.on("disconnect", () => console.log(` User disconnected: ${socket.id}`));
+
+    // Optional: Join a room based on busId or scheduleId for targeted updates
+    socket.on("joinTrip", ({ busId, scheduleId }) => {
+      const room = `${busId}-${scheduleId}`;
+      socket.join(room);
+      console.log(`User ${socket.id} joined room: ${room}`);
+    });
+
+    socket.on("disconnect", () => {
+      console.log(`❌ User disconnected: ${socket.id}`);
+    });
   });
+
   return io;
 };

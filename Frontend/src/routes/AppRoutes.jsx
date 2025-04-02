@@ -13,9 +13,15 @@ import UserSettings from "../pages/UserSettings";
 import Notification from "../pages/Notification";
 import AddNotification from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
+import SeatSelection from "../pages/SeatSelection";
 import ShedTable from "../pages/shedTable";
 import AddMessage from "../pages/AddMessage";
 import BusSearchResults from "../pages/BusSearchResults";
+import Payment from "../components/Payment";
+import BookingSummary from "../components/BookingSummary";
+import AddStop from "../pages/AddStop.jsx";
+import StopList from "../pages/StopList.jsx";
+import UpdateMessage from "../pages/UpdateMessage.jsx";
 
 const AppRoutes = () => {
 
@@ -45,6 +51,7 @@ const AppRoutes = () => {
           <Route path="/notification-management" element={<Notification />} />
           <Route path="/add-notification" element={<AddNotification />} />
           <Route path="/update-notification/:id" element={<UpdateNotification />} />
+          
           <Route path="/current-routes" element={<CurrentRoutes />} />
           
             <Route path="/notification-management" element={<Notification />} />
@@ -53,13 +60,20 @@ const AppRoutes = () => {
             <Route path="/update-notification/:id" element={<UpdateNotification />} />
             <Route path="/Schedule-notification" element={<ShedTable/>} />
             <Route path="/add-message" element={<AddMessage/>} />
+            <Route path="/add-stop" element={<AddStop/>} />
+            <Route path="/stop-management" element={<StopList/>} />
+            <Route path="/update-message/:id" element={<UpdateMessage/>}/>
         </Route>
         
 
         <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
           <Route path="/passenger" element={<PassengerHomepage />} />
+          <Route path="/seat-selection" element={<SeatSelection />} />
+          <Route path="/passenger" element={<PassengerHomepage />} />
           <Route path="/bus-search-results" element={<BusSearchResults />} />
-          
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/booking-summary" element={<BookingSummary />} />
+          <Route path="/booking-confirmation" element={<div>Booking Confirmed</div>} />
         </Route>
         <Route path="/settings" element={<UserSettings/>} />
        

@@ -1,94 +1,132 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import Navbar1 from "../components/Navbar1";
 import BusCard from "../components/BusCard";
 import Footer1 from "../components/Footer1";
+import { Bus } from "lucide-react";
 
 const BusSearchResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Get from, to, and date from Passenger Homepage
+
+  // Get search details from Passenger Homepage
   const { fromLocation, toLocation, journeyDate } = location.state || {};
 
   const [busResults, setBusResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState("departure"); // Default sort
+
+  useEffect(() => {
+    const socket = io("http://localhost:5000", {
+      withCredentials: true,
+    });
+  
+    socket.on("connect", () => {
+      busResults.forEach((bus) => {
+        socket.emit("joinTrip", { busId: bus.busId, scheduleId: bus.scheduleId });
+      });
+    });
+  
+    socket.on("seatUpdate", (data) => {
+      setBusResults((prev) =>
+        prev.map((bus) =>
+          bus.busId === data.busId && bus.scheduleId === data.scheduleId
+            ? { ...bus, availableSeats: data.availableSeats }
+            : bus
+        )
+      );
+    });
+  
+    return () => socket.disconnect();
+  }, [busResults]);
 
   useEffect(() => {
     if (!fromLocation || !toLocation || !journeyDate) {
-      navigate("/"); // Redirect if required data is missing
+      navigate("/"); // Redirect to homepage if required data is missing
       return;
     }
 
-    setLoading(true);
+    const fetchBusResults = async () => {
+      setLoading(true);
+      setError(null);
 
-    // Simulate API call with sample bus data
-    setTimeout(() => {
-      const mockResults = [
-        {
-          id: 1,
-          route: `${fromLocation} - Kattankudy`,
-          routeNumber: "48",
-          viaAirport: true,
-          departure: {
-            location: fromLocation,
-            date: journeyDate,
-            time: "21:00",
+      try {
+        const response = await fetch("http://localhost:5000/api/buses/search-buses", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-          arrival: {
-            location: "Kattankudy",
-            date: new Date(new Date(journeyDate).getTime() + 86400000).toISOString().split("T")[0], // Next day
-            time: "04:00",
-          },
-          duration: "07:00 Hours",
-          travel: {
-            name: "Zeena Travels",
-            busNumber: "ZT-48-2100-CK",
-            type: "Super Luxury",
-          },
-          price: 2500.0,
-          availableSeats: 5,
-          bookingClosing: `${journeyDate} | 20:00`,
-        },
-        {
-          id: 2,
-          route: `${fromLocation} - ${toLocation}`,
-          routeNumber: "42",
-          viaAirport: false,
-          departure: {
-            location: fromLocation,
-            date: journeyDate,
-            time: "22:30",
-          },
-          arrival: {
-            location: toLocation,
-            date: new Date(new Date(journeyDate).getTime() + 86400000).toISOString().split("T")[0], // Next day
-            time: "05:30",
-          },
-          duration: "07:00 Hours",
-          travel: {
-            name: "Lanka Express",
-            busNumber: "LE-42-5678-CO",
-            type: "Semi Luxury",
-          },
-          price: 2300.0,
-          availableSeats: 12,
-          bookingClosing: `${journeyDate} | 21:30`,
-        },
-      ];
+          body: JSON.stringify({
+            fromLocation,
+            toLocation,
+            selectedDate: journeyDate,
+          }),
+        });
 
-      setBusResults(mockResults);
-      setLoading(false);
-    }, 1000);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to find buses");
+        }
+
+        const data = await response.json();
+        setBusResults(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBusResults();
   }, [fromLocation, toLocation, journeyDate, navigate]);
 
   const handleModify = () => {
-    navigate(-1);
+    navigate(-1); // Go back to modify search
   };
 
-  const handleViewSeat = (busId) => {
-    console.log(`View seat for bus ID: ${busId}`);
-    // Navigate to seat selection page
+  const handleViewSeat = (busId, scheduleId) => {
+    navigate("/seat-selection", {
+      state: {
+        busId,
+        scheduleId,
+        fromLocation,
+        toLocation,
+        journeyDate
+      }
+    });
+  };
+
+  const sortBusResults = () => {
+    let sortedResults = [...busResults];
+    
+    switch(sortBy) {
+      case "departure":
+        sortedResults.sort((a, b) => 
+          a.schedule.departureTime.localeCompare(b.schedule.departureTime));
+        break;
+      case "arrival":
+        sortedResults.sort((a, b) => 
+          a.schedule.arrivalTime.localeCompare(b.schedule.arrivalTime));
+        break;
+      case "price":
+        sortedResults.sort((a, b) => a.fareAmount - b.fareAmount);
+        break;
+      case "seats":
+        sortedResults.sort((a, b) => b.availableSeats - a.availableSeats);
+        break;
+      default:
+        break;
+    }
+    
+    return sortedResults;
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   return (
@@ -104,7 +142,9 @@ const BusSearchResults = () => {
             <h1 className="text-xl font-bold">{toLocation}</h1>
           </div>
           <div className="flex items-center space-x-3 mt-2 sm:mt-0">
-            <span className="text-white">{journeyDate}</span>
+            <span className="text-white">
+              {journeyDate ? formatDate(journeyDate) : ""}
+            </span>
             <button
               onClick={handleModify}
               className="bg-brightYellow text-darkCharcoal px-3 py-1 rounded text-sm hover:bg-lightYellow"
@@ -118,10 +158,30 @@ const BusSearchResults = () => {
       {/* Filter options */}
       <div className="bg-softPeach py-2">
         <div className="container mx-auto flex justify-between text-darkCharcoal text-sm">
-          <button className="py-1 px-2 hover:bg-lightYellow font-medium">SORT</button>
-          <button className="py-1 px-2 hover:bg-lightYellow font-medium">DEPARTURE</button>
-          <button className="py-1 px-2 hover:bg-lightYellow font-medium">ARRIVAL</button>
-          <button className="py-1 px-2 hover:bg-lightYellow font-medium">SEATS</button>
+          <button 
+            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === 'price' ? 'bg-lightYellow' : ''}`}
+            onClick={() => setSortBy("price")}
+          >
+            PRICE
+          </button>
+          <button 
+            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === 'departure' ? 'bg-lightYellow' : ''}`}
+            onClick={() => setSortBy("departure")}
+          >
+            DEPARTURE
+          </button>
+          <button 
+            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === 'arrival' ? 'bg-lightYellow' : ''}`}
+            onClick={() => setSortBy("arrival")}
+          >
+            ARRIVAL
+          </button>
+          <button 
+            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === 'seats' ? 'bg-lightYellow' : ''}`}
+            onClick={() => setSortBy("seats")}
+          >
+            SEATS
+          </button>
         </div>
       </div>
 
@@ -134,13 +194,9 @@ const BusSearchResults = () => {
               <p className="mt-4 text-lg text-gray-700">Loading buses...</p>
             </div>
           </div>
-        ) : busResults.length > 0 ? (
-          busResults.map((bus) => (
-            <BusCard key={bus.id} bus={bus} onViewSeat={handleViewSeat} />
-          ))
-        ) : (
+        ) : error ? (
           <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-700">No buses found for this route and date</h2>
+            <h2 className="text-xl font-semibold text-gray-700">{error}</h2>
             <p className="mt-2 text-gray-600">Try modifying your search criteria</p>
             <button
               onClick={handleModify}
@@ -149,6 +205,28 @@ const BusSearchResults = () => {
               Modify Search
             </button>
           </div>
+        ) : busResults.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="flex justify-center mb-4">
+              <Bus size={48} className="text-gray-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-700">No buses found</h2>
+            <p className="mt-2 text-gray-600">Try different locations or dates</p>
+            <button
+              onClick={handleModify}
+              className="mt-4 bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
+            >
+              Modify Search
+            </button>
+          </div>
+        ) : (
+          sortBusResults().map((bus, index) => (
+            <BusCard 
+              key={index} 
+              bus={bus} 
+              onViewSeat={() => handleViewSeat(bus.busId, bus.scheduleId)} 
+            />
+          ))
         )}
       </div>
 

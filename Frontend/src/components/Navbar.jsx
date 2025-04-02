@@ -14,7 +14,6 @@ const Navbar = () => {
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
-
   const [isAdminModalOpen, setAdminModalOpen] = useState(false);
 
   const handleLogout = () => {
@@ -22,22 +21,34 @@ const Navbar = () => {
     navigate("/login");
   };
 
-  // Fetch initial notifications from the backend
+  // Fetch initial notifications and scheduled messages
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        // Fetch both notifications and messages
         const [notifResponse, msgResponse] = await Promise.all([
           axios.get("http://localhost:5000/api/notifications"),
           axios.get("http://localhost:5000/api/shed/messages"),
         ]);
 
-        // Extract sent messages
-        const sentMessages = msgResponse.data.data.filter((msg) => msg.status === "sent");
+        // Extract notifications and convert timestamps
+        const notificationsData = notifResponse.data.map((notif) => ({
+          ...notif,
+          type: "notification",
+          timestamp: new Date(notif.createdAt).getTime(), // Convert to timestamp
+        }));
 
-        // Combine and sort notifications and messages by latest date
-        const allNotifications = [...notifResponse.data, ...sentMessages].sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        // Extract sent messages and create timestamp from shedDate + shedTime
+        const sentMessages = msgResponse.data.data
+          .filter((msg) => msg.status === "sent") // Only include sent messages
+          .map((msg) => ({
+            ...msg,
+            type: "message",
+            timestamp: new Date(`${msg.shedDate}T${msg.shedTime}:00`).getTime(), // Convert to timestamp
+          }));
+
+        // Merge and sort both lists by timestamp (latest first)
+        const allNotifications = [...notificationsData, ...sentMessages].sort(
+          (a, b) => b.timestamp - a.timestamp
         );
 
         setNotifications(allNotifications);
@@ -47,7 +58,7 @@ const Navbar = () => {
           setHasUnread(true);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching notifications:", error);
       }
     };
 
@@ -55,9 +66,13 @@ const Navbar = () => {
 
     // Listen for real-time notifications
     socket.on("newNotification", (newNotif) => {
-      setNotifications((prev) => [newNotif, ...prev].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      ));
+      setNotifications((prev) => {
+        const updatedList = [
+          { ...newNotif, timestamp: new Date(newNotif.createdAt).getTime() },
+          ...prev,
+        ];
+        return updatedList.sort((a, b) => b.timestamp - a.timestamp);
+      });
       setHasUnread(true);
     });
 
@@ -99,20 +114,19 @@ const Navbar = () => {
             )}
           </button>
 
-          {showDropdown && ( 
-  <div className="fixed right-4 top-16 w-64 bg-white shadow-lg rounded-lg overflow-hidden z-50 border border-gray-300">
-    <div className="p-2 h-[500px] overflow-y-auto">
-      <h3 className="font-semibold text-lg">Notifications</h3>
-      <ul className="space-y-2">
-        {notifications.map((notif, index) => (
-          <li key={index} className="border-b py-2">
-            {notif.message}
-          </li>
-        ))}
-      </ul>
-    </div>
-  </div>
-
+          {showDropdown && (
+            <div className="fixed right-4 top-16 w-64 bg-white shadow-lg rounded-lg overflow-hidden z-50 border border-gray-300">
+              <div className="p-2 h-[500px] overflow-y-auto">
+                <h3 className="font-semibold text-lg">Notifications</h3>
+                <ul className="space-y-2">
+                  {notifications.map((notif, index) => (
+                    <li key={index} className="border-b py-2">
+                      {notif.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           )}
         </div>
 
@@ -130,6 +144,7 @@ const Navbar = () => {
           <span>Logout</span>
         </button>
       </div>
+
       {/* Admin Modal */}
       {isAdminModalOpen && (
         <AdminModal

@@ -2,28 +2,23 @@ import Notification from "../models/notificationModel.js";
 import User from "../models/user.js";
 import io  from "../server.js";
 
-
 export const create = async (req, res) => {
   try {
-    console.log("Received request body:", req.body); 
+    console.log("Received request body:", req.body);
 
-   
+    // Corrected the syntax here
     const customNotificationId = req.body.notificationId || `notif-${new Date().getTime()}`;
 
     const notificationData = {
       ...req.body,
-      notificationId: customNotificationId, 
+      notificationId: customNotificationId,
     };
 
-    
     const newNotification = new Notification(notificationData);
-    
-    
     const savedNotification = await newNotification.save();
-     
-     io.emit("newNotification",savedNotification);
-    
-    
+
+    io.emit("newNotification", savedNotification);
+
     res.status(201).json({ success: true, data: savedNotification });
   } catch (error) {
     console.error("Error while creating notification:", error);
@@ -33,6 +28,7 @@ export const create = async (req, res) => {
     });
   }
 };
+
 
 
 

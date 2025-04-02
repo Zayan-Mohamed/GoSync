@@ -121,6 +121,54 @@ export const addStopToRoute = async (req, res) => {
   }
 };
 
+export const addMultipleStopsToRoute = async (req, res) => {
+  try {
+    const { routeId, stops } = req.body; // stops is an array of { stopId, order }
+
+    // Find the route
+    const route = await Route.findOne({ routeId });
+    if (!route) return res.status(404).json({ error: 'Route not found' });
+
+    // Fetch all stops from the database
+    const stopIds = stops.map(s => s.stopId);
+    const foundStops = await Stop.find({ stopId: { $in: stopIds } });
+
+    if (foundStops.length !== stopIds.length) {
+      return res.status(400).json({ error: 'Some stops do not exist in the database' });
+    }
+
+    // Convert stopId to ObjectId for comparison
+    const existingStopIds = route.stops.map(s => s.stop.toString());
+
+    const newStops = [];
+    stops.forEach((stop, index) => {
+      const stopDoc = foundStops.find(s => s.stopId === stop.stopId);
+      if (!stopDoc) return;
+
+      if (!existingStopIds.includes(stopDoc._id.toString())) {
+        newStops.push({
+          stop: stopDoc._id,
+          order: stop.order || route.stops.length + newStops.length + 1
+        });
+      }
+    });
+
+    if (newStops.length === 0) {
+      return res.status(400).json({ error: 'No new stops were added (either already exist or invalid data)' });
+    }
+
+    // Add new stops and sort by order
+    route.stops = [...route.stops, ...newStops].sort((a, b) => a.order - b.order);
+
+    await route.save();
+
+    res.status(200).json({ message: 'Stops added successfully', route });
+  } catch (error) {
+    res.status(500).json({ error: 'Error adding stops to route', details: error.message });
+  }
+};
+
+
 // Update getAllRoutes function
 export const getAllRoutes = async (req, res) => {
   try {
@@ -263,7 +311,8 @@ export const getStopsForRoute = async (req, res) => {
       .sort((a, b) => a.order - b.order)
       .map(item => ({
         stop: item.stop,
-        order: item.order
+        order: item.order,
+        stopType: item.stopType // Add this line to include stopType in response
       }));
     
     // Return the stops for the route
@@ -276,7 +325,6 @@ export const getStopsForRoute = async (req, res) => {
     res.status(500).json({ error: "Error fetching stops", details: error.message });
   }
 };
-
 // Toggle the status of the route (active/inactive)
 export const toggleRouteStatus = async (req, res) => {
   try {
@@ -445,5 +493,86 @@ export const toggleStopStatus = async (req, res) => {
       error: 'Error toggling stop status', 
       details: err.message 
     });
+  }
+};
+
+export const updateStopType = async (req, res) => {
+  try {
+    const { routeId, stopId, stopType } = req.body; // stopType can be 'Boarding' or 'Dropping'
+
+    // Validate stopType
+    if (!['boarding', 'dropping'].includes(stopType)) {
+      return res.status(400).json({ error: 'Invalid stop type. It must be either "Boarding" or "Dropping".' });
+    }
+
+    // Find the route
+    const route = await Route.findOne({ routeId });
+    if (!route) return res.status(404).json({ error: 'Route not found' });
+
+    // Find the stop index in the stops array
+    const stopIndex = route.stops.findIndex(stop => stop.stop.toString() === stopId);
+    if (stopIndex === -1) {
+      return res.status(404).json({ error: 'Stop not found in the specified route' });
+    }
+
+    // Update only the stopType for the specific stop
+    route.stops[stopIndex].stopType = stopType;
+
+    // Save the updated route
+    await route.save();
+
+    res.status(200).json({ message: 'Stop type updated successfully', route });
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating stop type', details: error.message });
+  }
+};
+
+export const updateMultipleStopTypes = async (req, res) => {
+  try {
+    const { routeId, stops } = req.body;
+    const validStopTypes = ['boarding', 'dropping'];
+    const route = await Route.findOne({ routeId });
+
+    if (!route) return res.status(404).json({ error: 'Route not found' });
+
+    // Debug: Log the stop IDs from the database
+    console.log("Database Stop IDs:", route.stops.map(s => s.stopId || s._id || s.stop));
+
+    const updatedStops = [];
+
+    for (const stopData of stops) {
+      // Normalize stopType to lowercase
+      const stopType = stopData.stopType?.toLowerCase();
+      if (!validStopTypes.includes(stopType)) {
+        return res.status(400).json({ error: `Invalid stop type for stop ${stopData.stopId}` });
+      }
+
+      // Try multiple ID fields if needed
+      const stopIndex = route.stops.findIndex(s => 
+        String(s.stopId) === String(stopData.stopId) || 
+        String(s._id) === String(stopData.stopId) ||
+        String(s.stop) === String(stopData.stopId)
+      );
+
+      if (stopIndex !== -1) {
+        route.stops[stopIndex].stopType = stopType;
+        updatedStops.push(route.stops[stopIndex]);
+      } else {
+        console.log("No match for stopId:", stopData.stopId);
+      }
+    }
+
+    if (updatedStops.length === 0) {
+      return res.status(404).json({ 
+        error: "No matching stops found", 
+        databaseStopIds: route.stops.map(s => s.stopId || s._id || s.stop),
+        requestedStopIds: stops.map(s => s.stopId)
+      });
+    }
+
+    await route.save();
+    res.status(200).json({ message: `${updatedStops.length} stops updated`, updatedStops });
+  } catch (error) {
+    res.status(500).json({ error: 'Update failed', details: error.message });
   }
 };

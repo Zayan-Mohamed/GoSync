@@ -6,7 +6,8 @@ import {
   updateBus,
   deleteBus,
   getBusesByRoute,
-  getBusesByTravelName
+  getBusesByTravelName,
+  searchBuses
 } from "../controllers/busController.js";
 
 import { protect, adminOnly } from "../middlewares/authMiddleware.js";
@@ -14,6 +15,7 @@ import { protect, adminOnly } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 // ✅ Public Routes
+router.post("/search-buses", searchBuses); // Public route
 router.get("/buses", protect, getAllBuses); // Get all buses (Requires authentication)
 router.get("/buses/:id", protect, getBusById); // Get a bus by ID
 router.get("/buses/route/:routeId", protect, getBusesByRoute); // Get buses by route
