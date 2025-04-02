@@ -4,6 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import "../styles/AddNoti.css";
+import AdminLayout from "../layouts/AdminLayout";
 
 const UpdateMessage = () => {
   const { id } = useParams();
@@ -55,6 +56,7 @@ const UpdateMessage = () => {
   };
 
   return (
+    <AdminLayout>
     <div className="form-container">
       <h2 className="form-title">Update Scheduled Message</h2>
       <form onSubmit={handleSubmit} className="message-form">
@@ -112,6 +114,7 @@ const UpdateMessage = () => {
         </button>
       </form>
     </div>
+    </AdminLayout>
   );
 };
 
