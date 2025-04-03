@@ -208,9 +208,18 @@ export const searchBuses = async (req, res) => {
                   fareAmount: bus.fareAmount,
                   route: {
                       routeName: route.routeName,
-                      // Use the actual from/to locations instead of route start/end
                       departureLocation: fromLocation,
-                      arrivalLocation: toLocation
+                      arrivalLocation: toLocation,
+                      stops: route.stops.map(stop => ({
+                        stop: {
+                          stopId: stop.stop._id,
+                          stopName: stop.stop.stopName,
+                          stopAddress: stop.stop.stopAddress,
+                          coordinates: stop.stop.coordinates
+                        },
+                        stopType: stop.stopType,
+                        order: stop.order
+                      }))
                   },
                   schedule: {
                       departureDate: schedule.departureDate,

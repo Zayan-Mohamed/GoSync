@@ -30,8 +30,8 @@ const ManageRouteStops = () => {
     order: 1,
   });
   const navigate = useNavigate();
+  const API_URI = import.meta.env.VITE_API_URL
 
-  // Fetch all routes and stops on component mount
   // Fetch all routes and stops on component mount
   useEffect(() => {
     const fetchData = async () => {
@@ -40,7 +40,7 @@ const ManageRouteStops = () => {
         await fetchRoutes();
 
         // Fetch all stops
-        const stopsRes = await axios.get("http://localhost:5000/api/stops/get");
+        const stopsRes = await axios.get(`${API_URI}/api/stops/get`);
         if (stopsRes.data && Array.isArray(stopsRes.data.stops)) {
           setAllStops(stopsRes.data.stops);
         }
