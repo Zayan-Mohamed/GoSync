@@ -117,7 +117,6 @@ const PassengerHomepage = () => {
             )}
           </div>
         </div>
-
         <div className="popular-routes-section">
           <h2>Popular Bus Routes in Sri Lanka</h2>
           <div className="routes-grid">
