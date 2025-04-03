@@ -28,6 +28,8 @@
     "font-awesome": "^4.7.0",
     "framer-motion": "^12.5.0",
     "frontend": "file:",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
     "lucide-react": "^0.483.0",
@@ -40,6 +42,7 @@
     "react-router-dom": "^7.3.0",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.1",
+    "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "styled-components": "^6.1.15",
     "zustand": "^5.0.3"

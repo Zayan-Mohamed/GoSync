@@ -1,11 +1,13 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/operator"; // Adjust based on your backend
+const API_URI = import.meta.env.VITE_API_URL
+
+const API_URL = `${API_URI}/api/operator`; // Adjust based on your backend
 
 // Fetch all bus operators
 export const getBusOperators = async () => {
   try {
-    const response = await axios.get(API_URL);
+    const response = await axios.get(`${API_URL}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching bus operators:", error);
@@ -16,7 +18,7 @@ export const getBusOperators = async () => {
 // Add a new bus operator
 export const addBusOperator = async (operatorData) => {
   try {
-    const response = await axios.post(API_URL, operatorData);
+    const response = await axios.post(`${API_URL}`, operatorData);
     return response.data;
   } catch (error) {
     console.error("Error adding bus operator:", error);

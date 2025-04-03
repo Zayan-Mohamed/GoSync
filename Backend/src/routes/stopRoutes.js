@@ -5,19 +5,21 @@ import {
   editStop,
   deleteStop,
   getStop,
-  getAllStops
+  getAllStops,
+  toggleStopStatus
 } from '../controllers/stopController.js';
-import { updateStop,toggleStopStatus } from '../controllers/routeController.js';
 
 const router = express.Router();
 
 router.post('/create', createStop);
-router.post('/stops/bulk', createMultipleStops);
-router.put('/edit', editStop);
-router.delete('/:stopId', deleteStop);
+router.post('/bulk', createMultipleStops);
+// router.put('/edit', editStop);
+//router.delete('/:stopId', deleteStop);
 router.get('/get', getAllStops);
 router.get('/:stopId', getStop);
-router.put('/:stopId', updateStop );
-router.put('/:stopId/status', toggleStopStatus);
+// router.put('/:stopId', updateStop );
+router.put('/id/:id/status', toggleStopStatus);
+router.put('/id/:id', editStop);
+router.delete('/id/:id', deleteStop);
 
 export default router;

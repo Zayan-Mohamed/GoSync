@@ -106,3 +106,25 @@ export const deleteSchedule = asyncHandler(async (req, res) => {
     res.status(404).json({ message: "Schedule not found" });
   }
 });
+
+// ✅ Get schedules by busId
+export const getSchedulesByBusId = asyncHandler(async (req, res) => {
+  const { busId } = req.params;
+
+  // Validate busId
+  if (!busId) {
+    return res.status(400).json({ message: "Bus ID is required" });
+  }
+
+  const schedules = await Schedule.find({ busId })
+    .populate("routeId", "startLocation endLocation")
+    .populate("busId", "busNumber busType");
+
+  if (schedules.length > 0) {
+    res.json(schedules);
+  } else {
+    res.status(404).json({ message: "No schedules found for this bus" });
+  }
+});
+
+

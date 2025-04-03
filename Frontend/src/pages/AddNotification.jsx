@@ -9,6 +9,7 @@ const AddNotification = () => {
     const [status] = useState("sent"); // Default to 'sent', no need for a state update
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const API_URI = import.meta.env.VITE_API_URL
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -17,7 +18,7 @@ const AddNotification = () => {
         const newNotification = { type, message, status };
 
         try {
-            await axios.post("http://localhost:5000/api/notifications", newNotification);
+            await axios.post(`${API_URI}/api/notifications`, newNotification);
             alert("Notification Sent Successfully!");
             
             setType("");
