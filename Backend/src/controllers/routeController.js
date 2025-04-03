@@ -82,6 +82,133 @@ export const createRoute = async (req, res) => {
     });
   }
 };
+
+export const createMultipleRoutes = async (req, res) => {
+  // Set timeout for the entire operation (30 seconds)
+  req.setTimeout(30000);
+
+  const session = await mongoose.startSession();
+  
+  try {
+    await session.withTransaction(async () => {
+      const { routes } = req.body;
+
+      // 1. Basic validation
+      if (!Array.isArray(routes)) {
+        throw { status: 400, message: 'Input should be an array of routes' };
+      }
+
+      if (routes.length === 0) {
+        throw { status: 400, message: 'No routes provided' };
+      }
+
+
+      // 2. Check for duplicate names in request
+      const nameMap = new Map();
+      for (const route of routes) {
+        const normalized = route.routeName?.trim().toLowerCase();
+        if (nameMap.has(normalized)) {
+          throw { 
+            status: 400, 
+            message: `Duplicate route name found: ${route.routeName}` 
+          };
+        }
+        nameMap.set(normalized, true);
+      }
+
+      // 3. Check against existing routes
+      const existing = await Route.find({
+        routeName: { $in: routes.map(r => new RegExp(`^${r.routeName.trim()}$`, 'i')) }
+      }).session(session).lean();
+
+      if (existing.length > 0) {
+        throw {
+          status: 400,
+          message: 'Some routes already exist',
+          existing: existing.map(r => r.routeName)
+        };
+      }
+
+      // 4. Process routes with stops
+      const routesToCreate = [];
+      
+      for (const [index, route] of routes.entries()) {
+                
+        const formattedStops = [];
+        
+        // Process stops if they exist
+        if (route.stops?.length > 0) {
+          for (const [stopIndex, stopData] of route.stops.entries()) {
+            const stopId = stopData.stopId;
+           
+            
+            const stop = await Stop.findOne({ stopId })
+              .session(session)
+              .maxTimeMS(5000) // 5 second timeout per stop lookup
+              .lean();
+
+            if (!stop) {
+              throw { 
+                status: 404, 
+                message: `Stop not found: ${stopId}` 
+              };
+            }
+
+            formattedStops.push({
+              stop: stop._id,
+              order: stopData.order || stopIndex + 1,
+              stopType: ['boarding', 'dropping'].includes(stopData.stopType) 
+                ? stopData.stopType 
+                : undefined
+            });
+          }
+        }
+
+        routesToCreate.push({
+          routeId: generateRouteId(),
+          routeName: route.routeName,
+          startLocation: route.startLocation,
+          endLocation: route.endLocation,
+          totalDistance: route.totalDistance,
+          startLocationCoordinates: route.startLocationCoordinates,
+          endLocationCoordinates: route.endLocationCoordinates,
+          stops: formattedStops,
+          status: 'active'
+        });
+      }
+
+      // 5. Bulk insert with timeout
+      
+      const result = await Route.insertMany(routesToCreate, { 
+        session,
+        maxTimeMS: 15000 // 15 second timeout for insert
+      });
+
+      console.log(`[Route] Successfully created ${result.length} routes`);
+      return res.status(201).json({
+        success: true,
+        created: result.length,
+        routeIds: result.map(r => r.routeId)
+      });
+    });
+
+  } catch (error) {
+    console.error('[Route] Error:', error.message || error);
+    await session.abortTransaction();
+
+    const status = error.status || 500;
+    const response = {
+      error: error.message || 'Failed to create routes',
+      ...(error.existing && { existingRoutes: error.existing })
+    };
+
+    return res.status(status).json(response);
+  } finally {
+    session.endSession();
+   
+  }
+};
+
 // Update addStopToRoute function
 export const addStopToRoute = async (req, res) => {
   try {
@@ -206,9 +333,14 @@ export const getAllRoutes = async (req, res) => {
 // Get route details by routeId, including stops
 export const getRouteById = async (req, res) => {
   try {
-    const { routeId } = req.params;
+    const { id } = req.params; // Changed from routeId to id
 
-    const route = await Route.findOne({ routeId }).populate('stops.stop');
+    // Validate if the id is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid route ID format' });
+    }
+
+    const route = await Route.findById(id).populate('stops.stop');
     if (!route) return res.status(404).json({ error: 'Route not found' });
 
     // Sort stops by order for consistent output
@@ -315,40 +447,51 @@ export const updateRoute = async (req, res) => {
   }
 };
 
-// Getting all the stops for a specific route
+// // Getting all the stops for a specific route
+// export const getStopsForRoute = async (req, res) => {
+//   try {
+//     const { routeId } = req.params;
+    
+//     // Validate the routeId format
+//     if (!mongoose.Types.ObjectId.isValid(routeId)) {
+//       return res.status(400).json({ error: "Invalid route ID format" });
+//     }
+    
+//     // Find the route by ID and populate the stop details
+//     const route = await Route.findById(routeId).populate('stops.stop');
+    
+//     if (!route) {
+//       return res.status(404).json({ error: "Route not found" });
+//     }
+    
+//     // Sort stops by order and format the response
+//     const formattedStops = route.stops
+//       .sort((a, b) => a.order - b.order)
+//       .map(item => ({
+//         stop: item.stop,
+//         order: item.order,
+//         stopType: item.stopType // Add this line to include stopType in response
+//       }));
+    
+//     // Return the stops for the route
+//     res.status(200).json({
+//       message: "Stops retrieved successfully",
+//       stops: formattedStops
+//     });
+    
+//   } catch (error) {
+//     res.status(500).json({ error: "Error fetching stops", details: error.message });
+//   }
+// };
+
+  // In your routeController.js
 export const getStopsForRoute = async (req, res) => {
   try {
-    const { routeId } = req.params;
-    
-    // Validate the routeId format
-    if (!mongoose.Types.ObjectId.isValid(routeId)) {
-      return res.status(400).json({ error: "Invalid route ID format" });
-    }
-    
-    // Find the route by ID and populate the stop details
-    const route = await Route.findById(routeId).populate('stops.stop');
-    
-    if (!route) {
-      return res.status(404).json({ error: "Route not found" });
-    }
-    
-    // Sort stops by order and format the response
-    const formattedStops = route.stops
-      .sort((a, b) => a.order - b.order)
-      .map(item => ({
-        stop: item.stop,
-        order: item.order,
-        stopType: item.stopType // Add this line to include stopType in response
-      }));
-    
-    // Return the stops for the route
-    res.status(200).json({
-      message: "Stops retrieved successfully",
-      stops: formattedStops
-    });
-    
+    const route = await Route.findById(req.params.routeId)
+      .populate('stops.stop', 'stopName')  // Only populate essential fields
+    res.status(200).json({ stops: route.stops });
   } catch (error) {
-    res.status(500).json({ error: "Error fetching stops", details: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 // Toggle the status of the route (active/inactive)

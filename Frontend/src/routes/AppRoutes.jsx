@@ -21,6 +21,8 @@ import Payment from "../components/Payment";
 import BookingSummary from "../components/BookingSummary";
 import AddStop from "../pages/AddStop.jsx";
 import StopList from "../pages/StopList.jsx";
+import AddRoute from "../pages/AddRoute.jsx";
+import ManageRouteStops from "../pages/ManageRouteStops.jsx";
 
 const AppRoutes = () => {
 
@@ -46,21 +48,19 @@ const AppRoutes = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/bus-management" element={<BusList />} />
           <Route path="/add-bus" element={<InsertBus />} />
-
           <Route path="/notification-management" element={<Notification />} />
           <Route path="/add-notification" element={<AddNotification />} />
           <Route path="/update-notification/:id" element={<UpdateNotification />} />
-          
+          <Route path="/notification-management" element={<Notification />} />
+          <Route path="/add-notification" element={<AddNotification/>} />
+          <Route path="/update-notification/:id" element={<UpdateNotification />} />
+          <Route path="/Schedule-notification" element={<ShedTable/>} />
+          <Route path="/add-message" element={<AddMessage/>} />
+          <Route path="/add-stop" element={<AddStop/>} />
+          <Route path="/stop-management" element={<StopList/>} />
           <Route path="/current-routes" element={<CurrentRoutes />} />
-          
-            <Route path="/notification-management" element={<Notification />} />
-            
-            <Route path="/add-notification" element={<AddNotification/>} />
-            <Route path="/update-notification/:id" element={<UpdateNotification />} />
-            <Route path="/Schedule-notification" element={<ShedTable/>} />
-            <Route path="/add-message" element={<AddMessage/>} />
-            <Route path="/add-stop" element={<AddStop/>} />
-            <Route path="/stop-management" element={<StopList/>} />
+          <Route path="/add-routes" element={<AddRoute />} />
+          <Route path="/route-stops" element={<ManageRouteStops />} />
         </Route>
         
 
