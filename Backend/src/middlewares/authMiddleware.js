@@ -10,7 +10,6 @@ export const protect = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ message: "Not authorized, no token" });
   }
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "76f0a6e8ca67cdbea757096541f87b4a82c0a8adba6dd3f32552a5a65dbafa356d693530cf6f6950e32f6b950b38d40dec538ca95b5125c9c1ada472d52dd836");
     req.user = decoded; // { id, role } from JWT payload

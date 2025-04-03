@@ -1,4 +1,3 @@
-// src/components/BookingSummary.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -24,7 +23,7 @@ const BookingSummary = () => {
           { withCredentials: true }
         );
         setSummary(response.data.summary);
-        toast.success("Booking summary fetched and emailed!");
+        toast.success("Booking summary fetched!");
       } catch (err) {
         toast.error(err.response?.data?.message || "Error fetching summary");
       } finally {
@@ -58,10 +57,10 @@ const BookingSummary = () => {
         ))
       )}
       <button
-        onClick={() => navigate("/seat-selection")}
+        onClick={() => navigate("/passenger")}
         className="mt-4 bg-deepOrange text-white px-6 py-2 rounded"
       >
-        Back to Seat Selection
+        Back to Homepage
       </button>
     </div>
   );

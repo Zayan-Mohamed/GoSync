@@ -118,14 +118,40 @@ export const createMultipleStops = async (req, res) => {
 };
 
 // Edit an existing stop
+// Update or add this controller function
 export const editStop = async (req, res) => {
+  // Check which route is being used
+  const id = req.params.id;
   const { stopId, stopName, status } = req.body;
 
   try {
-    const stop = await Stop.findOne({ stopId });
+    let stop;
+    
+    if (id) {
+      // If we're using the id route
+      stop = await Stop.findById(id);
+    } else {
+      // If we're using the original route
+      stop = await Stop.findOne({ stopId });
+    }
 
     if (!stop) {
       return res.status(404).json({ error: 'Stop not found' });
+    }
+
+    // Check for duplicate name (excluding current stop)
+    if (stopName) {
+      const existingStop = await Stop.findOne({
+        stopName: { $regex: new RegExp(`^${stopName.trim()}$`, 'i') },
+        _id: { $ne: stop._id }
+      });
+
+      if (existingStop) {
+        return res.status(409).json({
+          error: 'Stop with this name already exists',
+          existingStop: existingStop.stopName
+        });
+      }
     }
 
     stop.stopName = stopName || stop.stopName;
@@ -182,16 +208,47 @@ export const getAllStops = async (req, res) => {
 
 // Delete a stop
 export const deleteStop = async (req, res) => {
-  const { stopId } = req.params;
-
+  // Check if we're using the id or stopId route
+  const id = req.params.id;
+  
   try {
-    const stop = await Stop.findOneAndDelete({ stopId });
+    let stop;
+    
+    if (id) {
+      // If we have an id parameter, use findByIdAndDelete
+      stop = await Stop.findByIdAndDelete(id);
+    } else {
+      // Fallback to the original method if no id is provided
+      const { stopId } = req.params;
+      stop = await Stop.findOneAndDelete({ stopId });
+    }
 
     if (!stop) {
       return res.status(404).json({ error: 'Stop not found' });
     }
 
     res.status(200).json({ message: 'Stop deleted successfully' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// In stopController.js
+export const toggleStopStatus = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const stop = await Stop.findById(id);
+
+    if (!stop) {
+      return res.status(404).json({ error: 'Stop not found' });
+    }
+
+    // Toggle the status between active and inactive
+    stop.status = stop.status === 'active' ? 'inactive' : 'active';
+
+    await stop.save();
+    res.status(200).json(stop);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
