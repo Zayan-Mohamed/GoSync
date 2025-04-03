@@ -53,7 +53,7 @@ const ShedTable = () => {
         </Link>
         <table>
           <thead>
-            <tr>
+            <tr> <th>Type</th>
               <th>Message</th>
               <th>Date</th>
               <th>Time</th>
@@ -65,6 +65,7 @@ const ShedTable = () => {
             {messages.length > 0 ? (
               messages.map((msg) => (
                 <tr key={msg._id}>
+                  <td>{msg.type}</td>
                   <td>{msg.message}</td>
                   <td>{msg.shedDate}</td>
                   <td>{msg.shedTime}</td>

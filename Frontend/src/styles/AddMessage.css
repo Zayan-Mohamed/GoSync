@@ -1,55 +1,55 @@
 .form-container {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 50px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
+  width: 100%;
+  max-width: 550px; /* Reduced the max width to make the form smaller */
+  margin: 0 auto;
+  padding: 50px; /* Reduced padding */
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   
-  .form-title {
-    text-align: center;
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-  }
-  
-  .message-form {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .message-form .form-label {
-    font-weight: bold;
-  }
-  
-  .message-form textarea,
-  .message-form input,
-  .message-form select,
-  .message-form .react-datepicker__input-container input {
-    border-radius: 5px;
-  }
-  
-  button:disabled {
-    background-color: #ccc;
-    border-color: #ccc;
-  }
-  
-  button {
-    margin-top: 20px;
-    padding: 10px 15px;
-    font-size: 1rem;
-    border-radius: 5px;
-  }
-  
-  .react-datepicker-wrapper {
-    width: 100%;
-  }
-  
-  .react-datepicker__input-container input {
-    width: 100%;
-    padding: 8px;
-    font-size: 1rem;
-    border-radius: 5px;
-  }
-  
+}
+
+.form-title {
+  text-align: center;
+  font-size: 1.25rem; /* Reduced font size */
+  margin-bottom: 15px; /* Reduced margin */
+}
+
+.message-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.message-form .form-label {
+  font-weight: bold;
+}
+
+.message-form textarea,
+.message-form input,
+.message-form select,
+.message-form .react-datepicker__input-container input {
+  border-radius: 5px;
+}
+
+button:disabled {
+  background-color: #ccc;
+  border-color: #ccc;
+}
+
+button {
+  margin-top: 15px; /* Reduced margin-top */
+  padding: 8px 12px; /* Reduced padding */
+  font-size: 0.9rem; /* Slightly smaller font size */
+  border-radius: 5px;
+}
+
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 6px; /* Reduced padding */
+  font-size: 0.9rem; /* Slightly smaller font size */
+  border-radius: 5px;
+}

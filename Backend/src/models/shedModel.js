@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 
 const shedSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['travel disruption', 'promotions', 'discounts', 'alert', 'reminders', 'info'],
+    default: 'info',
+  },
   message: { type: String, required: true },
   shedDate: { type: String, required: true }, // YYYY-MM-DD
   shedTime: { type: String, required: true }, // HH:mm

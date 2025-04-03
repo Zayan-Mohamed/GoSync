@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import "../styles/AddMessage.css"; 
+import "../styles/AddMessage.css";
 import axios from "axios";
+import AdminLayout from "../layouts/AdminLayout";
 
 const AddMessage = () => {
   const [message, setMessage] = useState("");
   const [shedDate, setShedDate] = useState(new Date()); // Default to today's date
   const [shedTime, setShedTime] = useState("");
   const [status, setStatus] = useState("pending");
+  const [type, setType] = useState(""); // Add state for notification type
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -20,6 +22,7 @@ const AddMessage = () => {
       shedDate: shedDate.toISOString().split("T")[0], // Convert to YYYY-MM-DD format
       shedTime,
       status,
+      type, // Add type to the new message object
     };
 
     try {
@@ -29,6 +32,7 @@ const AddMessage = () => {
       setShedDate(new Date());
       setShedTime("");
       setStatus("pending");
+      setType(""); // Reset the type field after successful submission
     } catch (error) {
       console.error("Error sending message:", error);
       alert("Failed to send message.");
@@ -38,9 +42,25 @@ const AddMessage = () => {
   };
 
   return (
+     <AdminLayout>
     <div className="form-container">
       <h2 className="form-title">Create Scheduled Message</h2>
       <form onSubmit={handleSubmit} className="message-form">
+        
+        {/* Notification Type */}
+        <label style={{ fontWeight: 'bold' }}>Notification Type</label>
+
+        <select value={type} onChange={(e) => setType(e.target.value)} required>
+          <option value="">Select Type</option>
+          <option value="travel disruption">Travel Disruption</option>
+          <option value="promotions">Promotions</option>
+          <option value="discounts">Discounts</option>
+          <option value="alert">Alert</option>
+          <option value="reminders">Reminders</option>
+          <option value="info">Info</option>
+        </select>
+
+        {/* Message */}
         <div className="mb-3">
           <label htmlFor="message" className="form-label">
             Message
@@ -56,6 +76,7 @@ const AddMessage = () => {
           ></textarea>
         </div>
 
+        {/* Scheduled Date */}
         <div className="mb-3">
           <label htmlFor="shedDate" className="form-label">
             Scheduled Date
@@ -69,6 +90,7 @@ const AddMessage = () => {
           />
         </div>
 
+        {/* Scheduled Time */}
         <div className="mb-3">
           <label htmlFor="shedTime" className="form-label">
             Scheduled Time
@@ -83,6 +105,7 @@ const AddMessage = () => {
           />
         </div>
 
+        {/* Status */}
         <div className="mb-3">
           <label htmlFor="status" className="form-label">
             Status
@@ -104,7 +127,9 @@ const AddMessage = () => {
         </button>
       </form>
     </div>
+  </AdminLayout>
   );
 };
 
 export default AddMessage;
+

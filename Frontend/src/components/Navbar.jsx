@@ -31,11 +31,13 @@ const Navbar = () => {
         ]);
 
         // Extract notifications and convert timestamps
-        const notificationsData = notifResponse.data.map((notif) => ({
-          ...notif,
-          type: "notification",
-          timestamp: new Date(notif.createdAt).getTime(), // Convert to timestamp
-        }));
+        const notificationsData = notifResponse.data
+          .filter((notif) => !notif.expiredAt || new Date(notif.expiredAt) > new Date()) // Filter out expired notifications
+          .map((notif) => ({
+            ...notif,
+            type: "notification",
+            timestamp: new Date(notif.createdAt).getTime(), // Convert to timestamp
+          }));
 
         // Extract sent messages and create timestamp from shedDate + shedTime
         const sentMessages = msgResponse.data.data
@@ -66,14 +68,17 @@ const Navbar = () => {
 
     // Listen for real-time notifications
     socket.on("newNotification", (newNotif) => {
-      setNotifications((prev) => {
-        const updatedList = [
-          { ...newNotif, timestamp: new Date(newNotif.createdAt).getTime() },
-          ...prev,
-        ];
-        return updatedList.sort((a, b) => b.timestamp - a.timestamp);
-      });
-      setHasUnread(true);
+      // Filter out expired notifications when they arrive
+      if (!newNotif.expiredAt || new Date(newNotif.expiredAt) > new Date()) {
+        setNotifications((prev) => {
+          const updatedList = [
+            { ...newNotif, timestamp: new Date(newNotif.createdAt).getTime() },
+            ...prev,
+          ];
+          return updatedList.sort((a, b) => b.timestamp - a.timestamp);
+        });
+        setHasUnread(true);
+      }
     });
 
     return () => socket.off("newNotification");

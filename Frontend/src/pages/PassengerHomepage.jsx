@@ -5,11 +5,13 @@ import Navbar1 from "../components/Navbar1";
 import { useNavigate } from "react-router-dom";
 import Footer1 from "../components/Footer1";
 import useStopStore from "../store/stopStore.js";
+import axios from 'axios'; // Make sure you have axios installed
 
 const PassengerHomepage = () => {
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
   const [journeyDate, setJourneyDate] = useState("");
+  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
 
   const { stops, loading, error, fetchStops } = useStopStore();
@@ -17,6 +19,25 @@ const PassengerHomepage = () => {
   useEffect(() => {
     fetchStops();
   }, [fetchStops]);
+
+  // Fetch Promotions and Discounts
+  useEffect(() => {
+    const fetchPromotionsAndDiscounts = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/notifications"); // Adjust with your actual API endpoint
+        const filteredNotifications = response.data
+          .filter(
+            (notif) => (notif.type === 'promotions' || notif.type === 'discounts') && 
+              (!notif.expiredAt || new Date(notif.expiredAt) > new Date()) // Filter expired notifications
+          );
+        setNotifications(filteredNotifications);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    fetchPromotionsAndDiscounts();
+  }, []);
 
   const findBuses = () => {
     if (!fromLocation || !toLocation) {
@@ -44,12 +65,6 @@ const PassengerHomepage = () => {
   return (
     <div className="passenger-homepage">
       <Navbar1 />
-      {/* <div className="map-container"> 
-        <LoadScript googleMapsApiKey={import.meta.env.VITE_API_GOOGLE_MAPS_KEY}>
-          <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={7} />
-        </LoadScript>
-      </div> 
-      */}
 
       <div className="main-content">
         <div className="booking-container">
@@ -118,6 +133,7 @@ const PassengerHomepage = () => {
           </div>
         </div>
 
+        {/* Popular Routes Section */}
         <div className="popular-routes-section">
           <h2>Popular Bus Routes in Sri Lanka</h2>
           <div className="routes-grid">
@@ -144,18 +160,39 @@ const PassengerHomepage = () => {
           </div>
         </div>
 
-        <div className="top-routes">
-          <h2>Most Searched Routes</h2>
-          <ul>
-            <li>Colombo - Kandy</li>
-            <li>Colombo - Jaffna</li>
-            <li>Galle - Colombo</li>
-            <li>Negombo - Colombo</li>
-            <li>Kandy - Nuwara Eliya</li>
-            <li>Colombo - Galle</li>
-          </ul>
+        {/* Displaying Promotions and Discounts */}
+        <div className="notifications-container">
+          {notifications.length > 0 ? (
+            notifications
+              .filter((notif) => !notif.expiredAt || new Date(notif.expiredAt) > new Date()) // Filter expired notifications
+              .map((notif) => (
+                <div className="notification-card" key={notif.notificationId}>
+                  <h3>{notif.type}</h3>
+                  <p>{notif.message}</p>
+                  {notif.expiredAt && (
+                    <p><strong>Valid Until:</strong> {new Date(notif.expiredAt).toLocaleDateString()}</p>
+                  )}
+                </div>
+              ))
+          ) : (
+            <p>No promotions or discounts available at the moment.</p>
+          )}
         </div>
       </div>
+
+      {/* Most Searched Routes Section */}
+      <div className="top-routes">
+        <h2>Most Searched Routes</h2>
+        <ul>
+          <li>Colombo - Kandy</li>
+          <li>Colombo - Jaffna</li>
+          <li>Galle - Colombo</li>
+          <li>Negombo - Colombo</li>
+          <li>Kandy - Nuwara Eliya</li>
+          <li>Colombo - Galle</li>
+        </ul>
+      </div>
+
       <Footer1 />
     </div>
   );
