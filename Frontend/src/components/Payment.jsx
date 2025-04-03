@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import useAuthStore from "../store/authStore";
+import Navbar1 from "./Navbar1";
+import Footer1 from "./Footer1";
 
 const Payment = () => {
   const { state } = useLocation();
@@ -20,6 +21,7 @@ const Payment = () => {
   }, [busId, scheduleId, selectedSeats, user, navigate]);
 
   const handlePayment = async () => {
+    setLoading(true);
     try {
       console.log("Starting payment for:", { busId, scheduleId, selectedSeats });
       const paymentSuccess = await new Promise((resolve) => setTimeout(() => resolve(true), 2000));
@@ -30,8 +32,7 @@ const Payment = () => {
         { busId, scheduleId, seatNumbers: selectedSeats },
         { withCredentials: true }
       );
-      console.log("Booking confirmed:", response.data);
-      toast.success(response.data.message);
+      console.log("Payment updated:", paymentResponse.data);
 
       try {
         const summaryResponse = await axios.get(
@@ -62,16 +63,30 @@ const Payment = () => {
     }
   };
 
+  if (!busId || !scheduleId || !selectedSeats || !bookingSummary) {
+    return <div>Invalid payment data</div>;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-      <h2 className="text-2xl font-semibold mb-4">Payment</h2>
-      <p>Booking seats: {selectedSeats?.join(", ")}</p>
-      <button
-        onClick={handlePayment}
-        className="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-      >
-        Pay Now
-      </button>
+    <div className="min-h-screen bg-gray-100">
+      <Navbar1 />
+      <div className="container mx-auto py-6 px-4">
+        <h2 className="text-2xl font-semibold mb-4">Payment</h2>
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <p>Booking ID: {bookingSummary.bookingId}</p>
+          <p>Route: {bookingSummary.from} to {bookingSummary.to}</p>
+          <p>Seats: {bookingSummary.seatNumbers.join(", ")}</p>
+          <p>Total Fare: ${bookingSummary.fareTotal}</p>
+          <button
+            onClick={handlePayment}
+            disabled={loading}
+            className="mt-4 px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            {loading ? "Processing..." : "Pay Now"}
+          </button>
+        </div>
+      </div>
+      <Footer1 />
     </div>
   );
 };

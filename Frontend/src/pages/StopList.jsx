@@ -5,19 +5,20 @@ import {
   deleteStop,
   toggleStopStatus
 } from "../services/stopService";
-import Navbar from "../components/Navbar";
-import Sidebar from "../components/Sidebar";
+import AdminLayout from "../layouts/AdminLayout";
 import {
   TextField,
   MenuItem,
   Select,
   CircularProgress
 } from "@mui/material";
-import { Edit, Delete, Save, Sync } from "@mui/icons-material";
+import { Edit, Delete, Save, Sync, PictureAsPdf } from "@mui/icons-material";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Table from "../components/Table";
 import CustomButton from "../components/Button";
+import { jsPDF } from "jspdf";
+import autoTable from  "jspdf-autotable";
 
 function StopList() {
     const [stops, setStops] = useState([]);
@@ -38,7 +39,6 @@ function StopList() {
           const data = await getAllStops();
           console.log("Received data:", data);
           
-          // Corrected ternary operation
           const stopsData = Array.isArray(data) 
             ? data 
             : (Array.isArray(data?.stops) 
@@ -138,27 +138,30 @@ function StopList() {
 
   const columns = [
     {
-      header: "Stop ID",
-      accessor: "stopId",
-      render: (stop) => stop.stopId
-    },
-    {
       header: "Stop Name",
       accessor: "stopName",
       render: (stop) => (
         editingStop.id === stop._id ? (
-          <TextField
-            value={editingStop.stopName}
-            onChange={(e) => setEditingStop({
-              ...editingStop,
-              stopName: e.target.value
-            })}
-            variant="outlined"
-            size="small"
-            fullWidth
-          />
+          <div>
+            <TextField
+              value={editingStop.stopName}
+              onChange={(e) => setEditingStop({
+                ...editingStop,
+                stopName: e.target.value
+              })}
+              variant="outlined"
+              size="small"
+              fullWidth
+            />
+            <div className="text-xs text-gray-500 mt-1">
+              ID: {editingStop.stopId}
+            </div>
+          </div>
         ) : (
-          stop.stopName
+          <div>
+            <div className="font-medium">{stop.stopName}</div>
+            <div className="text-xs text-gray-500">ID: {stop.stopId}</div>
+          </div>
         )
       )
     },
@@ -239,58 +242,117 @@ function StopList() {
     }
   ];
 
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Stops List', 14, 15);
+    
+    // Prepare data for PDF (only first two columns)
+    const pdfData = filteredStops.map(stop => [
+      `${stop.stopName}\nID: ${stop.stopId}`,
+      stop.status
+    ]);
+    
+    // Generate table using autoTable plugin
+    autoTable(doc, {
+      head: [['Stop Name', 'Status']],
+      body: pdfData,
+      startY: 25,
+      styles: {
+        fontSize: 10,
+        cellPadding: 2,
+        valign: 'middle'
+      },
+      columnStyles: {
+        0: { cellWidth: 120 },
+        1: { cellWidth: 40 }
+      },
+      didDrawCell: (data) => {
+        if (data.section === 'body' && data.column.index === 1) {
+          const status = data.cell.raw;
+          doc.setFillColor(status === 'active' ? '#d1fae5' : '#fee2e2');
+          doc.setDrawColor(status === 'active' ? '#10b981' : '#ef4444');
+          doc.rect(
+            data.cell.x,
+            data.cell.y,
+            data.cell.width,
+            data.cell.height,
+            'FD' // Fill and draw
+          );
+          doc.setTextColor(status === 'active' ? '#065f46' : '#991b1b');
+          doc.text(
+            status,
+            data.cell.x + data.cell.width / 2,
+            data.cell.y + data.cell.height / 2 + 2,
+            { align: 'center' }
+          );
+        }
+      }
+    });
+    
+    // Save the PDF
+    doc.save('stops-list.pdf');
+  };
+
   return (
-    <div className="flex">
-      <Sidebar />
-      <div className="flex-1 bg-[#F5F5F5] min-h-screen">
-        <Navbar />
-        <div className="p-6">
-          <h2 className="text-xl font-bold mb-4">Current Stops</h2>
+    <AdminLayout>
+      <div className="p-6">
+        <h2 className="text-xl font-bold mb-4">Current Stops</h2>
 
-          <div className="flex mb-4">
-            <TextField
-              label="Search stops by name"
-              variant="outlined"
-              size="small"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full md:w-1/2"
-            />
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center p-8">
-              <CircularProgress />
-            </div>
-          ) : error ? (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-              {error}
-              <CustomButton 
-                onClick={fetchStops}
-                className="ml-2 bg-red-500 hover:bg-red-600 text-white"
-              >
-                Retry
-              </CustomButton>
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              {filteredStops.length === 0 ? (
-                <div className="p-4 text-center">
-                  {searchTerm ? "No matching stops found" : "No stops available"}
-                </div>
-              ) : (
-                <Table
-                  columns={columns}
-                  data={filteredStops}
-                  className="w-full border border-gray-200"
-                />
-              )}
-            </div>
-          )}
+        <div className="flex mb-4 gap-2">
+          <TextField
+            label="Search stops by name"
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1"
+          />
+          <CustomButton
+            variant="contained"
+            color="primary"
+            starticon={<PictureAsPdf />}
+            onClick={generatePDF}
+            disabled={filteredStops.length === 0}
+          >
+            Generate PDF
+          </CustomButton>
         </div>
+
+        {loading ? (
+          <div className="flex justify-center p-8">
+            <CircularProgress />
+          </div>
+        ) : error ? (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+            {error}
+            <CustomButton 
+              onClick={fetchStops}
+              className="ml-2 bg-red-500 hover:bg-red-600 text-white"
+            >
+              Retry
+            </CustomButton>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            {filteredStops.length === 0 ? (
+              <div className="p-4 text-center">
+                {searchTerm ? "No matching stops found" : "No stops available"}
+              </div>
+            ) : (
+              <Table
+                columns={columns}
+                data={filteredStops}
+                className="w-full border border-gray-200"
+              />
+            )}
+          </div>
+        )}
       </div>
       <ToastContainer />
-    </div>
+    </AdminLayout>
   );
 }
 

@@ -35,6 +35,7 @@ const Sidebar = () => {
         { to: "/stop-analytics", label: "Stop Analytics", icon: <VscGraphScatter /> },
         { to: "/current-routes", label: "Current Routes", icon: <FiMap /> },
         { to: "/add-routes", label: "Add Routes", icon: <FiPlus /> },
+        { to: "/route-stops", label: "Manage Route Stops", icon: <BsGraphUp /> },
         { to: "/route-analytics", label: "Route Analytics", icon: <BsGraphUp /> },
       ],
     },
@@ -50,60 +51,30 @@ const Sidebar = () => {
       title: "Schedule Management",
       links: [
         { to: "/schedule-management", label: "Current Schedule", icon: <FiCalendar /> },
-        { to: "/add-schedule", label: "Add Schedule", icon: <FiPlus /> },
+        { to: "/insert-schedule", label: "Insert Schedule", icon: <FiPlus /> },
+        { to: "/schedule-search", label: "Search Schedule", icon: <FiCalendar /> },
         { to: "/schedule-analytics", label: "Schedule Analytics", icon: <BsGraphUpArrow /> },
       ],
-    },
-    {
-      title: "Seat and Booking Management",
-      links: [
-        { to: "/seat-management", label: "Current Seats", icon: <FiUserCheck /> },
-        { to: "/add-seat", label: "Add Seat", icon: <FiPlus /> },
-        { to: "/seat-analytics", label: "Seat Analytics", icon: <VscGraphLine /> },
-        { to: "/booking-management", label: "Current Bookings", icon: <FiUserCheck /> },
-        { to: "/add-booking", label: "Add Booking", icon: <FiPlus /> },
-        { to: "/booking-analytics", label: "Booking Analytics", icon: <SlGraph /> },
-      ],
-    },
-    {
-      title: "Notification Management",
-      links: [
-        { to: "/notification-management", label: "Current Notifications", icon: <FiBell /> },
-        { to: "/Schedule-notification", label: "Schedule Notifications", icon: <FiBell /> },
-        { to: "/add-notification", label: "Add Notification", icon: <FiPlus /> },
-        { to: "/notification-analytics", label: "Notification Analytics", icon: <GoGraph /> },
-      ],
-    },
-    {
-      title: "Notices",
-      links: [{ to: "/notices", label: "Current Notices", icon: <CgNotes /> }],
-    },
-    {
-      title: "Analytics",
-      links: [{ to: "/analytics", label: "Analytics Overview", icon: <TbReportSearch /> }],
     },
   ];
 
   return (
-    <div className={`bg-[#FFE082] h-screen flex flex-col transition-all overflow-hidden ${collapsed ? "w-16" : "w-70"}`}>
-      {/* Top Section: Logo & Toggle Button */}
+    <div className={`bg-[#FFE082] h-screen flex flex-col transition-all overflow-hidden duration-300 ${collapsed ? "w-16" : "w-64 md:w-72 lg:w-80"}`}>
       <div className="flex items-center p-4">
         <button onClick={() => setCollapsed(!collapsed)} className="mr-3 mt-6">
           <FiMenu size={24} />
         </button>
         {!collapsed && (
-          <img src="/assets/GoSync-Logo_Length2.png" alt="GoSync Logo" className="h-10 w-auto ml-8 mt-3" />
+          <img src="/assets/GoSync-Logo_Length2.png" alt="GoSync Logo" className="h-10 w-auto ml-8 mt-3 hidden sm:block" />
         )}
       </div>
 
-      {/* Middle Section: Sidebar Links (Grows to push Settings/Logout to Bottom) */}
       <div className="flex-grow overflow-y-auto p-4 space-y-6 custom-scrollbar">
         {sections.map((section, index) => (
           <SidebarSection key={index} title={section.title} links={section.links} collapsed={collapsed} />
         ))}
       </div>
 
-      {/* Bottom Section: Settings & Logout (Stays at the bottom) */}
       <div className="p-4">
         <ul className="space-y-4">
           <li>

@@ -7,21 +7,21 @@ const useStopStore = create((set, get) => ({
   error: null,
 
   // Fetch all stops
-  fetchStops: async () => {
-    set({ loading: true, error: null });
-    try {
-      const response = await axios.get('/api/stops/get');
-      set({ 
-        stops: response.data.stops || [], 
-        loading: false 
-      });
-    } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to fetch stops', 
-        loading: false 
-      });
-    }
-  },
+fetchStops: async () => {
+  set({ loading: true, error: null });
+  try {
+    const response = await axios.get('/api/stops/get');
+    set({ 
+      stops: response.data.stops || [], 
+      loading: false 
+    });
+  } catch (error) {
+    set({ 
+      error: error.response?.data?.message || 'Failed to fetch stops', 
+      loading: false 
+    });
+  }
+},
 
   // Toggle stop status
   toggleStopStatus: async (stopId) => {

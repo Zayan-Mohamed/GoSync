@@ -32,10 +32,10 @@ const handleServiceError = (error, action) => {
     if (error.response.status === 404) {
       errorInfo.message = "Stop not found";
     } else if (error.response.status === 409) {
-      errorInfo.message = "Stop name already exists";
+      errorInfo.message = error.response.data.error || "Stop name already exists";
     }
   } else if (error.request) {
-    errorInfo.message = "No response from server";
+    errorInfo.message = "No response received from server";
   } else {
     errorInfo.message = error.message;
   }
@@ -73,20 +73,39 @@ export const createStop = async (stopData) => {
   }
 };
 
-// Update a stop
-export const updateStop = async (stopId, updatedData) => {
+// Update the updateStop function
+export const updateStop = async (id, updatedData) => {
   try {
-    const response = await api.put(`/${stopId}`, updatedData);
+    // First check if the new name already exists
+    if (updatedData.stopName) {
+      const allStops = await getAllStops();
+      const nameExists = allStops.some(
+        stop => stop._id !== id && 
+        stop.stopName.toLowerCase() === updatedData.stopName.toLowerCase().trim()
+      );
+      
+      if (nameExists) {
+        throw {
+          response: {
+            status: 409,
+            data: { error: "Stop name already exists" }
+          }
+        };
+      }
+    }
+
+    // Use the new route
+    const response = await api.put(`/id/${id}`, updatedData);
+    
     return response.data;
   } catch (error) {
     handleServiceError(error, "updating stop");
   }
 };
 
-// Toggle stop status
-export const toggleStopStatus = async (stopId) => {
+export const toggleStopStatus = async (id) => {
   try {
-    const response = await api.put(`/${stopId}/status`);
+    const response = await api.put(`/id/${id}/status`);
     return response.data;
   } catch (error) {
     handleServiceError(error, "toggling stop status");
@@ -94,11 +113,21 @@ export const toggleStopStatus = async (stopId) => {
 };
 
 // Delete a stop
-export const deleteStop = async (stopId) => {
+export const deleteStop = async (id) => {
   try {
-    const response = await api.delete(`/${stopId}`);
+    const response = await api.delete(`/id/${id}`);
     return response.data;
   } catch (error) {
     handleServiceError(error, "deleting stop");
+  }
+};
+
+// Create multiple stops
+export const createMultipleStops = async (stopsData) => {
+  try {
+    const response = await api.post('/bulk', stopsData);
+    return response.data;
+  } catch (error) {
+    handleServiceError(error, "creating multiple stops");
   }
 };

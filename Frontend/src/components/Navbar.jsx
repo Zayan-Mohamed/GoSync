@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { FiBell, FiSearch, FiSettings, FiUser, FiLogOut } from "react-icons/fi";
-import io from "socket.io-client"; // Import socket.io-client
+import { FiBell, FiSearch, FiSettings, FiUser, FiLogOut, FiMenu, FiX } from "react-icons/fi";
+import io from "socket.io-client";
 import useAuthStore from "../store/authStore";
 import { useNavigate } from "react-router-dom";
 import AdminModal from "./AdminModal";
@@ -16,46 +16,35 @@ const Navbar = () => {
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
-
   const [isAdminModalOpen, setAdminModalOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  // Fetch initial notifications from the backend
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        // Fetch both notifications and messages
         const [notifResponse, msgResponse] = await Promise.all([
           axios.get(`${API_URI}/api/notifications`),
           axios.get(`${API_URI}/api/shed/messages`),
         ]);
 
-        // Extract sent messages
         const sentMessages = msgResponse.data.data.filter((msg) => msg.status === "sent");
-
-        // Combine and sort notifications and messages by latest date
         const allNotifications = [...notifResponse.data, ...sentMessages].sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
 
         setNotifications(allNotifications);
-
-        // If there are new notifications, mark them as unread
-        if (allNotifications.length > 0) {
-          setHasUnread(true);
-        }
+        if (allNotifications.length > 0) setHasUnread(true);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
 
     fetchNotifications();
-
-    // Listen for real-time notifications
     socket.on("newNotification", (newNotif) => {
       setNotifications((prev) => [newNotif, ...prev].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -68,26 +57,29 @@ const Navbar = () => {
 
   const toggleDropdown = () => {
     setShowDropdown((prev) => !prev);
-
-    if (!showDropdown) {
-      // Mark notifications as read when the dropdown is opened
-      setHasUnread(false);
-    }
+    if (!showDropdown) setHasUnread(false);
   };
 
   return (
-    <div className="flex justify-between items-center p-4 bg-white shadow-md">
+    <div className="flex justify-between items-center p-4 bg-white shadow-md w-full h-28">
+      {/* Left Section - Search */}
       <div className="flex items-center space-x-3">
-        <FiSearch size={20} />
-        <input type="text" placeholder="Search..." className="border-b outline-none" />
+        <FiSearch size={20} className="hidden md:block" />
+        <input type="text" placeholder="Search..." className="border-b outline-none hidden md:block" />
       </div>
 
-      <div className="flex items-center space-x-4">
+      {/* Mobile Menu Button */}
+      <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+      </button>
+
+      {/* Right Section - Icons & Buttons */}
+      <div className={`flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-4 absolute md:relative top-16 md:top-0 left-0 w-full md:w-auto bg-white md:bg-transparent shadow-md md:shadow-none p-4 md:p-0 transition-all duration-300 ${isMenuOpen ? "block" : "hidden md:flex"}`}>
         <button
           onClick={() => setAdminModalOpen(true)}
           className="bg-deepOrange text-white px-4 py-2 rounded-lg hover:bg-sunsetOrange transition"
         >
-          Add an Admin
+          Add Admin
         </button>
 
         {/* Bell Icon - Notifications */}
@@ -102,7 +94,7 @@ const Navbar = () => {
           </button>
 
           {showDropdown && (
-            <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg overflow-hidden">
+            <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg overflow-hidden z-50">
               <div className="p-2">
                 <h3 className="font-semibold text-lg">Notifications</h3>
                 <ul className="space-y-2">
@@ -131,6 +123,7 @@ const Navbar = () => {
           <span>Logout</span>
         </button>
       </div>
+
       {/* Admin Modal */}
       {isAdminModalOpen && (
         <AdminModal
