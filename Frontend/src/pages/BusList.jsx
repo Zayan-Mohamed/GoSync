@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { getBuses, addBus, updateBus, deleteBus } from "../services/busService";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import { Select, MenuItem } from "@mui/material";
+
 import {
   Table,
   TableBody,
@@ -192,23 +194,28 @@ function BusList() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {editingBus.id === bus._id ? (
-                          <TextField
-                            value={editingBus.busType}
-                            onChange={(e) =>
-                              setEditingBus({
-                                ...editingBus,
-                                busType: e.target.value,
-                              })
-                            }
-                            variant="outlined"
-                            size="small"
-                          />
-                        ) : (
-                          bus.busType
-                        )}
-                      </TableCell>
-                      <TableCell>
+  {editingBus.id === bus._id ? (
+    <Select
+      value={editingBus.busType}
+      onChange={(e) =>
+        setEditingBus((prev) => ({
+          ...prev,
+          busType: e.target.value,
+        }))
+      }
+      variant="outlined"
+      size="small"
+      fullWidth
+    >
+      <MenuItem value="Semi-Luxury">Semi-Luxury</MenuItem>
+      <MenuItem value="Non-AC">Non-AC</MenuItem>
+      <MenuItem value="AC">Luxury</MenuItem>
+    </Select>
+  ) : (
+    bus.busType
+  )}
+</TableCell>
+    <TableCell>
                         {editingBus.id === bus._id ? (
                           <TextField
                             value={String(editingBus.capacity)} // Ensure capacity is a string
@@ -226,22 +233,21 @@ function BusList() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {editingBus.id === bus._id ? (
-                          <TextField
-                            value={editingBus.status}
-                            onChange={(e) =>
-                              setEditingBus({
-                                ...editingBus,
-                                status: e.target.value,
-                              })
-                            }
-                            variant="outlined"
-                            size="small"
-                          />
-                        ) : (
-                          bus.status
-                        )}
-                      </TableCell>
+  {editingBus.id === bus._id ? (
+    <select
+      value={editingBus.status}
+      onChange={(e) =>
+        setEditingBus({ ...editingBus, status: e.target.value })
+      }
+    >
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+    </select>
+  ) : (
+    bus.status
+  )}
+</TableCell>
+
                       <TableCell>
                         {editingBus.id === bus._id ? (
                           <TextField

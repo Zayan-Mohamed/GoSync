@@ -17,6 +17,7 @@ import SeatSelection from "../pages/SeatSelection";
 import ShedTable from "../pages/shedTable";
 import AddMessage from "../pages/AddMessage";
 import BusSearchResults from "../pages/BusSearchResults";
+import BusOperatorsList from "../pages/BusOperatorsList";
 
 const AppRoutes = () => {
 
@@ -42,6 +43,8 @@ const AppRoutes = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/bus-management" element={<BusList />} />
           <Route path="/add-bus" element={<InsertBus />} />
+          <Route path="/bus-analytics" element={<BusList />} />
+          <Route path="/busop-man" element={<BusOperatorsList />} />
 
           <Route path="/notification-management" element={<Notification />} />
           <Route path="/add-notification" element={<AddNotification />} />
