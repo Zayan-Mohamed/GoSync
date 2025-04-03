@@ -12,13 +12,17 @@ export const registerUser = async (req, res) => {
 
   // ✅ Ensure phone is numeric
   if (isNaN(phone)) {
-    return res.status(400).json({ message: "Phone number must be a valid number" });
+    return res
+      .status(400)
+      .json({ message: "Phone number must be a valid number" });
   }
 
   // ✅ Check if user already exists by email or phone
   const userExists = await User.findOne({ $or: [{ email }, { phone }] });
   if (userExists) {
-    return res.status(400).json({ message: "Email or phone number already in use" });
+    return res
+      .status(400)
+      .json({ message: "Email or phone number already in use" });
   }
   console.log("Password before hashing:", password);
   // ✅ Hash password
@@ -44,23 +48,26 @@ export const registerUser = async (req, res) => {
 };
 
 export const protect = async (req, res, next) => {
-  let token = req.headers.authorization;
+  let token = req.cookies.jwt;
 
-  if (!token || !token.startsWith("Bearer ")) {
+  if (!token) {
+    console.log("No token found in cookies");
     return res.status(401).json({ message: "Unauthorized, no token" });
   }
 
   try {
-    token = token.split(" ")[1]; // Remove "Bearer "
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Decoded token:", decoded);
     req.user = await User.findById(decoded.id).select("-password");
-
+    if (!req.user) {
+      return res.status(401).json({ message: "User not found" });
+    }
     next();
   } catch (error) {
+    console.error("Token verification error:", error);
     res.status(401).json({ message: "Unauthorized, invalid token" });
   }
 };
-
 
 // ✅ Login user & set token in an HTTP-only cookie
 export const authUser = async (req, res) => {
@@ -73,9 +80,13 @@ export const authUser = async (req, res) => {
   if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
   // Generate token
-  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
+  const token = jwt.sign(
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "30d",
+    }
+  );
 
   // ✅ Store token in a secure HTTP-only cookie
   res.cookie("jwt", token, {
@@ -91,7 +102,6 @@ export const authUser = async (req, res) => {
     email: user.email,
     role: user.role,
     token: token,
-    
   });
 };
 
