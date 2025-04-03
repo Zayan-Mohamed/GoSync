@@ -24,7 +24,7 @@ const useRouteStore = create((set) => ({
   updateRoute: async (routeId, updateData) => {
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/routes/${_id}`,
+        `${API_URL}/api/routes/${_id}`,
         updateData
       );
       
@@ -63,7 +63,7 @@ const useRouteStore = create((set) => ({
   // Delete route
   deleteRoute: async (routeId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/routes/routes/${_id}`);
+      await axios.delete(`${API_URL}/api/routes/routes/${_id}`);
       set((state) => ({
         routes: state.routes.filter((route) => route._id !== routeId),
         currentRoute: null
@@ -77,7 +77,7 @@ const useRouteStore = create((set) => ({
 // In your routeStore.js
 getRouteById: async (routeId) => {
   try {
-    const response = await axios.get(`http://localhost:5000/api/routes/${routeId}`);
+    const response = await axios.get(`${API_URL}/api/routes/${routeId}`);
     set({ currentRoute: response.data.route });
     return response.data.route;
   } catch (error) {
@@ -89,7 +89,7 @@ getRouteById: async (routeId) => {
 getStopsForRoute: async (routeId) => {
   try {
     const response = await axios.get(
-      `http://localhost:5000/api/routes/routes/${routeId}/stops`
+      `${API_URL}/api/routes/routes/${routeId}/stops`
     );
     set({ routeStops: response.data.stops });
     return response.data.stops;
@@ -102,7 +102,7 @@ getStopsForRoute: async (routeId) => {
   addStopToRoute: async (routeId, stopData) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/routes/add-stop",
+        `${API_URL}/api/routes/add-stop`,
         { routeId, ...stopData }
       );
       return response.data.route;
@@ -115,7 +115,7 @@ getStopsForRoute: async (routeId) => {
   addMultipleStops: async (stopsData) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/routes/add-multiple-stops",
+        `${API_URL}}/api/routes/add-multiple-stops`,
         stopsData
       );
       return response.data.route;
@@ -128,7 +128,7 @@ getStopsForRoute: async (routeId) => {
   updateStopType: async (updateData) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/routes/update-stop-type",
+        `${API_URL}/api/routes/update-stop-type`,
         updateData
       );
       return response.data.route;
@@ -141,7 +141,7 @@ getStopsForRoute: async (routeId) => {
   deleteStopFromRoute: async (routeId, stopId) => {
     try {
       const response = await axios.delete(
-        `http://localhost:5000/api/routes/routes/${routeId}/stops/${stopId}`
+        `${API_URL}/api/routes/routes/${routeId}/stops/${stopId}`
       );
       return response.data.route;
     } catch (error) {
@@ -154,7 +154,7 @@ getStopsForRoute: async (routeId) => {
   createRoute: async (routeData) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/routes/create",
+        `${API_URL}/api/routes/create`,
         routeData
       );
       set((state) => ({
