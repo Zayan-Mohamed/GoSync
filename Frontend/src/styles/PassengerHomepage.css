@@ -152,6 +152,7 @@ body {
 /* Promo Card Specific Styles */
 .promo-card {
   position: relative;
+  border: 1px solid red;
   border-top-color: #FFC300; /* brightYellow */
 }
 
