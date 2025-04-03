@@ -20,6 +20,9 @@ import busOperatorRoutes from "./routes/busOperatorRoutes.js";
 dotenv.config();
 connectDB();
 
+console.log("Loaded EMAIL_USER:", process.env.EMAIL_USER);
+console.log("Loaded EMAIL_PASS:", process.env.EMAIL_PASS);
+
 const app = express();
 const server = createServer(app);
 

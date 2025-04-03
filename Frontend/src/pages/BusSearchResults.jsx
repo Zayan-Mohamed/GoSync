@@ -5,30 +5,35 @@ import Navbar1 from "../components/Navbar1";
 import BusCard from "../components/BusCard";
 import Footer1 from "../components/Footer1";
 import { Bus } from "lucide-react";
+import BookingForm from "../components/BookingForm";
+import { useBookingStore } from "../store/bookingStore";
 
 const BusSearchResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { showBookingContainer, setShowBookingContainer } = useBookingStore();
 
-  // Get search details from Passenger Homepage
   const { fromLocation, toLocation, journeyDate } = location.state || {};
 
   const [busResults, setBusResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortBy, setSortBy] = useState("departure"); // Default sort
+  const [sortBy, setSortBy] = useState("departure");
 
   useEffect(() => {
     const socket = io("http://localhost:5000", {
       withCredentials: true,
     });
-  
+
     socket.on("connect", () => {
       busResults.forEach((bus) => {
-        socket.emit("joinTrip", { busId: bus.busId, scheduleId: bus.scheduleId });
+        socket.emit("joinTrip", {
+          busId: bus.busId,
+          scheduleId: bus.scheduleId,
+        });
       });
     });
-  
+
     socket.on("seatUpdate", (data) => {
       setBusResults((prev) =>
         prev.map((bus) =>
@@ -38,7 +43,7 @@ const BusSearchResults = () => {
         )
       );
     });
-  
+
     return () => socket.disconnect();
   }, [busResults]);
 
@@ -51,23 +56,22 @@ const BusSearchResults = () => {
     const fetchBusResults = async () => {
       setLoading(true);
       setError(null);
-
       try {
-        const response = await fetch("http://localhost:5000/api/buses/search-buses", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            fromLocation,
-            toLocation,
-            selectedDate: journeyDate,
-          }),
-        });
+        const response = await fetch(
+          "http://localhost:5000/api/buses/search-buses",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fromLocation,
+              toLocation,
+              selectedDate: journeyDate,
+            }),
+          }
+        );
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to find buses");
+          throw new Error("Failed to find buses");
         }
 
         const data = await response.json();
@@ -80,10 +84,10 @@ const BusSearchResults = () => {
     };
 
     fetchBusResults();
-  }, [fromLocation, toLocation, journeyDate, navigate]);
+  }, [fromLocation, toLocation, journeyDate]);
 
   const handleModify = () => {
-    navigate(-1); // Go back to modify search
+    setShowBookingContainer((prev) => !prev); // Toggle visibility
   };
 
   const handleViewSeat = (busId, scheduleId) => {
@@ -93,22 +97,24 @@ const BusSearchResults = () => {
         scheduleId,
         fromLocation,
         toLocation,
-        journeyDate
-      }
+        journeyDate,
+      },
     });
   };
 
   const sortBusResults = () => {
     let sortedResults = [...busResults];
-    
-    switch(sortBy) {
+
+    switch (sortBy) {
       case "departure":
-        sortedResults.sort((a, b) => 
-          a.schedule.departureTime.localeCompare(b.schedule.departureTime));
+        sortedResults.sort((a, b) =>
+          a.schedule.departureTime.localeCompare(b.schedule.departureTime)
+        );
         break;
       case "arrival":
-        sortedResults.sort((a, b) => 
-          a.schedule.arrivalTime.localeCompare(b.schedule.arrivalTime));
+        sortedResults.sort((a, b) =>
+          a.schedule.arrivalTime.localeCompare(b.schedule.arrivalTime)
+        );
         break;
       case "price":
         sortedResults.sort((a, b) => a.fareAmount - b.fareAmount);
@@ -119,13 +125,17 @@ const BusSearchResults = () => {
       default:
         break;
     }
-    
+
     return sortedResults;
   };
 
-  // Format date for display
   const formatDate = (dateString) => {
-    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    const options = {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
@@ -155,29 +165,34 @@ const BusSearchResults = () => {
         </div>
       </div>
 
+      {/* Conditionally render the BookingForm with sliding effect */}
+      <div className={`booking-container ${showBookingContainer ? "visible" : "hidden"}`}>
+        <BookingForm />
+      </div>
+
       {/* Filter options */}
       <div className="bg-softPeach py-2">
         <div className="container mx-auto flex justify-between text-darkCharcoal text-sm">
-          <button 
-            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === 'price' ? 'bg-lightYellow' : ''}`}
+          <button
+            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === "price" ? "bg-lightYellow" : ""}`}
             onClick={() => setSortBy("price")}
           >
             PRICE
           </button>
-          <button 
-            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === 'departure' ? 'bg-lightYellow' : ''}`}
+          <button
+            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === "departure" ? "bg-lightYellow" : ""}`}
             onClick={() => setSortBy("departure")}
           >
             DEPARTURE
           </button>
-          <button 
-            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === 'arrival' ? 'bg-lightYellow' : ''}`}
+          <button
+            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === "arrival" ? "bg-lightYellow" : ""}`}
             onClick={() => setSortBy("arrival")}
           >
             ARRIVAL
           </button>
-          <button 
-            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === 'seats' ? 'bg-lightYellow' : ''}`}
+          <button
+            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === "seats" ? "bg-lightYellow" : ""}`}
             onClick={() => setSortBy("seats")}
           >
             SEATS
@@ -197,7 +212,9 @@ const BusSearchResults = () => {
         ) : error ? (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold text-gray-700">{error}</h2>
-            <p className="mt-2 text-gray-600">Try modifying your search criteria</p>
+            <p className="mt-2 text-gray-600">
+              Try modifying your search criteria
+            </p>
             <button
               onClick={handleModify}
               className="mt-4 bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
@@ -207,25 +224,24 @@ const BusSearchResults = () => {
           </div>
         ) : busResults.length === 0 ? (
           <div className="text-center py-12">
-            <div className="flex justify-center mb-4">
-              <Bus size={48} className="text-gray-400" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-700">No buses found</h2>
-            <p className="mt-2 text-gray-600">Try different locations or dates</p>
+            <h2 className="text-xl font-semibold text-gray-700">
+              No buses found
+            </h2>
+            <p className="mt-2 text-gray-600">
+              Try modifying your search criteria
+            </p>
             <button
               onClick={handleModify}
-              className="mt-4 bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
+              className="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
             >
               Modify Search
             </button>
           </div>
         ) : (
-          sortBusResults().map((bus, index) => (
-            <BusCard 
-              key={index} 
-              bus={bus} 
-              onViewSeat={() => handleViewSeat(bus.busId, bus.scheduleId)} 
-            />
+          sortBusResults().map((bus) => (
+            <div key={bus.busId} className="mb-6">
+              <BusCard bus={bus} onViewSeat={handleViewSeat} />
+            </div>
           ))
         )}
       </div>

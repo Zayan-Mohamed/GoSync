@@ -1,7 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import gosyncLogo from "/assets/GoSync-Logo_Length2.png";
 import { useNavigate } from "react-router-dom";
-import { FiXCircle, FiLogOut, FiBell, FiSettings, FiUser, FiSearch } from "react-icons/fi";
+import {
+  FiXCircle,
+  FiLogOut,
+  FiBell,
+  FiSettings,
+  FiUser,
+  FiClock,
+  FiBook,
+  FiChevronDown,
+} from "react-icons/fi";
 import useAuthStore from "../store/authStore";
 import AdminModal from "./AdminModal";
 import axios from "axios";
@@ -29,7 +38,10 @@ const Navbar1 = () => {
 
         // Extract notifications and convert timestamps
         const notificationsData = notifResponse.data
-          .filter((notif) => !notif.expiredAt || new Date(notif.expiredAt) > new Date()) // Filter out expired notifications
+          .filter(
+            (notif) =>
+              !notif.expiredAt || new Date(notif.expiredAt) > new Date()
+          ) // Filter out expired notifications
           .map((notif) => ({
             ...notif,
             type: "notification",
@@ -80,9 +92,11 @@ const Navbar1 = () => {
 
     return () => socket.off("newNotification");
   }, []);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleCancelTicket = () => {
     navigate("/cancel-ticket");
+    setIsDropdownOpen(false);
   };
 
   const handleLogout = () => {
@@ -96,95 +110,157 @@ const Navbar1 = () => {
       // Mark notifications as read when the dropdown is opened
       setHasUnread(false);
     }
-  };
+    const handleReserved = () => {
+      navigate("/reserved");
+      setIsDropdownOpen(false);
+    };
 
-  return (
-    <nav className="flex justify-between items-center p-4 bg-white shadow-md">
-      {/* Left: Logo & Title */}
-      <div className="flex items-center space-x-3">
-        <img src={gosyncLogo} alt="GoSync Logo" className="h-12" />
-        <h1 className="text-lg font-semibold text-gray-700">An Online Bus Ticket Booking System</h1>
-      </div>
+    const handleBookingHistory = () => {
+      navigate("/booking-history");
+      setIsDropdownOpen(false);
+    };
 
-      {/* Right: Controls */}
-      <div className="flex items-center space-x-4">
-        {/* Search Input */}
-        <div className="flex items-center space-x-2">
-          <FiSearch size={20} />
-          <input type="text" placeholder="Search..." className="border-b outline-none" />
+    return (
+      <nav className="flex justify-between items-center p-4 bg-white shadow-md">
+        {/* Left: Logo and Title */}
+        <div className="flex items-center space-x-3">
+          <img
+            src={gosyncLogo}
+            alt="GoSync Logo"
+            onClick={() => navigate("/passenger")}
+            className="h-12"
+          />
+          <h1 className="text-lg font-semibold text-gray-700">
+            An Online Bus Ticket Booking System
+          </h1>
         </div>
 
-        {/* Add Admin Button */}
-        <button
-          onClick={() => setAdminModalOpen(true)}
-          className="bg-deepOrange text-white px-4 py-2 rounded-lg hover:bg-sunsetOrange transition"
-        >
-          Add an Admin
-        </button>
+        {/* Right: Controls */}
+        <div className="flex items-center space-x-4">
+          {/* Search Input */}
+          <div className="flex items-center space-x-2">
+            <FiSearch size={20} />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="border-b outline-none"
+            />
+          </div>
 
-        {/* Bell Icon - Notifications */}
-        <div className="relative">
-          <button onClick={toggleDropdown} className="relative">
-            <FiBell size={24} />
-            {hasUnread && (
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                {notifications.length}
-              </span>
-            )}
+          {/* Add Admin Button */}
+          <button
+            onClick={() => setAdminModalOpen(true)}
+            className="bg-deepOrange text-white px-4 py-2 rounded-lg hover:bg-sunsetOrange transition"
+          >
+            Add an Admin
           </button>
 
-          {/* Notifications Dropdown */}
-          {showDropdown && (
-            <div className="absolute right-0 top-full w-64 bg-white shadow-lg rounded-lg z-50 border border-gray-300">
-              <div className="p-2 h-[500px] overflow-y-auto">
-                <h3 className="font-semibold text-lg">Notifications</h3>
-                <ul className="space-y-2">
-                  {notifications.map((notif, index) => (
-                    <li key={index} className="border-b py-2">
-                      {notif.message}
-                    </li>
-                  ))}
-                </ul>
+          {/* Bell Icon - Notifications */}
+          <div className="relative">
+            <button onClick={toggleDropdown} className="relative">
+              <FiBell size={24} />
+              {hasUnread && (
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {notifications.length}
+                </span>
+              )}
+            </button>
+
+            {/* Notifications Dropdown */}
+            {showDropdown && (
+              <div className="absolute right-0 top-full w-64 bg-white shadow-lg rounded-lg z-50 border border-gray-300">
+                <div className="p-2 h-[500px] overflow-y-auto">
+                  <h3 className="font-semibold text-lg">Notifications</h3>
+                  <ul className="space-y-2">
+                    {notifications.map((notif, index) => (
+                      <li key={index} className="border-b py-2">
+                        {notif.message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Settings Button */}
+          <button
+            className="relative text-gray-600 hover:text-gray-800 transition"
+            aria-label="Notifications"
+          >
+            <FiBell size={24} />
+          </button>
+          <button
+            className="text-gray-600 hover:text-gray-800 transition"
+            aria-label="Settings"
+          >
+            <FiSettings size={24} />
+          </button>
+          <button
+            className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center"
+            aria-label="Profile"
+          >
+            <FiUser size={24} />
+          </button>
+
+          {/* Dropdown Spinner */}
+          <div className="relative">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center space-x-2 px-4 py-2 bg-deepOrange text-white rounded-lg hover:bg-red-700 transition"
+            >
+              <span>Actions</span>
+              <FiChevronDown
+                size={20}
+                className={isDropdownOpen ? "rotate-180" : ""}
+              />
+            </button>
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
+                <button
+                  onClick={handleReserved}
+                  className="flex items-center space-x-2 w-full px-4 py-2 text-yellow-600 hover:bg-yellow-100 transition"
+                >
+                  <FiClock size={20} />
+                  <span>Reserved</span>
+                </button>
+                <button
+                  onClick={handleCancelTicket}
+                  className="flex items-center space-x-2 w-full px-4 py-2 text-red-600 hover:bg-red-100 transition"
+                >
+                  <FiXCircle size={20} />
+                  <span>Cancel Ticket</span>
+                </button>
+                <button
+                  onClick={handleBookingHistory}
+                  className="flex items-center space-x-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
+                >
+                  <FiBook size={20} />
+                  <span>Booking History</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+          >
+            <FiLogOut size={20} />
+            <span>Logout</span>
+          </button>
         </div>
 
-        {/* Settings Button */}
-        <button>
-          <FiSettings size={24} />
-        </button>
-
-        {/* Profile Button */}
-        <button className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-          <FiUser size={24} />
-        </button>
-
-        {/* Cancel Ticket Button */}
-        <button
-          onClick={handleCancelTicket}
-          className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
-        >
-          <FiXCircle size={20} />
-          <span>Cancel Ticket</span>
-        </button>
-
-        {/* Logout Button */}
-        <button
-          onClick={handleLogout}
-          className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-        >
-          <FiLogOut size={20} />
-          <span>Logout</span>
-        </button>
-      </div>
-
-      {/* Admin Modal */}
-      {isAdminModalOpen && (
-        <AdminModal isOpen={isAdminModalOpen} onClose={() => setAdminModalOpen(false)} />
-      )}
-    </nav>
-  );
+        {/* Admin Modal */}
+        {isAdminModalOpen && (
+          <AdminModal
+            isOpen={isAdminModalOpen}
+            onClose={() => setAdminModalOpen(false)}
+          />
+        )}
+      </nav>
+    );
+  };
 };
 
 export default Navbar1;
