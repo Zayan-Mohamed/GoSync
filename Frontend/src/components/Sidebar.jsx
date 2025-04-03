@@ -56,6 +56,34 @@ const Sidebar = () => {
         { to: "/schedule-analytics", label: "Schedule Analytics", icon: <BsGraphUpArrow /> },
       ],
     },
+    {
+      title: "Seat and Booking Management",
+      links: [
+        { to: "/seat-management", label: "Current Seats", icon: <FiUserCheck /> },
+        { to: "/add-seat", label: "Add Seat", icon: <FiPlus /> },
+        { to: "/seat-analytics", label: "Seat Analytics", icon: <VscGraphLine /> },
+        { to: "/booking-management", label: "Current Bookings", icon: <FiUserCheck /> },
+        { to: "/add-booking", label: "Add Booking", icon: <FiPlus /> },
+        { to: "/booking-analytics", label: "Booking Analytics", icon: <SlGraph /> },
+      ],
+    },
+    {
+      title: "Notification Management",
+      links: [
+        { to: "/notification-management", label: "Current Notifications", icon: <FiBell /> },
+        { to: "/Schedule-notification", label: "Schedule Notifications", icon: <FiBell /> },
+        { to: "/add-notification", label: "Add Notification", icon: <FiPlus /> },
+        { to: "/notification-analytics", label: "Notification Analytics", icon: <GoGraph /> },
+      ],
+    },
+    {
+      title: "Notices",
+      links: [{ to: "/notices", label: "Current Notices", icon: <CgNotes /> }],
+    },
+    {
+      title: "Analytics",
+      links: [{ to: "/analytics", label: "Analytics Overview", icon: <TbReportSearch /> }],
+    },
   ];
 
   return (
