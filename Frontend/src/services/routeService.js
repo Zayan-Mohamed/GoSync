@@ -13,6 +13,7 @@ export const getRoutes = async () => {
     console.error("Error fetching routes:", error);
     throw error;
   }
+  
 };
 
 // Update a route
@@ -35,4 +36,10 @@ export const deleteRoute = async (routeId) => {
     console.error("Error deleting route:", error);
     throw error;
   }
+};
+
+export default {
+  getRoutes,
+  updateRoute,
+  deleteRoute,
 };
