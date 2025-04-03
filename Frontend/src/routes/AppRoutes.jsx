@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { useState, useEffect } from "react";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -21,9 +26,15 @@ import Payment from "../components/Payment";
 import BookingSummary from "../components/BookingSummary";
 import AddStop from "../pages/AddStop.jsx";
 import StopList from "../pages/StopList.jsx";
+import BookingHistory from "../pages/BookingHistory.jsx";
+import Reserved from "../pages/Reserved";
+import CancelTicket from "../pages/CancelTicket";
+import InsertSchedule from "../pages/InsertSchedule.jsx";
+import ScheduleSearchResults from "../pages/ScheduleSearchResults.jsx";
+import ScheduleList from "../pages/ScheduleList.jsx";
+
 
 const AppRoutes = () => {
-
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
@@ -35,50 +46,54 @@ const AppRoutes = () => {
       {showSplash ? (
         <SplashScreen />
       ) : (
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* ✅ Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/bus-management" element={<BusList />} />
-          <Route path="/add-bus" element={<InsertBus />} />
+          {/* ✅ Protected Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/bus-management" element={<BusList />} />
+            <Route path="/add-bus" element={<InsertBus />} />
 
-          <Route path="/notification-management" element={<Notification />} />
-          <Route path="/add-notification" element={<AddNotification />} />
-          <Route path="/update-notification/:id" element={<UpdateNotification />} />
-          
-          <Route path="/current-routes" element={<CurrentRoutes />} />
-          
             <Route path="/notification-management" element={<Notification />} />
-            
-            <Route path="/add-notification" element={<AddNotification/>} />
-            <Route path="/update-notification/:id" element={<UpdateNotification />} />
-            <Route path="/Schedule-notification" element={<ShedTable/>} />
-            <Route path="/add-message" element={<AddMessage/>} />
-            <Route path="/add-stop" element={<AddStop/>} />
-            <Route path="/stop-management" element={<StopList/>} />
-        </Route>
-        
+            <Route path="/add-notification" element={<AddNotification />} />
+            <Route
+              path="/update-notification/:id"
+              element={<UpdateNotification />}
+            />
+            <Route path="/current-routes" element={<CurrentRoutes />} />
+            <Route path="/Schedule-notification" element={<ShedTable />} />
+            <Route path="/add-message" element={<AddMessage />} />
+            <Route path="/add-stop" element={<AddStop />} />
+            <Route path="/stop-management" element={<StopList />} />
+            <Route path="/schedule-management" element={<ScheduleList />} />
+            <Route path="/insert-schedule" element={<InsertSchedule />} />
+            <Route path="/schedule-search" element={<ScheduleSearchResults />} />
+          </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
-          <Route path="/passenger" element={<PassengerHomepage />} />
-          <Route path="/seat-selection" element={<SeatSelection />} />
-          <Route path="/passenger" element={<PassengerHomepage />} />
-          <Route path="/bus-search-results" element={<BusSearchResults />} />
-          <Route path="/payment" element={<Payment />} />
-          <Route path="/booking-summary" element={<BookingSummary />} />
-          <Route path="/booking-confirmation" element={<div>Booking Confirmed</div>} />
-        </Route>
-        <Route path="/settings" element={<UserSettings/>} />
-       
-        {/* ✅ Catch-all for unauthorized access */}
-        <Route path="/unauthorized" element={<h1>Access Denied</h1>} />
-        <Route path="/" element={<AdminDashboard />} />
-      </Routes>
+          <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
+            <Route path="/passenger" element={<PassengerHomepage />} />
+            <Route path="/seat-selection" element={<SeatSelection />} />
+            <Route path="/passenger" element={<PassengerHomepage />} />
+            <Route path="/bus-search-results" element={<BusSearchResults />} />
+            <Route path="/payment" element={<Payment />} />
+            <Route path="/booking-summary" element={<BookingSummary />} />
+            <Route path="/booking-history" element={<BookingHistory />} />
+            <Route path="/reserved" element={<Reserved />} />
+            <Route path="/cancel-ticket" element={<CancelTicket />} />
+            <Route
+              path="/booking-confirmation"
+              element={<div>Booking Confirmed</div>}
+            />
+          </Route>
+          <Route path="/settings" element={<UserSettings />} />
+
+          {/* ✅ Catch-all for unauthorized access */}
+          <Route path="/unauthorized" element={<h1>Access Denied</h1>} />
+          <Route path="/" element={<AdminDashboard />} />
+        </Routes>
       )}
     </Router>
   );

@@ -6,6 +6,7 @@ import {
   checkSeatAvailability,
   cancelSeatBooking,
   monitorSeatOccupancy,
+  getUserReservedSeats,
 } from "../controllers/seatController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
@@ -16,5 +17,6 @@ router.post("/:busId/schedule/:scheduleId/reserve", protect, reserveSeats);
 router.get("/:busId/schedule/:scheduleId/availability", protect, checkSeatAvailability);
 router.delete("/cancel/:bookingId", protect, cancelSeatBooking);
 router.get("/:busId/schedule/:scheduleId/occupancy", protect, monitorSeatOccupancy);
+router.get("/reserved/user", protect, getUserReservedSeats);
 
 export default router;

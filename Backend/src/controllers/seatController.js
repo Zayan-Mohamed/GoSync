@@ -155,3 +155,42 @@ export const monitorSeatOccupancy = async (req, res) => {
     res.status(500).json({ message: "Error fetching seat occupancy", error: error.message });
   }
 };
+
+export const getUserReservedSeats = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const reservedSeats = await Seat.find({
+      reservedUntil: { $gt: new Date() }, // Only active reservations
+    })
+      .populate("busId", "busNumber routeId")
+      .populate({
+        path: "busId",
+        populate: { path: "routeId", select: "startLocation endLocation" },
+      });
+
+    // Group by busId and scheduleId, filter for user's reservations (assuming userId isn't stored)
+    const grouped = reservedSeats.reduce((acc, seat) => {
+      const key = `${seat.busId._id}-${seat.scheduleId}`;
+      if (!acc[key]) {
+        acc[key] = {
+          busId: seat.busId._id,
+          scheduleId: seat.scheduleId,
+          busNumber: seat.busId.busNumber,
+          from: seat.busId.routeId.startLocation,
+          to: seat.busId.routeId.endLocation,
+          seatNumbers: [],
+          reservedUntil: seat.reservedUntil,
+        };
+      }
+      acc[key].seatNumbers.push(seat.seatNumber);
+      return acc;
+    }, {});
+
+    const result = Object.values(grouped);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching reserved seats:", error);
+    res.status(500).json({ message: "Failed to fetch reserved seats" });
+  }
+};
