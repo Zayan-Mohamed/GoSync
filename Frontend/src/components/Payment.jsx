@@ -10,6 +10,8 @@ const Payment = () => {
   const { busId, scheduleId, selectedSeats } = state || {};
   const { user } = useAuthStore();
 
+  const API_URI = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     if (!busId || !scheduleId || !selectedSeats || !user) {
       navigate("/seat-selection");
@@ -24,7 +26,7 @@ const Payment = () => {
       if (!paymentSuccess) throw new Error("Payment failed");
 
       const response = await axios.post(
-        "http://localhost:5000/api/bookings/confirm",
+        `${API_URI}/api/bookings/confirm`,
         { busId, scheduleId, seatNumbers: selectedSeats },
         { withCredentials: true }
       );
@@ -33,7 +35,7 @@ const Payment = () => {
 
       try {
         const summaryResponse = await axios.get(
-          `http://localhost:5000/api/bookings/summary/${user._id}`,
+          `${API_URI}/api/bookings/summary/${user._id}`,
           { withCredentials: true }
         );
         console.log("Summary fetched:", summaryResponse.data);
@@ -47,7 +49,7 @@ const Payment = () => {
       console.error("Payment error:", err.response?.data || err);
       try {
         const releaseResponse = await axios.post(
-          `http://localhost:5000/api/seats/${busId}/schedule/${scheduleId}/reserve`,
+          `${API_URI}/api/seats/${busId}/schedule/${scheduleId}/reserve`,
           { seatNumbers: selectedSeats, release: true },
           { withCredentials: true }
         );

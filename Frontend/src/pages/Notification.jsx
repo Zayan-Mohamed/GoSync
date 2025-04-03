@@ -9,10 +9,12 @@ import AdminLayout from '../layouts/AdminLayout';
 const Notification = () => {
     const [notifications, setNotifications] = useState([]);
 
+    const API_URI = import.meta.env.VITE_API_URL
+
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
-                const response = await axios.get("http://localhost:5000/api/notifications");
+                const response = await axios.get(`${API_URI}/api/notifications`);
                 setNotifications(response.data);
             } catch (error) {
                 console.error("Error fetching notifications:", error);
@@ -28,7 +30,7 @@ const Notification = () => {
         if (!confirmDelete) return;
 
         try {
-            await axios.delete(`http://localhost:5000/api/notifications/${notificationId}`);
+            await axios.delete(`${API_URI}/api/notifications/${notificationId}`);
             alert("Notification deleted successfully!");
             setNotifications(notifications.filter(notification => notification.notificationId !== notificationId));
         } catch (error) {

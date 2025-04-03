@@ -18,8 +18,10 @@ const BusSearchResults = () => {
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState("departure"); // Default sort
 
+  const API_URI = import.meta.env.VITE_API_URL
+
   useEffect(() => {
-    const socket = io("http://localhost:5000", {
+    const socket = io(`${API_URI}`, {
       withCredentials: true,
     });
   
@@ -53,7 +55,7 @@ const BusSearchResults = () => {
       setError(null);
 
       try {
-        const response = await fetch("http://localhost:5000/api/buses/search-buses", {
+        const response = await fetch(`${API_URI}/api/buses/search-buses`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

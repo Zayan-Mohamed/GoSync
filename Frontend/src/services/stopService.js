@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/stops";
+const API_URI = import.meta.env.VITE_API_URL
+
+const API_URL = `${API_URI}/api/stops`;
 
 const api = axios.create({
   baseURL: API_URL,

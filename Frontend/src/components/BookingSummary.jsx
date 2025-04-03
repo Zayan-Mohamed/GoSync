@@ -11,6 +11,8 @@ const BookingSummary = () => {
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const API_URI = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     if (!isAuthenticated || !user) {
       navigate("/login");
@@ -20,7 +22,7 @@ const BookingSummary = () => {
     const fetchSummary = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/bookings/summary/${user._id}`,
+          `${API_URI}/api/bookings/summary/${user._id}`,
           { withCredentials: true }
         );
         setSummary(response.data.summary);

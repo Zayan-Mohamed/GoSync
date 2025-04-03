@@ -20,6 +20,8 @@ const SeatSelection = () => {
   const [error, setError] = useState(null);
   const [socket, setSocket] = useState(null);
 
+  const API_URI = import.meta.env.VITE_API_URL
+
   useEffect(() => {
     if (!busId || !scheduleId) {
       navigate("/");
@@ -29,7 +31,7 @@ const SeatSelection = () => {
     const fetchSeats = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/seats/${busId}/schedule/${scheduleId}/seats`,
+          `${API_URI}/api/seats/${busId}/schedule/${scheduleId}/seats`,
           { withCredentials: true }
         );
         console.log("Fetched seats:", response.data);
@@ -43,7 +45,7 @@ const SeatSelection = () => {
 
     fetchSeats();
 
-    const newSocket = io("http://localhost:5000", { withCredentials: true });
+    const newSocket = io(`${API_URI}`, { withCredentials: true });
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
@@ -89,7 +91,7 @@ const SeatSelection = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/seats/${busId}/schedule/${scheduleId}/reserve`,
+        `${API_URI}/api/seats/${busId}/schedule/${scheduleId}/reserve`,
         { seatNumbers: selectedSeats },
         { withCredentials: true }
       );
@@ -113,7 +115,7 @@ const SeatSelection = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/seats/${busId}/schedule/${scheduleId}/reserve`,
+        `${API_URI}/api/seats/${busId}/schedule/${scheduleId}/reserve`,
         { seatNumbers: selectedSeats },
         { withCredentials: true }
       );

@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL
+
 const useRouteStore = create((set) => ({
   routes: [], // Store as an array
   fetchRoutes: async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/routes/routes");
+      const response = await axios.get(`${API_URL}/api/routes/routes`);
       set({ routes: response.data.routes }); // ✅ Extract only the array
     } catch (error) {
       console.error("Error fetching routes:", error);
@@ -25,7 +27,7 @@ const useRouteStore = create((set) => ({
   },
   deleteRoute: async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/routes/${id}`);
+      await axios.delete(`${API_URL}/api/routes/${id}`);
       set((state) => ({
         routes: state.routes.filter((route) => route._id !== id),
       }));

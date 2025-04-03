@@ -14,7 +14,7 @@ import Notification from "../pages/Notification";
 import AddNotification from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
 import SeatSelection from "../pages/SeatSelection";
-import ShedTable from "../pages/shedTable";
+import ShedTable from "../pages/ShedTable";
 import AddMessage from "../pages/AddMessage";
 import BusSearchResults from "../pages/BusSearchResults";
 import Payment from "../components/Payment";
