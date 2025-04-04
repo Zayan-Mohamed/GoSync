@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from "react";
 import gosyncLogo from "/assets/GoSync-Logo_Length2.png";
 import { useNavigate } from "react-router-dom";
-import { FiXCircle, FiLogOut, FiBell, FiSettings, FiUser, FiSearch } from "react-icons/fi";
+import {
+  FiXCircle,
+  FiLogOut,
+  FiBell,
+  FiSettings,
+  FiUser,
+  FiSearch,
+  FiClock,
+  FiBook,
+  FiChevronDown,
+} from "react-icons/fi";
 import useAuthStore from "../store/authStore";
 import AdminModal from "./AdminModal";
 import axios from "axios";
@@ -18,6 +28,7 @@ const Navbar1 = () => {
 
   const navigate = useNavigate();
   const { logout } = useAuthStore();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -28,7 +39,10 @@ const Navbar1 = () => {
         ]);
 
         const notificationsData = notifResponse.data
-          .filter((notif) => !notif.expiredAt || new Date(notif.expiredAt) > new Date())
+          .filter(
+            (notif) =>
+              !notif.expiredAt || new Date(notif.expiredAt) > new Date()
+          )
           .map((notif) => ({
             ...notif,
             type: "notification",
@@ -76,11 +90,22 @@ const Navbar1 = () => {
 
   const handleCancelTicket = () => {
     navigate("/cancel-ticket");
+    setIsDropdownOpen(false);
   };
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleReserved = () => {
+    navigate("/reserved");
+    setIsDropdownOpen(false);
+  };
+
+  const handleBookingHistory = () => {
+    navigate("/booking-history");
+    setIsDropdownOpen(false);
   };
 
   const toggleDropdown = () => {
@@ -92,24 +117,21 @@ const Navbar1 = () => {
 
   return (
     <nav className="flex justify-between items-center p-4 bg-white shadow-md">
+      {/* Left: Logo and Title */}
       <div className="flex items-center space-x-3">
-        <img src={gosyncLogo} alt="GoSync Logo" className="h-12" />
-        <h1 className="text-lg font-semibold text-gray-700">An Online Bus Ticket Booking System</h1>
+        <img
+          src={gosyncLogo}
+          alt="GoSync Logo"
+          onClick={() => navigate("/passenger")}
+          className="h-12"
+        />
+        <h1 className="text-lg font-semibold text-gray-700">
+          An Online Bus Ticket Booking System
+        </h1>
       </div>
 
+      {/* Right: Buttons */}
       <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
-          <FiSearch size={20} />
-          <input type="text" placeholder="Search..." className="border-b outline-none" />
-        </div>
-
-        <button
-          onClick={() => setAdminModalOpen(true)}
-          className="bg-deepOrange text-white px-4 py-2 rounded-lg hover:bg-sunsetOrange transition"
-        >
-          Add an Admin
-        </button>
-
         <div className="relative">
           <button onClick={toggleDropdown} className="relative">
             <FiBell size={24} />
@@ -135,22 +157,57 @@ const Navbar1 = () => {
             </div>
           )}
         </div>
-
-        <button>
+        <button
+          className="text-gray-600 hover:text-gray-800 transition"
+          aria-label="Settings"
+        >
           <FiSettings size={24} />
         </button>
-
-        <button className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+        <button
+          className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center"
+          aria-label="Profile"
+        >
           <FiUser size={24} />
         </button>
 
-        <button
-          onClick={handleCancelTicket}
-          className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
-        >
-          <FiXCircle size={20} />
-          <span>Cancel Ticket</span>
-        </button>
+        {/* Dropdown Spinner */}
+        <div className="relative">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center space-x-2 px-4 py-2 bg-deepOrange text-white rounded-lg hover:bg-red-700 transition"
+          >
+            <span>Actions</span>
+            <FiChevronDown
+              size={20}
+              className={isDropdownOpen ? "rotate-180" : ""}
+            />
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50">
+              <button
+                onClick={handleReserved}
+                className="flex items-center space-x-2 w-full px-4 py-2 text-yellow-600 hover:bg-yellow-100 transition"
+              >
+                <FiClock size={20} />
+                <span>Reserved</span>
+              </button>
+              <button
+                onClick={handleCancelTicket}
+                className="flex items-center space-x-2 w-full px-4 py-2 text-red-600 hover:bg-red-100 transition"
+              >
+                <FiXCircle size={20} />
+                <span>Cancel Ticket</span>
+              </button>
+              <button
+                onClick={handleBookingHistory}
+                className="flex items-center space-x-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
+              >
+                <FiBook size={20} />
+                <span>Booking History</span>
+              </button>
+            </div>
+          )}
+        </div>
 
         <button
           onClick={handleLogout}
@@ -160,10 +217,6 @@ const Navbar1 = () => {
           <span>Logout</span>
         </button>
       </div>
-
-      {isAdminModalOpen && (
-        <AdminModal isOpen={isAdminModalOpen} onClose={() => setAdminModalOpen(false)} />
-      )}
     </nav>
   );
 };
