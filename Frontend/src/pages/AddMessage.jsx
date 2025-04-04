@@ -6,6 +6,8 @@ import axios from "axios";
 import AdminLayout from "../layouts/AdminLayout";
 
 const AddMessage = () => {
+  const API_URL = import.meta.env.VITE_API_URL
+
   const [message, setMessage] = useState("");
   const [shedDate, setShedDate] = useState(new Date()); // Default to today's date
   const [shedTime, setShedTime] = useState("");
@@ -26,7 +28,7 @@ const AddMessage = () => {
     };
 
     try {
-      await axios.post("http://localhost:5000/api/shed/shed", newMessage);
+      await axios.post(`${API_URL}/api/shed/shed`, newMessage);
       alert("Message Scheduled Successfully!");
       setMessage("");
       setShedDate(new Date());
