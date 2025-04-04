@@ -1,6 +1,7 @@
 // src/controllers/seatController.js
 import Bus from "../models/bus.js";
 import Seat from "../models/seatModel.js";
+import Route from "../models/routeModel.js";
 
 export const getSeatLayout = async (req, res) => {
   const { busId, scheduleId } = req.params;
@@ -52,6 +53,7 @@ export const reserveSeats = async (req, res) => {
   const { busId, scheduleId } = req.params;
   const { seatNumbers } = req.body;
   const io = req.app.get("io");
+  const userId = req.user.id; // Add this to get the userId
 
   try {
     const seats = await Seat.find({
@@ -68,8 +70,9 @@ export const reserveSeats = async (req, res) => {
       if (seat.isBooked || (seat.reservedUntil && seat.reservedUntil > new Date())) {
         return res.status(400).json({ message: `Seat ${seat.seatNumber} unavailable` });
       }
-      seat.reservedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes reservation
-      seat.isBooked = false; // Ensure the seat is not booked yet
+      seat.reservedUntil = new Date(Date.now() + 15 * 60 * 1000);
+      seat.reservedBy = userId; // Set the user who reserved it
+      seat.isBooked = false;
     }
 
     await Promise.all(seats.map((seat) => seat.save()));
@@ -160,34 +163,47 @@ export const getUserReservedSeats = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const reservedSeats = await Seat.find({
-      reservedUntil: { $gt: new Date() }, // Only active reservations
-    })
-      .populate("busId", "busNumber routeId")
-      .populate({
-        path: "busId",
-        populate: { path: "routeId", select: "startLocation endLocation" },
-      });
+    console.log("Fetching reserved seats for userId:", userId);
 
-    // Group by busId and scheduleId, filter for user's reservations (assuming userId isn't stored)
-    const grouped = reservedSeats.reduce((acc, seat) => {
-      const key = `${seat.busId._id}-${seat.scheduleId}`;
-      if (!acc[key]) {
-        acc[key] = {
-          busId: seat.busId._id,
-          scheduleId: seat.scheduleId,
+    const reservedSeats = await Seat.find({
+      reservedUntil: { $gt: new Date() },
+      reservedBy: userId,
+    }).populate("busId", "busNumber routeId");
+
+    console.log("Raw reserved seats from DB:", reservedSeats);
+
+    if (!reservedSeats.length) {
+      console.log("No reserved seats found for user:", userId);
+      return res.status(200).json([]);
+    }
+
+    const grouped = await Promise.all(
+      reservedSeats.map(async (seat) => {
+        const route = await Route.findOne({ routeId: seat.busId.routeId });
+        return {
+          busId: seat.busId._id.toString(),
+          scheduleId: seat.scheduleId.toString(),
           busNumber: seat.busId.busNumber,
-          from: seat.busId.routeId.startLocation,
-          to: seat.busId.routeId.endLocation,
-          seatNumbers: [],
+          from: route ? route.startLocation : "Unknown",
+          to: route ? route.endLocation : "Unknown",
+          seatNumbers: [seat.seatNumber],
           reservedUntil: seat.reservedUntil,
         };
-      }
-      acc[key].seatNumbers.push(seat.seatNumber);
-      return acc;
-    }, {});
+      })
+    );
 
-    const result = Object.values(grouped);
+    const result = Object.values(
+      grouped.reduce((acc, curr) => {
+        const key = `${curr.busId}-${curr.scheduleId}`;
+        if (!acc[key]) {
+          acc[key] = { ...curr, seatNumbers: [] };
+        }
+        acc[key].seatNumbers.push(...curr.seatNumbers);
+        return acc;
+      }, {})
+    );
+
+    console.log("Reserved seats for user:", result);
     res.status(200).json(result);
   } catch (error) {
     console.error("Error fetching reserved seats:", error);

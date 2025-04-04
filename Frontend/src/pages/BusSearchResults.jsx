@@ -43,7 +43,7 @@ const BusSearchResults = () => {
     });
 
     return () => socket.disconnect();
-  }, [busResults]);
+  }, [busResults, API_URI]);
 
   useEffect(() => {
     if (!fromLocation || !toLocation || !journeyDate) {
@@ -82,7 +82,7 @@ const BusSearchResults = () => {
     };
 
     fetchBusResults();
-  }, [fromLocation, toLocation, journeyDate]);
+  }, [fromLocation, toLocation, journeyDate, API_URI, navigate]);
 
   const handleModify = () => {
     setShowBookingForm(!showBookingForm); // Toggle booking form visibility
