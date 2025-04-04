@@ -22,6 +22,8 @@ const AddStop = () => {
   const [activeTab, setActiveTab] = useState("single");
   const [allStops, setAllStops] = useState([]);
 
+  const API_URI = import.meta.env.VITE_API_URL
+
   // Clear messages when switching tabs
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -33,7 +35,7 @@ const AddStop = () => {
   useEffect(() => {
     const fetchStops = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/stops/get", {
+        const response = await axios.get(`${API_URI}/api/stops/get`, {
           withCredentials: true
         });
         if (response.data && Array.isArray(response.data.stops)) {
@@ -143,7 +145,7 @@ const AddStop = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/stops/create",
+        `${API_URI}/api/stops/create`,
         singleStopForm,
         {
           headers: { "Content-Type": "application/json" },
@@ -158,7 +160,7 @@ const AddStop = () => {
       });
       setExistingSingleStop(null);
       // Refresh stops list after creation
-      const stopsResponse = await axios.get("http://localhost:5000/api/stops/get", {
+      const stopsResponse = await axios.get(`${API_URI}/api/stops/get`, {
         withCredentials: true
       });
       setAllStops(stopsResponse.data.stops);
@@ -193,7 +195,7 @@ const AddStop = () => {
       console.log("Sending stops data:", stopsData); // Debug log
   
       const response = await axios.post(
-        "http://localhost:5000/api/stops/bulk",
+        `${API_URI}/api/stops/bulk`,
         stopsData,  // Send array directly
         {
           headers: { "Content-Type": "application/json" },
@@ -208,7 +210,7 @@ const AddStop = () => {
       setExistingMultipleStops([]);
       
       // Refresh stops list
-      const stopsResponse = await axios.get("http://localhost:5000/api/stops/get", {
+      const stopsResponse = await axios.get(`${API_URI}/api/stops/get`, {
         withCredentials: true
       });
       setAllStops(stopsResponse.data.stops);

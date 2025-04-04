@@ -11,13 +11,14 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  
 }
 
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-}
+} 
 
 /* Map Section */
 .map-section {
@@ -37,20 +38,7 @@ body {
   background-color: #f0f4f8;
 }
 
-.map-overlay {
-  position: relative;
-  z-index: 1;
-  padding: 40px 5%;
-  display: flex;
-  flex-direction: column;
-  gap: 60px;
-  background: linear-gradient(
-    to bottom, 
-    rgba(255, 255, 255, 0.7) 0%, 
-    rgba(255, 255, 255, 0.8) 30%, 
-    rgba(255, 255, 255, 0.9) 100%
-  );
-}
+
 
 .section-title {
   text-align: center;
@@ -304,161 +292,4 @@ body {
     height: 70px;
     padding: 10px;
   }
-}
-
-/* Booking Container Styles */
-.booking-container {
-  transition: all 0.3s ease-in-out;
-  max-height: 0;
-  overflow: hidden;
-}
-
-.booking-container.slide-down {
-  max-height: 500px;
-}
-
-.booking-container.slide-up {
-  max-height: 0;
-}
-
-/* Booking Form Styles */
-.booking-form {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(
-    135deg,
-    rgba(254, 248, 228, 0.95),
-    rgba(255, 193, 7, 0.85)
-  );
-  padding: 30px;
-  border-radius: 0px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  width: auto;
-  z-index: 10;
-  position: relative;
-  overflow: hidden;
-}
-
-.booking-form::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 6px;
-  background: linear-gradient(
-    to right,
-    #E65C00, /* sunsetOrange */
-    #FF8F00,
-    #FFC300 /* brightYellow */
-  );
-}
-
-.booking-form select,
-.booking-form input,
-.booking-form button {
-  margin: 0 12px;
-  padding: 14px 18px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  min-width: 180px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-}
-
-.booking-form select,
-.booking-form input {
-  background-color: white;
-  color: #212121;
-  font-weight: 500;
-  position: relative;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23E65100%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 15px center;
-  background-size: 12px;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  padding-right: 30px;
-}
-
-.booking-form select::-ms-expand {
-  display: none;
-}
-
-.booking-form input[type="date"] {
-  background-image: none;
-  padding-right: 15px;
-}
-
-.booking-form input:focus,
-.booking-form select:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #E65C00; /* sunsetOrange */
-  transform: translateY(-2px);
-}
-
-.booking-form select option:first-child {
-  color: #757575;
-  font-style: italic;
-}
-
-.booking-form input::placeholder {
-  color: #757575;
-  font-style: italic;
-}
-
-.booking-form button {
-  background: linear-gradient(to right, #E65C00, #FF8F00);
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  min-width: 150px;
-  position: relative;
-  overflow: hidden;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.4s ease;
-}
-
-.booking-form button:hover {
-  background: linear-gradient(
-    to right,
-    #FF8F00,
-    #E65C00
-  );
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(230, 81, 0, 0.4);
-}
-
-.booking-form button:active {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(230, 81, 0, 0.4);
-}
-
-.booking-form button::after {
-  content: "";
-  display: block;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
-  background-repeat: no-repeat;
-  background-position: 50%;
-  transform: scale(10, 10);
-  opacity: 0;
-  transition:
-    transform 0.5s,
-    opacity 1s;
-}
-
-.booking-form button:active::after {
-  transform: scale(0, 0);
-  opacity: 0.3;
-  transition: 0s;
 }

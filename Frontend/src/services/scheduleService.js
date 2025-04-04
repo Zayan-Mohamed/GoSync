@@ -1,14 +1,21 @@
 import axios from "axios";
 
-const API_URL = "/api/schedules";
+const API_URI = import.meta.env.VITE_API_URL
+const API_URL = `${API_URI}/api/schedules`;
 
 // Get All Schedules
 export const getSchedules = async () => {
   try {
-    const response = await axios.get(API_URL, {
+    const response = await fetch(`http://localhost:5001/api/schedules`, {
       withCredentials: true,
-    });
-    return response.data || [];
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+    const data = await response.json();
+    return data || [];
+  
   } catch (error) {
     console.error("Error fetching schedules:", error);
     return [];
@@ -18,7 +25,7 @@ export const getSchedules = async () => {
 // Get Schedules by Date
 export const getSchedulesByDate = async (date) => {
   try {
-    const response = await axios.get(`${API_URL}/search?date=${date}`, {
+    const response = await fetch(`${API_URL}/search?date=${date}`, {
       withCredentials: true,
     });
     return response.data || [];

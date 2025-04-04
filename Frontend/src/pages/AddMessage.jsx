@@ -4,12 +4,15 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../styles/AddMessage.css"; // Your custom CSS
 import axios from "axios";
 
+
 const AddMessage = () => {
   const [message, setMessage] = useState("");
   const [shedDate, setShedDate] = useState(new Date()); // Default to today's date
   const [shedTime, setShedTime] = useState("");
   const [status, setStatus] = useState("pending");
   const [loading, setLoading] = useState(false);
+
+const API_URL = import.meta.env.VITE_API_URL
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,8 +25,9 @@ const AddMessage = () => {
       status,
     };
 
+
     try {
-      await axios.post("http://localhost:5000/api/shed/shed", newMessage);
+      await axios.post(`${API_URL}/api/shed/shed`, newMessage);
       alert("Message Scheduled Successfully!");
       setMessage("");
       setShedDate(new Date());
