@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Bus } from "lucide-react";
 import "../styles/PassengerHomepage.css";
 import Navbar1 from "../components/Navbar1";
@@ -14,15 +15,37 @@ const PassengerHomepage = () => {
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
   const [journeyDate, setJourneyDate] = useState("");
-  
-  
-
+  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
   const { stops, loading, error, fetchStops } = useStopStore();
+  
+  const API_URI = import.meta.env.VITE_API_URL
+
 
   useEffect(() => {
     fetchStops();
   }, [fetchStops]);
+
+
+useEffect(() => {
+  const fetchPromotionsAndDiscounts = async () => {
+    try {
+      const response = await axios.get(`${API_URI}/api/notifications`); // Adjust with your actual API endpoint
+      const filteredNotifications = response.data
+        .filter(
+          (notif) => (notif.type === 'promotions' || notif.type === 'discounts') &&
+            (!notif.expiredAt || new Date(notif.expiredAt) > new Date()) // Filter expired notifications
+        );
+      setNotifications(filteredNotifications);
+      console.log(filteredNotifications); // Check if data is fetched correctly
+    } catch (error) {
+      console.error("Error fetching promotions:", error);
+    }
+  };
+
+  fetchPromotionsAndDiscounts();
+}, []);
+
 
   const findBuses = () => {
     if (!fromLocation || !toLocation) {
@@ -79,37 +102,7 @@ const PassengerHomepage = () => {
     }
   ];
 
-  // Promotions data
-  const promotions = [
-    {
-      id: 1,
-      title: "Early Bird Special",
-      description: "Book before 9 AM and get 15% off",
-      code: "EARLY15",
-      validUntil: "2023-12-31"
-    },
-    {
-      id: 2,
-      title: "Weekend Getaway",
-      description: "20% discount on all weekend travels",
-      code: "WEEKEND20",
-      validUntil: "2023-12-31"
-    },
-    {
-      id: 3,
-      title: "Student Discount",
-      description: "25% off for students with valid ID",
-      code: "STUDENT25",
-      validUntil: "2024-06-30"
-    },
-    {
-      id: 4,
-      title: "Family Package",
-      description: "Buy 3 tickets, get 1 free",
-      code: "FAMILY4",
-      validUntil: "2024-03-31"
-    }
-  ];
+
 
   // Partners data
   const partners = [
@@ -123,7 +116,6 @@ const PassengerHomepage = () => {
   return (
     <div className="passenger-homepage">
       <Navbar1 />
-      
       <div className="main-content">
         <BookingForm isVisible={true} />
         
@@ -168,47 +160,56 @@ const PassengerHomepage = () => {
             </div>
             
             {/* Promotions Cards */}
-            <div className="cards-container">
-              <h2 className="section-title">Promotions & Discounts</h2>
-              <div className="cards-grid">
-                {promotions.map(promo => (
-                  <div key={promo.id} className="card promo-card">
-                    <div className="promo-badge">HOT DEAL</div>
-                    <h3>{promo.title}</h3>
-                    <p>{promo.description}</p>
-                    <div className="promo-code">
-                      <span>Use code: </span>
-                      <strong>{promo.code}</strong>
-                    </div>
-                    <div className="promo-valid">Valid until: {promo.validUntil}</div>
-                    <button className="card-button">Claim Offer</button>
-                  </div>
-                ))}
-              </div>
-            </div>
+<div className="cards-container">
+  <h2 className="section-title">Promotions & Discounts</h2>
+  <div className="cards-grid">
+  {notifications.length > 0 ? (
+  notifications
+    .filter((notif) => !notif.expiredAt || new Date(notif.expiredAt) > new Date())
+    .map((notif) => (
+      <div key={notif.notificationId} className="card promo-card">
+        <div className="promo-badge">HOT DEAL</div>
+        <h3>{notif.type}</h3>
+        <p>{notif.message}</p>
+        <div className="promo-code">
+          <span>Use code: </span>
+          <strong>2550</strong>
+        </div>
+        <div className="promo-valid">
+          Valid until: {new Date(notif.expiredAt).toLocaleDateString()}
+        </div>
+        <button className="card-button">Claim Offer</button>
+      </div>
+    ))
+) : (
+  <p>No promotions or discounts available at the moment.</p>
+)}
+
+  </div>
+</div>
           
         </section>
         
-        {/* Partners Section */}
-        <section className="partners-section">
-          <h2 className="section-title">Our Trusted Partners</h2>
-          <div className="partners-grid">
-            {partners.map(partner => (
-              <div key={partner.id} className="partner-logo">
-                <img 
-                  src={partner.logo} 
-                  alt={partner.name} 
-                  onError={(e) => {
-                    e.target.onerror = null; 
-                    e.target.src = "/logos/default-partner.png";
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
+       {/* Partners Section */}
+<section className="partners-section">
+  <h2 className="section-title">Our Trusted Partners</h2>
+  <div className="partners-grid">
+    {partners.map(partner => (
+      <div key={partner.id} className="partner-logo">
+        <img 
+          src={partner.logo} 
+          alt={partner.name} 
+          onError={(e) => {
+            e.target.onerror = null; 
+            e.target.src = "/logos/default-partner.png";
+          }}
+        />
       </div>
-      
+    ))}
+  </div>
+</section> {/* Properly closed the section here */}
+
+</div>
       <Footer1 />
     </div>
   );

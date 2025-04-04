@@ -66,6 +66,7 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  
 }
 
 .cards-grid {
@@ -139,6 +140,7 @@ body {
 /* Promo Card Specific Styles */
 .promo-card {
   position: relative;
+  border: 1px solid red;
   border-top-color: #FFC300; /* brightYellow */
 }
 

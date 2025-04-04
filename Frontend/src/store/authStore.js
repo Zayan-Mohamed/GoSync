@@ -23,6 +23,7 @@ const useAuthStore = create(
               _id: data._id,
               name: data.name,
               email: data.email,
+              phone:data.phone,
               role: data.role,
             },
             isAuthenticated: true,
