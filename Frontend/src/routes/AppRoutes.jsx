@@ -32,7 +32,12 @@ import CancelTicket from "../pages/CancelTicket";
 import InsertSchedule from "../pages/InsertSchedule.jsx";
 import ScheduleSearchResults from "../pages/ScheduleSearchResults.jsx";
 import ScheduleList from "../pages/ScheduleList.jsx";
-
+import SeatManagement from "../pages/SeatManagement.jsx";
+import AddSeat from "../pages/AddSeat.jsx";
+import SeatAnalytics from "../pages/SeatAnalytics.jsx";
+import BookingManagement from "../pages/BookingManagement.jsx";
+import AddBooking from "../pages/AddBooking.jsx";
+import BookingAnalytics from "../pages/BookingAnalytics.jsx";
 
 const AppRoutes = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -70,7 +75,16 @@ const AppRoutes = () => {
             <Route path="/stop-management" element={<StopList />} />
             <Route path="/schedule-management" element={<ScheduleList />} />
             <Route path="/insert-schedule" element={<InsertSchedule />} />
-            <Route path="/schedule-search" element={<ScheduleSearchResults />} />
+            <Route
+              path="/schedule-search"
+              element={<ScheduleSearchResults />}
+            />
+            <Route path="/seat-management" element={<SeatManagement />} />
+            <Route path="/add-seat" element={<AddSeat />} />
+            <Route path="/seat-analytics" element={<SeatAnalytics />} />
+            <Route path="/booking-management" element={<BookingManagement />} />
+            <Route path="/add-booking" element={<AddBooking />} />
+            <Route path="/booking-analytics" element={<BookingAnalytics />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
