@@ -129,7 +129,7 @@ const Navbar = () => {
           )}
         </div>
 
-        <button>
+        <button onClick={() => navigate("/settings")}>
           <FiSettings size={24} />
         </button>
         <button className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
