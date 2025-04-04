@@ -5,6 +5,7 @@ import "../styles/AddMessage.css";
 import axios from "axios";
 import AdminLayout from "../layouts/AdminLayout";
 
+
 const AddMessage = () => {
   const API_URL = import.meta.env.VITE_API_URL
 
@@ -14,6 +15,7 @@ const AddMessage = () => {
   const [status, setStatus] = useState("pending");
   const [type, setType] = useState(""); // Add state for notification type
   const [loading, setLoading] = useState(false);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +28,7 @@ const AddMessage = () => {
       status,
       type, // Add type to the new message object
     };
+
 
     try {
       await axios.post(`${API_URL}/api/shed/shed`, newMessage);

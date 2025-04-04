@@ -11,6 +11,7 @@ const AddNotification = () => {
     const [expirationDate, setExpirationDate] = useState("");  // New field for expiration date
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const API_URI = import.meta.env.VITE_API_URL
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -31,7 +32,7 @@ const AddNotification = () => {
         };
 
         try {
-            await axios.post("http://localhost:5000/api/notifications", newNotification);
+            await axios.post(`${API_URI}/api/notifications`, newNotification);
             alert("Notification Sent Successfully!");
             
             setType("");

@@ -6,7 +6,9 @@ import { useNavigate } from "react-router-dom";
 import AdminModal from "./AdminModal";
 import axios from "axios";
 
-const socket = io("http://localhost:5000"); // Replace with your backend URL
+const API_URI = import.meta.env.VITE_API_URL;
+
+const socket = io(`${API_URI}`); // Replace with your backend URL
 
 const Navbar = () => {
   const { logout } = useAuthStore();
@@ -26,8 +28,8 @@ const Navbar = () => {
     const fetchNotifications = async () => {
       try {
         const [notifResponse, msgResponse] = await Promise.all([
-          axios.get("http://localhost:5000/api/notifications"),
-          axios.get("http://localhost:5000/api/shed/messages"),
+          axios.get(`${API_URI}/api/notifications`),
+          axios.get(`${API_URI}/api/shed/messages`),
         ]);
 
         const notificationsData = notifResponse.data

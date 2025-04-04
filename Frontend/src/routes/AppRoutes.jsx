@@ -19,7 +19,7 @@ import Notification from "../pages/Notification";
 import AddNotification from "../pages/AddNotification";
 import UpdateNotification from "../pages/UpdateNotification";
 import SeatSelection from "../pages/SeatSelection";
-import ShedTable from "../pages/shedTable";
+import ShedTable from "../pages/ShedTable";
 import AddMessage from "../pages/AddMessage";
 import BusSearchResults from "../pages/BusSearchResults";
 import Payment from "../components/Payment";
@@ -73,14 +73,13 @@ const AppRoutes = () => {
             <Route path="/schedule-management" element={<ScheduleList />} />
             <Route path="/insert-schedule" element={<InsertSchedule />} />
             <Route path="/schedule-search" element={<ScheduleSearchResults />} />
-            <Route path="/add-route" element={<AddRoute />} />
+            <Route path="/add-routes" element={<AddRoute />} />
             <Route path="/route-stops" element={<ManageRouteStops />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
             <Route path="/passenger" element={<PassengerHomepage />} />
             <Route path="/seat-selection" element={<SeatSelection />} />
-            <Route path="/passenger" element={<PassengerHomepage />} />
             <Route path="/bus-search-results" element={<BusSearchResults />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/booking-summary" element={<BookingSummary />} />

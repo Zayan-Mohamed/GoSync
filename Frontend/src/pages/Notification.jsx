@@ -10,11 +10,13 @@ const Notification = () => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(false); // Add loading state
 
+    const API_URI = import.meta.env.VITE_API_URL
+
     useEffect(() => {
         const fetchNotifications = async () => {
             setLoading(true);
             try {
-                const response = await axios.get("http://localhost:5000/api/notifications");
+                const response = await axios.get(`${API_URI}/api/notifications`);
                 console.log(response.data); // Debugging: Check the structure of the response data
 
                 // Ensure notifications are being parsed correctly, including the expiredAt field
@@ -46,7 +48,7 @@ const Notification = () => {
         if (!confirmDelete) return;
     
         try {
-            await axios.delete(`http://localhost:5000/api/notifications/${notificationId}`);
+            await axios.delete(`${API_URI}/api/notifications/${notificationId}`);
             alert("Notification deleted successfully!");
     
             // Remove the deleted notification from the state

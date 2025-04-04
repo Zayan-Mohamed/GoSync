@@ -8,10 +8,12 @@ const ShedTable = () => {
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState(null);
 
+  const API_URI = import.meta.env.VITE_API_URL
+
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/shed/messages");
+        const response = await axios.get(`${API_URI}/api/shed/messages`);
 
         const sortedMessages = response.data.data.sort((a, b) => {
           const aDateTime = new Date(`${a.shedDate}T${a.shedTime}:00`);
@@ -34,7 +36,7 @@ const ShedTable = () => {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/shed/messages/${messageId}`);
+      await axios.delete(`${API_URI}/api/shed/messages/${messageId}`);
       alert("Message deleted successfully!");
       setMessages(messages.filter(msg => msg._id !== messageId));
     } catch (error) {

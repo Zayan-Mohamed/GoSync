@@ -13,11 +13,13 @@ const UpdateNotification = () => {
     const [status, setStatus] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const API_URI = import.meta.env.VITE_API_URL
+
     useEffect(() => {
         const fetchNotification = async () => {
             try {
                 console.log("Fetching notification with ID:", id);
-                const response = await axios.get(`http://localhost:5000/api/notifications/${id}`);
+                const response = await axios.get(`${API_URI}/api/notifications/${id}`);
                 const notification = response.data;
                 
                 // Log the fetched notification for debugging
@@ -51,7 +53,7 @@ const UpdateNotification = () => {
         try {
             console.log("Updating notification:", updatedNotification);
 
-            const response = await axios.put(`http://localhost:5000/api/notifications/${id}`, updatedNotification); // ID corresponds to notificationId
+            const response = await axios.put(`${API_URI}/api/notifications/${id}`, updatedNotification); // ID corresponds to notificationId
             console.log("Notification update response:", response);
 
             alert("Notification updated successfully!");

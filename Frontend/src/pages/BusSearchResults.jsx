@@ -4,24 +4,22 @@ import { io } from "socket.io-client";
 import Navbar1 from "../components/Navbar1";
 import BusCard from "../components/BusCard";
 import Footer1 from "../components/Footer1";
-import { Bus } from "lucide-react";
 import BookingForm from "../components/BookingForm";
-import { useBookingStore } from "../store/bookingStore";
 
 const BusSearchResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { showBookingContainer, setShowBookingContainer } = useBookingStore();
-
   const { fromLocation, toLocation, journeyDate } = location.state || {};
-
   const [busResults, setBusResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState("departure");
+  const [showBookingForm, setShowBookingForm] = useState(false);
+
+  const API_URI = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    const socket = io("http://localhost:5000", {
+    const socket = io(`${API_URI}`, {
       withCredentials: true,
     });
 
@@ -57,18 +55,18 @@ const BusSearchResults = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/buses/search-buses",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              fromLocation,
-              toLocation,
-              selectedDate: journeyDate,
-            }),
-          }
-        );
+        const response = await fetch(`${API_URI}/api/buses/search-buses`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fromLocation,
+            toLocation,
+            selectedDate: journeyDate,
+            includeStops: true
+          }),
+        });
 
         if (!response.ok) {
           throw new Error("Failed to find buses");
@@ -87,7 +85,30 @@ const BusSearchResults = () => {
   }, [fromLocation, toLocation, journeyDate]);
 
   const handleModify = () => {
-    setShowBookingContainer((prev) => !prev); // Toggle visibility
+    setShowBookingForm(!showBookingForm); // Toggle booking form visibility
+  };
+
+
+  const handleModifySearch = () => {
+    navigate("/passenger", {
+      state: {
+        fromLocation,
+        toLocation,
+        journeyDate,
+      },
+    });
+  };
+
+  const handleFormSubmit = (formData) => {
+    // Update the search with new criteria
+    navigate("/bus-search-results", {
+      state: {
+        fromLocation: formData.fromLocation,
+        toLocation: formData.toLocation,
+        journeyDate: formData.journeyDate,
+      },
+    });
+    setShowBookingForm(false); // Hide the form after submission
   };
 
   const handleViewSeat = (busId, scheduleId) => {
@@ -159,16 +180,17 @@ const BusSearchResults = () => {
               onClick={handleModify}
               className="bg-brightYellow text-darkCharcoal px-3 py-1 rounded text-sm hover:bg-lightYellow"
             >
-              Modify
+              {showBookingForm ? "Cancel" : "Modify"}
             </button>
           </div>
         </div>
       </div>
-
-      {/* Conditionally render the BookingForm with sliding effect */}
-      <div className={`booking-container ${showBookingContainer ? "visible" : "hidden"}`}>
-        <BookingForm />
-      </div>
+      {/* Booking Form - Only shown when showBookingForm is true */}
+      <BookingForm
+        isVisible={showBookingForm}
+        initialValues={{ fromLocation, toLocation, journeyDate }}
+        onSubmit={handleFormSubmit}
+      />
 
       {/* Filter options */}
       <div className="bg-softPeach py-2">
@@ -216,8 +238,8 @@ const BusSearchResults = () => {
               Try modifying your search criteria
             </p>
             <button
-              onClick={handleModify}
-              className="mt-4 bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
+              onClick={handleModifySearch}
+              className="mt-4 bg-deepOrange text-white px-6 py-2 rounded hover:bg-sunsetOrange"
             >
               Modify Search
             </button>
