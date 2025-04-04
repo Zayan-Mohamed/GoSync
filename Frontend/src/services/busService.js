@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/buses"; // Correct backend URL (Note: The server is running on port 5001)
+const API_URI = import.meta.env.VITE_API_URL
+
+const API_URL = `${API_URI}/api/buses`; // Correct backend URL (Note: The server is running on port 5001)
 
 // Get All Buses
 export const getBuses = async () => {

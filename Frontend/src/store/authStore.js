@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL
+
 const useAuthStore = create(
   persist(
     (set) => ({
@@ -11,7 +13,7 @@ const useAuthStore = create(
       login: async (email, password) => {
         try {
           const { data } = await axios.post(
-            "http://localhost:5000/api/auth/login",
+            `${API_URL}/api/auth/login`,
             { email, password },
             { withCredentials: true } // Ensures cookie is sent/stored
           );
@@ -39,7 +41,7 @@ const useAuthStore = create(
       logout: async () => {
         try {
           await axios.post(
-            "http://localhost:5000/api/auth/logout",
+            "http://localhost:5001/api/auth/logout",
             {},
             { withCredentials: true }
           );

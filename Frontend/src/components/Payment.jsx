@@ -6,6 +6,7 @@ import Navbar1 from "./Navbar1";
 import Footer1 from "./Footer1";
 
 const Payment = () => {
+  const API_URL = import.meta.env.VITE_API_URL;
   const { state } = useLocation();
   const navigate = useNavigate();
   const { busId, scheduleId, selectedSeats, bookingSummary } = state || {};
@@ -17,7 +18,7 @@ const Payment = () => {
       // Assuming booking is already confirmed, just simulate payment
       // Update payment status (new endpoint needed)
       const paymentResponse = await axios.post(
-        "http://localhost:5000/api/bookings/update-payment",
+        `${API_URL}/api/bookings/update-payment`,
         { bookingId: bookingSummary.bookingId, paymentStatus: "completed" },
         { withCredentials: true }
       );

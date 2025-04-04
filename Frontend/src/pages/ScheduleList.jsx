@@ -46,9 +46,7 @@ function ScheduleList() {
     const fetchData = async () => {
       try {
         const [schedulesData, busesData, routesData] = await Promise.all([
-          getSchedules(),
-          getBuses(),
-          getRoutes(),
+          getSchedules()
         ]);
 
         setSchedules(schedulesData);

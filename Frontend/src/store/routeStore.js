@@ -1,50 +1,200 @@
 import { create } from "zustand";
 import axios from "axios";
-import { updateRoute } from "../services/routeService";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const useRouteStore = create((set) => ({
-  routes: [], // Store as an array
+  routes: [],
+  currentRoute: null,
+  routeStops: [],
+
+  // Fetch all routes
   fetchRoutes: async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/routes/routes");
-      console.log("Raw API response:", response.data);
-      
-      // If first route has stops, log the first stop structure
-      if (response.data.routes && 
-          response.data.routes.length > 0 && 
-          response.data.routes[0].stops && 
-          response.data.routes[0].stops.length > 0) {
-        console.log("Sample stop structure:", response.data.routes[0].stops[0]);
-      }
-      
-      set({ routes: response.data.routes });
+      const response = await axios.get(`${API_URL}/api/routes/routes`);
+      set({ routes: response.data.routes }); // ✅ Extract only the array
     } catch (error) {
       console.error("Error fetching routes:", error);
+      throw error;
     }
   },
-  editRoute: async (routeId, updatedData) => {
+
+  // Update route (distance and status)
+  updateRoute: async (routeId, updateData) => {
     try {
-      const updatedRoute = await updateRoute(routeId, updatedData);
+      const response = await axios.put(
+        `${API_URL}/api/routes/${routeId}`,
+        updateData
+      );
+
       set((state) => ({
         routes: state.routes.map((route) =>
-          route._id === routeId ? updatedRoute : route
+          route._id === routeId ? response.data.route : route
         ),
+        currentRoute: response.data.route,
       }));
+
+      return response.data.route;
     } catch (error) {
-      set({ error: error.message });
+      console.error("Error updating route:", error);
+      throw error;
     }
   },
-  deleteRoute: async (id) => {
+
+  // Toggle route status
+  toggleRouteStatus: async (routeId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/routes/${id}`);
+      await axios.delete(`${API_URL}/api/routes/${routeId}`);
       set((state) => ({
-        routes: state.routes.filter((route) => route._id !== id),
+        routes: state.routes.filter((route) => route._id !== routeId),
+        currentRoute: null,
       }));
+
+      return true;
+    } catch (error) {
+      console.error("Error toggling route status:", error);
+      throw error;
+    }
+  },
+
+  // Delete route
+  deleteRoute: async (routeId) => {
+    try {
+      await axios.delete(`${API_URL}/api/routes/${routeId}`);
+      set((state) => ({
+        routes: state.routes.filter((route) => route._id !== routeId),
+        currentRoute: null,
+      }));
+
+      return true;
     } catch (error) {
       console.error("Error deleting route:", error);
+      throw error;
+    }
+  },
+
+  // Get route by ID
+  getRouteById: async (routeId) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/routes/${routeId}`);
+      set({ currentRoute: response.data.route });
+      return response.data.route;
+    } catch (error) {
+      console.error("Error fetching route:", error);
+      throw error;
+    }
+  },
+
+  // Get stops for a specific route
+  getStopsForRoute: async (routeId) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/routes/${routeId}/stops`);
+      set({ routeStops: response.data.stops });
+      return response.data.stops;
+    } catch (error) {
+      console.error("Error fetching route stops:", error);
+      throw error;
+    }
+  },
+
+  // Add a stop to a route
+  addStopToRoute: async (routeId, stopData) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/routes/add-stop`, {
+        routeId,
+        ...stopData,
+      });
+
+      set((state) => ({
+        routes: state.routes.map((route) =>
+          route._id === routeId ? response.data.route : route
+        ),
+      }));
+
+      return response.data.route;
+    } catch (error) {
+      console.error("Error adding stop to route:", error);
+      throw error;
+    }
+  },
+
+  // Add multiple stops to a route
+  addMultipleStops: async (stopsData) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/routes/add-multiple-stops`,
+        stopsData
+      );
+
+      set((state) => ({
+        routes: state.routes.map((route) =>
+          route._id === response.data.route._id ? response.data.route : route
+        ),
+      }));
+
+      return response.data.route;
+    } catch (error) {
+      console.error("Error adding multiple stops:", error);
+      throw error;
+    }
+  },
+
+  // Update stop type
+  updateStopType: async (updateData) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/routes/update-stop-type`,
+        updateData
+      );
+
+      set((state) => ({
+        routes: state.routes.map((route) =>
+          route._id === response.data.route._id ? response.data.route : route
+        ),
+      }));
+
+      return response.data.route;
+    } catch (error) {
+      console.error("Error updating stop type:", error);
+      throw error;
+    }
+  },
+
+  // Delete a stop from a route
+  deleteStopFromRoute: async (routeId, stopId) => {
+    try {
+      const response = await axios.delete(
+        `${API_URL}/api/routes/${routeId}/stops/${stopId}`
+      );
+
+      set((state) => ({
+        routes: state.routes.map((route) =>
+          route._id === response.data.route._id ? response.data.route : route
+        ),
+      }));
+
+      return response.data.route;
+    } catch (error) {
+      console.error("Error deleting stop from route:", error);
+      throw error;
+    }
+  },
+
+  // Create a new route
+  createRoute: async (routeData) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/routes/create`, routeData);
+      
+      set((state) => ({
+        routes: [...state.routes, response.data.route],
+      }));
+
+      return response.data.route;
+    } catch (error) {
+      console.error("Error creating route:", error);
+      throw error;
     }
   },
 }));
-
 
 export default useRouteStore;
