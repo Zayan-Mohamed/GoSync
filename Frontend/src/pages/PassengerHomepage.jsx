@@ -18,6 +18,9 @@ const PassengerHomepage = () => {
   const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
   const { stops, loading, error, fetchStops } = useStopStore();
+  
+  const API_URI = import.meta.env.VITE_API_URL
+
 
   useEffect(() => {
     fetchStops();
@@ -27,7 +30,7 @@ const PassengerHomepage = () => {
 useEffect(() => {
   const fetchPromotionsAndDiscounts = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/notifications"); // Adjust with your actual API endpoint
+      const response = await axios.get(`${API_URI}/api/notifications`); // Adjust with your actual API endpoint
       const filteredNotifications = response.data
         .filter(
           (notif) => (notif.type === 'promotions' || notif.type === 'discounts') &&

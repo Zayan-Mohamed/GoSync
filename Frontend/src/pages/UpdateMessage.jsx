@@ -14,11 +14,12 @@ const UpdateMessage = () => {
   const [shedTime, setShedTime] = useState("");
   const [status, setStatus] = useState("pending");
   const [loading, setLoading] = useState(false);
+  const API_URI = import.meta.env.VITE_API_URL
 
   useEffect(() => {
     const fetchMessage = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/shed/messages/${id}`);
+        const response = await axios.get(`${API_URI}/api/shed/messages/${id}`);
         const { message, shedDate, shedTime, status } = response.data.data;
         setMessage(message);
         setShedDate(new Date(shedDate));
@@ -44,7 +45,7 @@ const UpdateMessage = () => {
     };
 
     try {
-      await axios.put(`http://localhost:5000/api/shed/messages/${id}`, updatedMessage);
+      await axios.put(`${API_URI}/api/shed/messages/${id}`, updatedMessage);
       alert("Message updated successfully!");
       navigate("/messages");
     } catch (error) {

@@ -7,7 +7,8 @@ import AdminModal from "./AdminModal";
 import axios from "axios";
 import io from "socket.io-client"; // Import socket.io-client
 
-const socket = io("http://localhost:5000"); // Replace with your backend URL
+const API_URI = import.meta.env.VITE_API_URL;
+const socket = io(`${API_URI}`); // Replace with your backend URL
 
 const Navbar1 = () => {
   const [isAdminModalOpen, setAdminModalOpen] = useState(false);
@@ -22,8 +23,8 @@ const Navbar1 = () => {
     const fetchNotifications = async () => {
       try {
         const [notifResponse, msgResponse] = await Promise.all([
-          axios.get("http://localhost:5000/api/notifications"),
-          axios.get("http://localhost:5000/api/shed/messages"),
+          axios.get(`${API_URI}/api/notifications`),
+          axios.get(`${API_URI}/api/shed/messages`),
         ]);
 
         const notificationsData = notifResponse.data
