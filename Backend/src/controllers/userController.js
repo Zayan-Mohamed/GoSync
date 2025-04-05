@@ -42,6 +42,7 @@ export const registerUser = async (req, res) => {
     _id: user._id,
     name: user.name,
     email: user.email,
+    password: user.password,
     phone: user.phone,
     role: user.role,
   });
@@ -100,20 +101,30 @@ export const authUser = async (req, res) => {
     _id: user._id,
     name: user.name,
     email: user.email,
+    password: user.password,
+    phone: user.phone,
     role: user.role,
     token: token,
   });
 };
 
 export const updateUser = async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user.id);
+  console.log("User found:", user); // Debug
+  console.log("✅ /api/auth/update hit"); // Add this
 
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
 
   user.name = req.body.name || user.name;
+  user.email = req.body.email || user.email;
   user.phone = req.body.phone || user.phone;
+  user.password = req.body.password
+    ? await bcrypt.hash(req.body.password, 10)
+    : user.password; // Hash new password if provided
+
+  console.log("User data before saving:", user); // Debug
 
   await user.save();
   res.json({ message: "Profile updated successfully", user });
