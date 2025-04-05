@@ -1,26 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Bus } from "lucide-react";
 import "../styles/PassengerHomepage.css";
 import Navbar1 from "../components/Navbar1";
-import { useNavigate } from "react-router-dom";
 import Footer1 from "../components/Footer1";
 import BookingForm from "../components/BookingForm";
 import useStopStore from "../store/stopStore.js";
-import useBookingStore from "../store/bookingStore.js";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 const PassengerHomepage = () => {
-  const [fromLocation, setFromLocation] = useState("");
-  const [toLocation, setToLocation] = useState("");
-  const [journeyDate, setJourneyDate] = useState("");
   const [notifications, setNotifications] = useState([]);
-  const navigate = useNavigate();
-  const { stops, loading, error, fetchStops } = useStopStore();
+  const { fetchStops } = useStopStore();
   
   const API_URI = import.meta.env.VITE_API_URL
-
 
   useEffect(() => {
     fetchStops();
@@ -44,31 +36,7 @@ useEffect(() => {
   };
 
   fetchPromotionsAndDiscounts();
-}, []);
-
-
-  const findBuses = () => {
-    if (!fromLocation || !toLocation) {
-      alert("Please select both from and to locations");
-      return;
-    }
-
-    navigate("/bus-search-results", {
-      state: {
-        fromLocation,
-        toLocation,
-        journeyDate,
-      },
-    });
-  };
-
-  const locations =
-    loading || error
-      ? []
-      : stops
-          ?.filter((stop) => stop.status === "active")
-          .map((stop) => stop.stopName)
-          .sort();
+}, [API_URI]);
 
   // Popular routes data
   const popularRoutes = [
@@ -101,8 +69,6 @@ useEffect(() => {
       frequency: "Every 30-60 mins"
     }
   ];
-
-
 
   // Partners data
   const partners = [
@@ -184,7 +150,6 @@ useEffect(() => {
 ) : (
   <p>No promotions or discounts available at the moment.</p>
 )}
-
   </div>
 </div>
           
