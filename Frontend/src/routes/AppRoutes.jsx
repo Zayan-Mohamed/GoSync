@@ -31,9 +31,10 @@ import ManageRouteStops from "../pages/ManageRouteStops.jsx";
 import BookingHistory from "../pages/BookingHistory.jsx";
 import Reserved from "../pages/Reserved";
 import CancelTicket from "../pages/CancelTicket";
-import InsertSchedule from "../pages/InsertSchedule.jsx";
-import ScheduleSearchResults from "../pages/ScheduleSearchResults.jsx";
-import ScheduleList from "../pages/ScheduleList.jsx";
+import ScheduleManagement from "../pages/ScheduleManagement.jsx";
+import AddSchedule from "../pages/AddSchedule.jsx";
+import EditSchedule from "../pages/EditSchedule.jsx";
+import ScheduleAnalytics from "../pages/ScheduleAnalytics.jsx";
 
 
 const AppRoutes = () => {
@@ -70,9 +71,10 @@ const AppRoutes = () => {
             <Route path="/add-message" element={<AddMessage />} />
             <Route path="/add-stop" element={<AddStop />} />
             <Route path="/stop-management" element={<StopList />} />
-            <Route path="/schedule-management" element={<ScheduleList />} />
-            <Route path="/insert-schedule" element={<InsertSchedule />} />
-            <Route path="/schedule-search" element={<ScheduleSearchResults />} />
+            <Route path="/schedule-management" element={<ScheduleManagement />} />
+            <Route path="/add-schedule" element={<AddSchedule />} />
+            <Route path="/edit-schedule/:scheduleID" element={<EditSchedule />} />
+            <Route path="/schedule-analytics" element={<ScheduleAnalytics />} />
             <Route path="/add-route" element={<AddRoute />} />
             <Route path="/route-stops" element={<ManageRouteStops />} />
           </Route>

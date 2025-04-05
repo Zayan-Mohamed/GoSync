@@ -51,8 +51,7 @@ const Sidebar = () => {
       title: "Schedule Management",
       links: [
         { to: "/schedule-management", label: "Current Schedule", icon: <FiCalendar /> },
-        { to: "/insert-schedule", label: "Insert Schedule", icon: <FiPlus /> },
-        { to: "/schedule-search", label: "Search Schedule", icon: <FiCalendar /> },
+        { to: "/add-schedule", label: "Insert Schedule", icon: <FiPlus /> },
         { to: "/schedule-analytics", label: "Schedule Analytics", icon: <BsGraphUpArrow /> },
       ],
     },
