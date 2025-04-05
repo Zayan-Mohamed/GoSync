@@ -74,7 +74,7 @@ useEffect(() => {
   const partners = [
     { id: 1, name: "SLTB", logo: "/logos/sltb.png" },
     { id: 2, name: "Private Bus Association", logo: "/logos/pba.png" },
-    { id: 3, name: "Intercity Express", logo: "/logos/intercity.png" },
+    { id: 3, name: "Intercity Express", logo: "/logos/intercity.jpeg" },
     { id: 4, name: "Lanka Ashok Leyland", logo: "/logos/lal.png" },
     { id: 5, name: "Tourism Board", logo: "/logos/tourism-board.png" }
   ];

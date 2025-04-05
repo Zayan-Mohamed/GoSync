@@ -342,9 +342,17 @@ export const cancelBooking = async (req, res) => {
   console.log("Cancel booking request:", { bookingId, userId });
 
   try {
-    const booking = await Booking.findOne({ bookingId, userId });
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    const booking = await Booking.findOne({ bookingId, userId })
+      .populate("busId", "busNumber busRouteNumber routeId")
+      .populate("userId", "name email")
+      .populate("seats", "seatNumber");
+
+    if (!booking) {
+      console.log("Booking not found:", { bookingId, userId });
+      return res.status(404).json({ message: "Booking not found" });
+    }
     if (booking.status !== "confirmed") {
+      console.log("Cannot cancel booking with status:", booking.status);
       return res.status(400).json({ message: "Cannot cancel this booking" });
     }
 
@@ -364,15 +372,43 @@ export const cancelBooking = async (req, res) => {
       io.to(`${booking.busId}-${booking.scheduleId}`).emit("seatUpdate", {
         seats: updatedSeats,
       });
-      console.log(
-        `Seat update emitted: ${booking.busId}-${booking.scheduleId}`
-      );
+      console.log(`Seat update emitted: ${booking.busId}-${booking.scheduleId}`);
     }
 
-    res.status(200).json({ message: "Booking cancelled" });
+    // Fetch route using bus.routeId
+    const route = await Route.findOne({ routeId: booking.busId.routeId });
+    const from = route ? route.startLocation : "Unknown";
+    const to = route ? route.endLocation : "Unknown";
+
+    const emailContent = `
+      <h2>GoSync Booking Cancellation Confirmation</h2>
+      <p>Dear ${booking.userId.name},</p>
+      <p>Your booking with GoSync has been successfully cancelled. Below are the details:</p>
+      <ul>
+        <li><strong>Booking ID:</strong> ${booking.bookingId}</li>
+        <li><strong>Bus Number:</strong> ${booking.busId.busNumber}</li>
+        <li><strong>Route:</strong> ${booking.busId.busRouteNumber} (${from} to ${to})</li>
+        <li><strong>Seats:</strong> ${booking.seats.map((seat) => seat.seatNumber).join(", ")}</li>
+        <li><strong>Total Fare:</strong> Rs. ${booking.fareTotal}</li>
+        <li><strong>Status:</strong> Cancelled</li>
+        <li><strong>Cancelled At:</strong> ${new Date().toLocaleString()}</li>
+      </ul>
+      <p>We’re sorry to see you go! If you have any questions, feel free to contact us.</p>
+      <p>Best regards,<br>The GoSync Team</p>
+    `;
+
+    await transporter.sendMail({
+      from: `"GoSync Team" <${process.env.EMAIL_USER}>`,
+      to: booking.userId.email,
+      subject: `Booking Cancellation Confirmation - ${booking.bookingId}`,
+      html: emailContent,
+    });
+
+    console.log(`Cancellation email sent to ${booking.userId.email}`);
+    res.status(200).json({ message: "Booking cancelled and confirmation email sent" });
   } catch (error) {
-    console.error("Error cancelling booking:", error);
-    res.status(500).json({ message: "Failed to cancel booking" });
+    console.error("Error cancelling booking or sending email:", error);
+    res.status(500).json({ message: "Failed to cancel booking or send email", error: error.message });
   }
 };
 

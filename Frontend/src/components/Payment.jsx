@@ -176,7 +176,7 @@ const Payment = () => {
               </div>
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="text-gray-700 font-semibold">Total Fare:</span>
-                <span className="text-gray-900 font-bold text-lg">${bookingSummary.fareTotal}</span>
+                <span className="text-gray-900 font-bold text-lg">LKR. {bookingSummary.fareTotal}</span>
               </div>
             </div>
             <motion.button
@@ -199,7 +199,7 @@ const Payment = () => {
                   Processing...
                 </span>
               ) : (
-                `Pay Now ($${bookingSummary.fareTotal})`
+                `Pay Now (LKR. ${bookingSummary.fareTotal})`
               )}
             </motion.button>
           </motion.div>
