@@ -210,41 +210,127 @@ export const createMultipleRoutes = async (req, res) => {
 };
 
 // Update addStopToRoute function
+// export const addStopToRoute = async (req, res) => {
+//   try {
+//     const { routeId, stopId, order } = req.body;
+
+//     // Find the route
+//     const route = await Route.findOne({ routeId });
+//     if (!route) return res.status(404).json({ error: 'Route not found' });
+
+//     // Find the stop
+//     const stop = await Stop.findOne({ stopId });
+//     if (!stop) return res.status(404).json({ error: 'Stop not found' });
+
+//     // Check if the stop is already in the route
+//     const stopExists = route.stops.some((existingStop) => 
+//       existingStop.stop.toString() === stop._id.toString()
+//     );
+    
+//     if (stopExists) {
+//       return res.status(400).json({ error: 'Stop is already under this route, cannot add again.' });
+//     }
+
+//     // Add the stop to the route with the specified order
+//     route.stops.push({
+//       stop: stop._id,
+//       order: order || route.stops.length + 1 // Default to next position if no order specified
+//     });
+    
+//     // Sort the stops by order
+//     route.stops.sort((a, b) => a.order - b.order);
+    
+//     await route.save();
+
+//     res.status(200).json({ message: 'Stop added to route successfully', route });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Error adding stop to route', details: error });
+//   }
+// };
+
 export const addStopToRoute = async (req, res) => {
   try {
-    const { routeId, stopId, order } = req.body;
+    const { routeId, stopId, order, stopType } = req.body;
 
-    // Find the route
-    const route = await Route.findOne({ routeId });
-    if (!route) return res.status(404).json({ error: 'Route not found' });
-
-    // Find the stop
-    const stop = await Stop.findOne({ stopId });
-    if (!stop) return res.status(404).json({ error: 'Stop not found' });
-
-    // Check if the stop is already in the route
-    const stopExists = route.stops.some((existingStop) => 
-      existingStop.stop.toString() === stop._id.toString()
-    );
-    
-    if (stopExists) {
-      return res.status(400).json({ error: 'Stop is already under this route, cannot add again.' });
+    // Validate required fields
+    if (!routeId || !stopId) {
+      return res.status(400).json({ error: 'routeId and stopId are required' });
     }
 
-    // Add the stop to the route with the specified order
+    // Find the route (support both _id and routeId)
+    const route = await Route.findOne({
+      $or: [{ _id: routeId }, { routeId: routeId }]
+    });
+    if (!route) {
+      return res.status(404).json({ error: 'Route not found' });
+    }
+
+    // Find the stop (support both _id and stopId)
+    const stop = await Stop.findOne({
+      $or: [{ _id: stopId }, { stopId: stopId }]
+    });
+    if (!stop) {
+      return res.status(404).json({ error: 'Stop not found' });
+    }
+
+    // Check if stop already exists in route
+    const stopExists = route.stops.some(existingStop => {
+      const existingStopId = existingStop.stop?._id?.toString() || existingStop.stop?.toString();
+      return existingStopId === stop._id.toString();
+    });
+
+    if (stopExists) {
+      return res.status(400).json({ 
+        error: 'Stop already exists in this route',
+        existingStop: route.stops.find(s => 
+          (s.stop?._id?.toString() || s.stop?.toString()) === stop._id.toString()
+        )
+      });
+    }
+
+    // Validate order (default to next available if not provided)
+    const newOrder = order || route.stops.length + 1;
+    if (newOrder < 1) {
+      return res.status(400).json({ error: 'Order must be at least 1' });
+    }
+
+    // Check for order conflicts
+    const orderConflict = route.stops.some(s => s.order === newOrder);
+    if (orderConflict) {
+      return res.status(400).json({ 
+        error: `Order ${newOrder} is already taken`,
+        conflictingStop: route.stops.find(s => s.order === newOrder)
+      });
+    }
+
+    // Add the stop to the route
     route.stops.push({
       stop: stop._id,
-      order: order || route.stops.length + 1 // Default to next position if no order specified
+      order: newOrder,
+      stopType: stopType || 'boarding' // Default to boarding if not specified
     });
-    
-    // Sort the stops by order
+
+    // Re-sort stops by order
     route.stops.sort((a, b) => a.order - b.order);
-    
+
     await route.save();
 
-    res.status(200).json({ message: 'Stop added to route successfully', route });
+    // Populate the stop details in the response
+    const populatedRoute = await Route.populate(route, { path: 'stops.stop' });
+
+    res.status(200).json({ 
+      message: 'Stop added to route successfully',
+      addedStop: populatedRoute.stops.find(s => 
+        (s.stop?._id?.toString() || s.stop?.toString()) === stop._id.toString()
+      ),
+      route: populatedRoute
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Error adding stop to route', details: error });
+    console.error('Error adding stop to route:', error);
+    res.status(500).json({ 
+      error: 'Error adding stop to route',
+      details: error.message 
+    });
   }
 };
 
@@ -955,6 +1041,121 @@ export const addMultipleStopsWithTypes = async (req, res) => {
     res.status(500).json({ 
       error: 'Error managing stops on route', 
       details: error.message 
+    });
+  }
+};
+
+export const updateStopInRoute = async (req, res) => {
+  try {
+    const { routeId, stopId } = req.params;
+    const { order, stopType } = req.body;
+
+    // 1. Input validation
+    if (order === undefined && stopType === undefined) {
+      return res.status(400).json({ message: 'Nothing to update (provide order or stopType)' });
+    }
+
+    // 2. Find the route
+    const route = await Route.findOne({
+      $or: [{ _id: routeId }, { routeId: routeId }]
+    }).populate('stops.stop'); // Ensure stops are populated
+
+    if (!route) {
+      return res.status(404).json({ message: 'Route not found' });
+    }
+
+    // 3. Find the exact stop to update
+    const stopToUpdate = route.stops.find(s => 
+      s.stop?._id?.toString() === stopId || 
+      s.stop?.toString() === stopId
+    );
+
+    if (!stopToUpdate) {
+      return res.status(404).json({
+        message: 'Stop not found in this route',
+        availableStops: route.stops.map(s => ({
+          stopId: s.stop?._id?.toString() || s.stop?.toString(),
+          order: s.order,
+          name: s.stop?.stopName || 'Unknown'
+        }))
+      });
+    }
+
+    // 4. STRICT Order Validation
+    if (order !== undefined) {
+      // Check if another stop has this order (excluding current stop)
+      const orderConflict = route.stops.some(s => {
+        const isSameStop = s.stop?._id?.toString() === stopId || 
+                         s.stop?.toString() === stopId;
+        return s.order === order && !isSameStop;
+      });
+
+      if (orderConflict) {
+        const conflictingStop = route.stops.find(s => s.order === order);
+        return res.status(400).json({
+          message: `Order ${order} is already assigned to ${conflictingStop.stop?.stopName || 'another stop'}`,
+          conflict: {
+            existingStop: {
+              name: conflictingStop.stop?.stopName,
+              order: conflictingStop.order,
+              type: conflictingStop.stopType
+            },
+            attemptedUpdate: {
+              stopId: stopId,
+              newOrder: order
+            }
+          },
+          allStops: route.stops.map(s => ({
+            stopId: s.stop?._id?.toString() || s.stop?.toString(),
+            order: s.order,
+            name: s.stop?.stopName
+          }))
+        });
+      }
+
+      // Update only after validation passes
+      stopToUpdate.order = order;
+    }
+
+    // 5. Update stopType if provided
+    if (stopType !== undefined) {
+      stopToUpdate.stopType = stopType;
+    }
+
+    // 6. Verify uniqueness before saving
+    const orders = route.stops.map(s => s.order);
+    const hasDuplicates = new Set(orders).size !== orders.length;
+    
+    if (hasDuplicates) {
+      return res.status(500).json({
+        message: 'Critical error: Duplicate orders detected after validation',
+        orders: orders,
+        stops: route.stops.map(s => ({
+          stopId: s.stop?._id?.toString() || s.stop?.toString(),
+          order: s.order
+        }))
+      });
+    }
+
+    // 7. Save changes
+    await route.save();
+
+    return res.status(200).json({
+      message: 'Stop updated successfully',
+      updatedStop: {
+        stopId: stopId,
+        order: stopToUpdate.order,
+        stopType: stopToUpdate.stopType
+      },
+      allOrders: route.stops.map(s => s.order) // Return all orders for verification
+    });
+
+  } catch (error) {
+    console.error('Update error:', error);
+    return res.status(500).json({
+      message: 'Failed to update stop',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
