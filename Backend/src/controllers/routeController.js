@@ -485,13 +485,49 @@ export const updateRoute = async (req, res) => {
 // };
 
   // In your routeController.js
+// export const getStopsForRoute = async (req, res) => {
+//   try {
+//     const route = await Route.findById(req.params.routeId)
+//       .populate('stops.stop', 'stopName')  // Only populate essential fields
+//     res.status(200).json({ stops: route.stops });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+// Get stops for a specific route
 export const getStopsForRoute = async (req, res) => {
   try {
-    const route = await Route.findById(req.params.routeId)
-      .populate('stops.stop', 'stopName')  // Only populate essential fields
-    res.status(200).json({ stops: route.stops });
+    const { routeId } = req.params;
+    
+    // Validate routeId format
+    if (!routeId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid route ID format" });
+    }
+
+    const route = await Route.findById(routeId)
+      .populate('stops.stop')
+      .lean();
+
+    if (!route) {
+      return res.status(404).json({ message: "Route not found" });
+    }
+
+    // Transform the data to match frontend expectations
+    const formattedStops = route.stops.map(stop => ({
+      ...stop,
+      stopId: stop.stop._id, // Add stopId for frontend compatibility
+      stopName: stop.stop.stopName // Flatten the stop name
+    }));
+
+    res.status(200).json({
+      stops: formattedStops
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error in getStopsForRoute:", error);
+    res.status(500).json({ 
+      message: "Server error",
+      error: error.message 
+    });
   }
 };
 // Toggle the status of the route (active/inactive)
@@ -512,6 +548,7 @@ export const toggleRouteStatus = async (req, res) => {
   }
 };
 
+
 export const deleteStopFromRoute = async (req, res) => {
   try {
     const { routeId, stopId } = req.params;
@@ -521,20 +558,36 @@ export const deleteStopFromRoute = async (req, res) => {
       return res.status(400).json({ error: "Route ID and Stop ID are required" });
     }
 
-    // Find the route using routeId
-    const route = await Route.findOne({ routeId: routeId });
+    // Find the route - try both _id and routeId
+    const route = await Route.findOne({
+      $or: [
+        { _id: mongoose.Types.ObjectId.isValid(routeId) ? new mongoose.Types.ObjectId(routeId) : null },
+        { routeId: routeId }
+      ]
+    });
+    
     if (!route) {
       return res.status(404).json({ error: "Route not found" });
     }
 
-    // Find the index and order of the stop to be deleted
-    const stopToDelete = route.stops.find(s => s.stop.toString() === stopId);
+    // Convert stopId to ObjectId if valid
+    const stopObjectId = mongoose.Types.ObjectId.isValid(stopId) 
+      ? new mongoose.Types.ObjectId(stopId) 
+      : stopId;
+
+    // Handle both MongoDB _id and string stopId
+    const stopToDelete = route.stops.find(s => {
+      const stopIdentifier = s.stop._id ? s.stop._id.toString() : s.stop.toString();
+      return stopIdentifier === stopId || 
+             (mongoose.Types.ObjectId.isValid(stopId) && stopIdentifier === stopObjectId.toString());
+    });
+    
     if (!stopToDelete) {
       return res.status(404).json({ 
         error: "Stop not found in route",
         details: {
-          routeId: route.routeId,
-          stopIds: route.stops.map(s => s.stop.toString())
+          routeId: route._id,
+          stopIds: route.stops.map(s => s.stop._id?.toString() || s.stop.toString())
         }
       });
     }
@@ -543,7 +596,11 @@ export const deleteStopFromRoute = async (req, res) => {
     const deletedStopOrder = stopToDelete.order;
 
     // Remove stop from the route's stops array
-    route.stops = route.stops.filter(s => s.stop.toString() !== stopId);
+    route.stops = route.stops.filter(s => {
+      const currentStopId = s.stop._id ? s.stop._id.toString() : s.stop.toString();
+      return currentStopId !== stopId && 
+             currentStopId !== stopObjectId.toString();
+    });
 
     // Reorder the remaining stops
     route.stops.forEach(stop => {
@@ -571,6 +628,132 @@ export const deleteStopFromRoute = async (req, res) => {
     });
   }
 };
+// export const deleteStopFromRoute = async (req, res) => {
+//   try {
+//     const { routeId, stopId } = req.params;
+
+//     // Validate input
+//     if (!routeId || !stopId) {
+//       return res.status(400).json({ error: "Route ID and Stop ID are required" });
+//     }
+
+//     // Find the route using routeId
+//     const route = await Route.findOne({ routeId: routeId });
+//     if (!route) {
+//       return res.status(404).json({ error: "Route not found" });
+//     }
+
+//     // Find the stop to be deleted using _id
+//     const stopToDelete = route.stops.find(s => 
+//       s.stop._id.toString() === stopId || 
+//       s.stop.toString() === stopId
+//     );
+    
+//     if (!stopToDelete) {
+//       return res.status(404).json({ 
+//         error: "Stop not found in route",
+//         details: {
+//           routeId: route.routeId,
+//           stopIds: route.stops.map(s => s.stop._id?.toString() || s.stop.toString())
+//         }
+//       });
+//     }
+
+//     // Get the order of the stop to be deleted
+//     const deletedStopOrder = stopToDelete.order;
+
+//     // Remove stop from the route's stops array
+//     route.stops = route.stops.filter(s => 
+//       (s.stop._id?.toString() !== stopId) && 
+//       (s.stop.toString() !== stopId)
+//     );
+
+//     // Reorder the remaining stops
+//     route.stops.forEach(stop => {
+//       if (stop.order > deletedStopOrder) {
+//         stop.order -= 1;
+//       }
+//     });
+
+//     // Sort stops by order to ensure correct sequence
+//     route.stops.sort((a, b) => a.order - b.order);
+
+//     // Save the updated route
+//     const updatedRoute = await route.save();
+
+//     // Send a success response
+//     return res.status(200).json({ 
+//       message: "Stop successfully removed from route",
+//       updatedStops: updatedRoute.stops 
+//     });
+//   } catch (error) {
+//     console.error('Error in deleteStopFromRoute:', error);
+//     return res.status(500).json({
+//       error: "Error deleting stop",
+//       details: error.message
+//     });
+//   }
+// };
+
+// export const deleteStopFromRoute = async (req, res) => {
+//   try {
+//     const { routeId, stopId } = req.params;
+
+//     // Validate input 
+//     if (!routeId || !stopId) {
+//       return res.status(400).json({ error: "Route ID and Stop ID are required" });
+//     }
+
+//     // Find the route using routeId
+//     const route = await Route.findOne({ routeId: routeId });
+//     if (!route) {
+//       return res.status(404).json({ error: "Route not found" });
+//     }
+
+//     // Find the index and order of the stop to be deleted
+//     const stopToDelete = route.stops.find(s => s.stop.toString() === stopId);
+//     if (!stopToDelete) {
+//       return res.status(404).json({ 
+//         error: "Stop not found in route",
+//         details: {
+//           routeId: route.routeId,
+//           stopIds: route.stops.map(s => s.stop.toString())
+//         }
+//       });
+//     }
+
+//     // Get the order of the stop to be deleted
+//     const deletedStopOrder = stopToDelete.order;
+
+//     // Remove stop from the route's stops array
+//     route.stops = route.stops.filter(s => s.stop.toString() !== stopId);
+
+//     // Reorder the remaining stops
+//     route.stops.forEach(stop => {
+//       if (stop.order > deletedStopOrder) {
+//         stop.order -= 1;
+//       }
+//     });
+
+//     // Sort stops by order to ensure correct sequence
+//     route.stops.sort((a, b) => a.order - b.order);
+
+//     // Save the updated route
+//     const updatedRoute = await route.save();
+
+//     // Send a success response
+//     return res.status(200).json({ 
+//       message: "Stop successfully removed from route",
+//       updatedStops: updatedRoute.stops 
+//     });
+//   } catch (error) {
+//     console.error('Error in deleteStopFromRoute:', error);
+//     return res.status(500).json({
+//       error: "Error deleting stop",
+//       details: error.message
+//     });
+//   }
+// };
 // delete a route
 export const deleteRoute = async (req, res) => {
   try {

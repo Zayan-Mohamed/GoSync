@@ -13,7 +13,6 @@ import {
   FiChevronDown,
 } from "react-icons/fi";
 import useAuthStore from "../store/authStore";
-import AdminModal from "./AdminModal";
 import axios from "axios";
 import io from "socket.io-client"; // Import socket.io-client
 
@@ -21,7 +20,6 @@ const API_URI = import.meta.env.VITE_API_URL;
 const socket = io(`${API_URI}`); // Replace with your backend URL
 
 const Navbar1 = () => {
-  const [isAdminModalOpen, setAdminModalOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [hasUnread, setHasUnread] = useState(false);
@@ -118,7 +116,7 @@ const Navbar1 = () => {
   return (
     <nav className="flex justify-between items-center p-4 bg-white shadow-md">
       {/* Left: Logo and Title */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-3 cursor-pointer">
         <img
           src={gosyncLogo}
           alt="GoSync Logo"
@@ -158,6 +156,7 @@ const Navbar1 = () => {
           )}
         </div>
         <button
+          onClick={() => navigate("/settings")}
           className="text-gray-600 hover:text-gray-800 transition"
           aria-label="Settings"
         >
