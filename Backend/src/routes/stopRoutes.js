@@ -17,7 +17,7 @@ router.post('/bulk', createMultipleStops);
 //router.delete('/:stopId', deleteStop);
 router.get('/get', getAllStops);
 router.get('/:stopId', getStop);
-// router.put('/:stopId', updateStop );
+//router.put('/:stopId', updateStop );
 router.put('/id/:id/status', toggleStopStatus);
 router.put('/id/:id', editStop);
 router.delete('/id/:id', deleteStop);

@@ -140,25 +140,103 @@ const useRouteStore = create((set) => ({
     }
   },
   // Add a stop to a route
-  addStopToRoute: async (routeId, stopData) => {
-    try {
-      const response = await axios.post(`${API_URL}/api/routes/add-stop`, {
-        routeId,
-        ...stopData,
-      });
+//   addStopToRoute: async (routeId, stopData) => {
+//   try {
+//     set({ loading: true, error: null });
 
-      set((state) => ({
-        routes: state.routes.map((route) =>
-          route._id === routeId ? response.data.route : route
-        ),
-      }));
+//     const response = await axios.post(
+//       `${API_URL}/api/routes/add-stop`,
+//       stopData
+//     );
 
-      return response.data.route;
-    } catch (error) {
-      console.error("Error adding stop to route:", error);
-      throw error;
-    }
-  },
+//     set(state => ({
+//       routes: state.routes.map(route => 
+//         (route._id === routeId || route.routeId === routeId)
+//           ? { ...route, stops: [...route.stops, response.data.addedStop] }
+//           : route
+//       ),
+//       loading: false
+//     }));
+
+//     return response.data;
+//   } catch (error) {
+//     set({ 
+//       error: error.response?.data?.message || "Failed to add stop",
+//       loading: false 
+//     });
+//     throw error;
+//   }
+// },
+
+ // Add stop to route
+//  addStopToRoute: async (routeId, stopData) => {
+//   try {
+//     set({ loading: true, error: null });
+    
+//     const response = await axios.post(
+//       `${API_URL}/api/routes/add-stop`,
+//       stopData
+//     );
+
+//     // Optimistic update
+//     set(state => ({
+//       routes: state.routes.map(route => 
+//         (route._id === routeId || route.routeId === routeId)
+//           ? { ...route, stops: [...route.stops, response.data.addedStop] }
+//           : route
+//       ),
+//       routeStops: [...state.routeStops, response.data.addedStop],
+//       loading: false
+//     }));
+
+//     return response.data;
+//   } catch (error) {
+//     set({ 
+//       error: error.response?.data?.error || 'Failed to add stop',
+//       loading: false 
+//     });
+//     throw error;
+//   }
+// },
+
+// In your route store (Zustand)
+addStopToRoute: async (routeId, stopData) => {
+  try {
+    set({ loading: true, error: null });
+    
+    const requestData = {
+      routeId,  // Include routeId in the request body
+      stopId: stopData.stopId,  // Make sure this matches backend expectation
+      order: stopData.order,
+      stopType: stopData.stopType
+    };
+
+    const response = await axios.post(
+      `${API_URL}/api/routes/add-stop`,
+      requestData
+    );
+
+    // Optimistic update
+    set(state => ({
+      routes: state.routes.map(route => 
+        (route._id === routeId || route.routeId === routeId)
+          ? { ...route, stops: [...route.stops, response.data.addedStop] }
+          : route
+      ),
+      routeStops: [...state.routeStops, response.data.addedStop],
+      loading: false
+    }));
+
+    return response.data;
+  } catch (error) {
+    set({ 
+      error: error.response?.data?.error || 'Failed to add stop',
+      loading: false 
+    });
+    throw error;
+  }
+},
+
 
   // Add multiple stops to a route
   addMultipleStops: async (stopsData) => {
@@ -202,23 +280,6 @@ const useRouteStore = create((set) => ({
     }
   },
 
-  // Delete a stop from a route
-  // deleteStopFromRoute: async (routeId, _id) => {
-  //   try {
-  //     const response = await axios.delete(`${API_URL}/api/routes/routes/${routeId}/stops/${_id}`);
-
-  //     set((state) => ({
-  //       routes: state.routes.map((route) =>
-  //         route._id === response.data.route._id ? response.data.route : route
-  //       ),
-  //     }));
-
-  //     return response.data.route;
-  //   } catch (error) {
-  //     console.error("Error deleting stop from route:", error);
-  //     throw error;
-  //   }
-  // },
 
   deleteStopFromRoute: async (routeId, stopId) => {
     try {
@@ -282,6 +343,48 @@ const useRouteStore = create((set) => ({
       throw error;
     }
   },
+
+    // Update a stop within a route
+    updateRouteStop: async (routeId, stopId, { order, stopType }) => {
+      try {
+        set({ loading: true, error: null });
+  
+        const response = await axios.put(
+          `${API_URL}/api/routes/${routeId}/stops/${stopId}`,
+          { order, stopType }
+        );
+  
+        // Optimistic update
+        set((state) => ({
+          routes: state.routes.map((route) => {
+            if (route._id === routeId || route.routeId === routeId) {
+              const updatedStops = route.stops.map((stop) => {
+                const stopIdentifier = stop.stop?._id?.toString() || stop.stop?.toString();
+                return stopIdentifier === stopId
+                  ? { ...stop, order, stopType }
+                  : stop;
+              });
+              return { ...route, stops: updatedStops };
+            }
+            return route;
+          }),
+          currentRoute: response.data.updatedRoute,
+          loading: false
+        }));
+  
+        return response.data;
+      } catch (error) {
+        let errorMessage = error.response?.data?.message || "Failed to update stop";
+        
+        // Handle duplicate order error specifically
+        if (error.response?.data?.conflict) {
+          errorMessage = `Order ${order} is already used by ${error.response.data.conflict.existingStop.name}`;
+        }
+  
+        set({ error: errorMessage, loading: false });
+        throw new Error(errorMessage);
+      }
+    },
 }));
 
 export default useRouteStore;
