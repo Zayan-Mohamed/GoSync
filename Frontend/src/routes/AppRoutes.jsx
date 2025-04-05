@@ -36,6 +36,15 @@ import AddSchedule from "../pages/AddSchedule.jsx";
 import EditSchedule from "../pages/EditSchedule.jsx";
 import ScheduleAnalytics from "../pages/ScheduleAnalytics.jsx";
 
+import InsertSchedule from "../pages/InsertSchedule.jsx";
+import ScheduleSearchResults from "../pages/ScheduleSearchResults.jsx";
+import ScheduleList from "../pages/ScheduleList.jsx";
+import SeatManagement from "../pages/SeatManagement.jsx";
+import AddSeat from "../pages/AddSeat.jsx";
+import SeatAnalytics from "../pages/SeatAnalytics.jsx";
+import BookingManagement from "../pages/BookingManagement.jsx";
+import AddBooking from "../pages/AddBooking.jsx";
+import BookingAnalytics from "../pages/BookingAnalytics.jsx";
 
 const AppRoutes = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -76,13 +85,26 @@ const AppRoutes = () => {
             <Route path="/edit-schedule/:scheduleID" element={<EditSchedule />} />
             <Route path="/schedule-analytics" element={<ScheduleAnalytics />} />
             <Route path="/add-route" element={<AddRoute />} />
+            <Route path="/schedule-management" element={<ScheduleList />} />
+            <Route path="/insert-schedule" element={<InsertSchedule />} />
+            <Route
+              path="/schedule-search"
+              element={<ScheduleSearchResults />}
+            />
+            <Route path="/seat-management" element={<SeatManagement />} />
+            <Route path="/add-seat" element={<AddSeat />} />
+            <Route path="/seat-analytics" element={<SeatAnalytics />} />
+            <Route path="/booking-management" element={<BookingManagement />} />
+            <Route path="/add-booking" element={<AddBooking />} />
+            <Route path="/booking-analytics" element={<BookingAnalytics />} />
+            <Route path="/schedule-search" element={<ScheduleSearchResults />} />
+            <Route path="/add-routes" element={<AddRoute />} />
             <Route path="/route-stops" element={<ManageRouteStops />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
             <Route path="/passenger" element={<PassengerHomepage />} />
             <Route path="/seat-selection" element={<SeatSelection />} />
-            <Route path="/passenger" element={<PassengerHomepage />} />
             <Route path="/bus-search-results" element={<BusSearchResults />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/booking-summary" element={<BookingSummary />} />

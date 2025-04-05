@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "../styles/ShedTable.css";
+import AdminLayout from "../layouts/AdminLayout";
 
 const ShedTable = () => {
   const [messages, setMessages] = useState([]);
+  const [error, setError] = useState(null);
 
   const API_URI = import.meta.env.VITE_API_URL
 
@@ -12,11 +14,20 @@ const ShedTable = () => {
     const fetchMessages = async () => {
       try {
         const response = await axios.get(`${API_URI}/api/shed/messages`);
-        setMessages(response.data.data);
+
+        const sortedMessages = response.data.data.sort((a, b) => {
+          const aDateTime = new Date(`${a.shedDate}T${a.shedTime}:00`);
+          const bDateTime = new Date(`${b.shedDate}T${b.shedTime}:00`);
+          return bDateTime - aDateTime;
+        });
+
+        setMessages(sortedMessages);
       } catch (error) {
+        setError("Error fetching messages.");
         console.error("Error fetching messages:", error);
       }
     };
+
     fetchMessages();
   }, []);
 
@@ -35,47 +46,51 @@ const ShedTable = () => {
   };
 
   return (
-    <div className="table-container">
-      <h2>Scheduled Messages</h2>
-      <Link to="/add-message" className="btn btn-primary">
-        Schedule <i className="fa-solid fa-plus"></i>
-      </Link>
-      <table>
-        <thead>
-          <tr>
-            <th>Message</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {messages.length > 0 ? (
-            messages.map((msg) => (
-              <tr key={msg._id}>
-                <td>{msg.message}</td>
-                <td>{msg.shedDate}</td>
-                <td>{msg.shedTime}</td>
-                <td className={msg.status === "sent" ? "sent" : "pending"}>{msg.status}</td>
-                <td className="actionButtons">
-                  <Link to={`/update-message/${msg._id}`} className="btn btn-info">
-                    <i className="fa-solid fa-pen-to-square"></i>
-                  </Link>
-                  <button className="btn btn-danger" onClick={() => handleDelete(msg._id)}>
-                    <i className="fa-solid fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5">No messages scheduled</td>
+    <AdminLayout>
+      <div className="table-container">
+        <h2>Scheduled Messages</h2>
+        {error && <div className="error-message">{error}</div>}
+        <Link to="/add-message" className="btn btn-primary">
+          Schedule <i className="fa-solid fa-plus"></i>
+        </Link>
+        <table>
+          <thead>
+            <tr> <th>Type</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {messages.length > 0 ? (
+              messages.map((msg) => (
+                <tr key={msg._id}>
+                  <td>{msg.type}</td>
+                  <td>{msg.message}</td>
+                  <td>{msg.shedDate}</td>
+                  <td>{msg.shedTime}</td>
+                  <td className={msg.status === "sent" ? "sent" : "pending"}>{msg.status}</td>
+                  <td className="actionButtons">
+                    <Link to={`/update-message/${msg._id}`} className="btn btn-info">
+                      <i className="fa-solid fa-pen-to-square"></i>
+                    </Link>
+                    <button className="btn btn-danger" onClick={() => handleDelete(msg._id)}>
+                      <i className="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5">No messages scheduled</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </AdminLayout>
   );
 };
 

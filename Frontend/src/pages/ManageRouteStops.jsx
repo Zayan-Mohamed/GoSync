@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, X, Pencil, Trash2, ArrowLeft } from "lucide-react";
+import { Pencil, Trash2, ArrowLeft } from "lucide-react";
 import AdminLayout from "../layouts/AdminLayout";
 import useRouteStore from "../store/routeStore";
 import axios from "axios";
@@ -16,6 +16,7 @@ const ManageRouteStops = () => {
     addStopToRoute,
     updateStopType,
     deleteStopFromRoute,
+    setRouteStops,
   } = useRouteStore();
 
   const [allStops, setAllStops] = useState([]);
@@ -23,163 +24,315 @@ const ManageRouteStops = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editStopData, setEditStopData] = useState(null);
+  const [editStopData, setEditStopData] = useState({
+    stopId: "",
+    stopType: "boarding",
+    order: 1,
+    stop: { _id: "", stopName: "" }
+  });
   const [newStop, setNewStop] = useState({
     stopId: "",
     stopType: "boarding",
     order: 1,
   });
-  const navigate = useNavigate();
 
-  // Fetch all routes and stops on component mount
-  // Fetch all routes and stops on component mount
+  const navigate = useNavigate();
+  const API_URI = import.meta.env.VITE_API_URL.replace(/\/$/, "");
+
+   // Fetch all stops from API
+   const fetchAllStops = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URI}/api/stops/get`);
+      setAllStops(response.data.stops || []);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch stops");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Form handlers
+  const handleNewStopChange = (e) => {
+    const { name, value } = e.target;
+    setNewStop(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditStopChange = (e) => {
+    const { name, value } = e.target;
+    setEditStopData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // API request debugging
+  useEffect(() => {
+    const reqInterceptor = axios.interceptors.request.use(config => {
+      console.log('Request:', config.method?.toUpperCase(), config.url);
+      return config;
+    });
+
+    const resInterceptor = axios.interceptors.response.use(
+      response => response,
+      error => {
+        console.error('API Error:', {
+          url: error.config?.url,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.request.eject(reqInterceptor);
+      axios.interceptors.response.eject(resInterceptor);
+    };
+  }, []);
+
+  // Initial data fetch
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         await fetchRoutes();
-
-        // Fetch all stops
-        const stopsRes = await axios.get("http://localhost:5000/api/stops/get");
-        if (stopsRes.data && Array.isArray(stopsRes.data.stops)) {
-          setAllStops(stopsRes.data.stops);
-        }
+        const stopsRes = await axios.get(`${API_URI}/api/routes/routes`);
+        setAllStops(stopsRes.data?.stops || []);
+        await fetchAllStops();
       } catch (err) {
-        setError("Failed to fetch data");
-        console.error("Error fetching data:", err);
+        setError(err.response?.data?.message || "Failed to fetch initial data");
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, [fetchRoutes]);
+  }, [fetchRoutes, API_URI]);
 
-  // Handle route selection using _id
+  // Route selection handler
   const handleRouteSelect = async (routeId) => {
+    if (!routeId) return;
+
     try {
       setLoading(true);
       setError(null);
       setSuccess(null);
 
-      // Use store methods to get route and its stops
       await getRouteById(routeId);
-      await getStopsForRoute(routeId);
+      const stops = await getStopsForRoute(routeId);
 
-      // Initialize new stop form
       setNewStop({
         stopId: "",
         stopType: "boarding",
-        order: currentRoute?.stops?.length + 1 || 1,
+        order: (stops?.length || 0) + 1,
       });
       setIsEditing(false);
-      setEditStopData(null);
+      setEditStopData({
+        stopId: "",
+        stopType: "boarding",
+        order: 1,
+        stop: { _id: "", stopName: "" }
+      });
     } catch (err) {
-      setError("Failed to load route details");
+      setError(err.response?.data?.message || `Failed to load route ${routeId}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle form changes
-  const handleNewStopChange = (e) => {
-    const { name, value } = e.target;
-    setNewStop((prev) => ({ ...prev, [name]: value }));
+   // Get stops not already in current route
+   const getAvailableStops = () => {
+    if (!currentRoute || !allStops.length) return allStops;
+    
+    const existingStopIds = new Set(
+      routeStops.map(stop => stop.stop?._id?.toString() || stop.stop?.toString())
+    );
+    
+    return allStops.filter(stop => !existingStopIds.has(stop._id.toString()));
   };
 
-  const handleEditStopChange = (e) => {
-    const { name, value } = e.target;
-    setEditStopData((prev) => ({ ...prev, [name]: value }));
-  };
+  // Enhanced add stop handler
+  // const addStopToRouteHandler = async () => {
+  //   if (!newStop.stopId) {
+  //     setError("Please select a stop");
+  //     return;
+  //   }
 
-  // Start editing a stop
-  const startEditingStop = (stop) => {
-    setIsEditing(true);
-    setEditStopData({ ...stop });
-  };
+  //   try {
+  //     setLoading(true);
+  //     setError(null);
+  //     setSuccess(null);
 
-  // Cancel editing
-  const cancelEditing = () => {
-    setIsEditing(false);
-    setEditStopData(null);
-  };
+  //     // Prepare stop data
+  //     const stopData = {
+  //       stopId: newStop.stopId,
+  //       order: parseInt(newStop.order),
+  //       stopType: newStop.stopType
+  //     };
 
-  // Add a new stop to the route
+  //     // Use store action
+  //     await addStopToRoute(currentRoute._id || currentRoute.routeId, stopData);
+
+  //     // Refresh stops list
+  //     await getStopsForRoute(currentRoute._id);
+
+  //     setSuccess("Stop added successfully!");
+  //     setNewStop({
+  //       stopId: "",
+  //       stopType: "boarding",
+  //       order: routeStops.length + 1,
+  //     });
+  //   } catch (err) {
+  //     setError(err.message || "Failed to add stop");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const addStopToRouteHandler = async () => {
     if (!newStop.stopId) {
       setError("Please select a stop");
       return;
     }
-
+  
     try {
       setLoading(true);
       setError(null);
-
-      await addStopToRoute(currentRoute._id, newStop);
-      await getStopsForRoute(currentRoute._id);
-
+      setSuccess(null);
+  
+      // Validate order isn't already taken
+      const orderConflict = routeStops.some(stop => 
+        stop.order === parseInt(newStop.order)
+      );
+  
+      if (orderConflict) {
+        throw new Error(`Order ${newStop.order} is already taken`);
+      }
+  
+      // Prepare the stop data for the route
+      const stopData = {
+        stopId: newStop.stopId,  // Must match backend expectation
+        order: parseInt(newStop.order),
+        stopType: newStop.stopType
+      };
+  
+      // Use the store action
+      await addStopToRoute(currentRoute._id || currentRoute.routeId, stopData);
+  
+      // Refresh the stops list
+      if (getStopsForRoute) {
+        await getStopsForRoute(currentRoute._id);
+      }
+  
       setSuccess("Stop added successfully!");
       setNewStop({
         stopId: "",
         stopType: "boarding",
-        order: currentRoute.stops.length + 1,
+        order: routeStops.length + 1,
       });
     } catch (err) {
-      setError(err.message || "Failed to add stop");
+      setError(err.response?.data?.message || err.message || "Failed to add stop");
     } finally {
       setLoading(false);
     }
   };
 
-  // Update an existing stop
+  // Edit stop functions
+  const startEditingStop = (stop) => {
+    setIsEditing(true);
+    setEditStopData({ 
+      ...stop,
+      stopId: stop.stop?._id || stop._id,
+      stopName: stop.stopName || stop.stop?.stopName
+    });
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditStopData({
+      stopId: "",
+      stopType: "boarding",
+      order: 1,
+      stop: { _id: "", stopName: "" }
+    });
+  };
+
   const updateStopHandler = async () => {
-    if (!editStopData.stopId) {
+    if (!editStopData?.stopId) {
       setError("Please select a stop");
       return;
     }
-
+  
     try {
       setLoading(true);
       setError(null);
-
-      await updateStopType({
-        routeId: currentRoute._id,
-        stopId: editStopData.stopId,
-        stopType: editStopData.stopType,
-        order: editStopData.order,
-      });
-
-      await getStopsForRoute(currentRoute._id);
+      setSuccess(null);
+  
+      const { updateRouteStop } = useRouteStore.getState();
+  
+      await updateRouteStop(
+        currentRoute._id || currentRoute.routeId,
+        editStopData.stopId,
+        {
+          stopType: editStopData.stopType,
+          order: parseInt(editStopData.order)
+        }
+      );
+  
+      // Optional: Refresh stops if needed
+      if (getStopsForRoute) {
+        await getStopsForRoute(currentRoute._id);
+      }
+  
       setSuccess("Stop updated successfully!");
       setIsEditing(false);
-      setEditStopData(null);
+      setEditStopData({
+        stopId: "",
+        stopType: "boarding",
+        order: 1,
+        stop: { _id: "", stopName: "" }
+      });
     } catch (err) {
-      setError(err.message || "Failed to update stop");
+      // Error is already handled in the store
+      console.error("Update error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Delete a stop from the route
   const deleteStopHandler = async (stopId) => {
-    if (window.confirm("Are you sure you want to delete this stop?")) {
-      try {
-        setLoading(true);
-        setError(null);
-
-        await deleteStopFromRoute(currentRoute._id, stopId);
-        await getStopsForRoute(currentRoute._id);
-
-        setSuccess("Stop deleted successfully!");
-        setNewStop((prev) => ({
-          ...prev,
-          order: currentRoute.stops.length + 1,
-        }));
-      } catch (err) {
-        setError(err.message || "Failed to delete stop");
-      } finally {
-        setLoading(false);
+    if (!window.confirm("Are you sure you want to delete this stop?")) return;
+  
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+  
+      // Find the stop object
+      const stopToDelete = routeStops.find(s => 
+        (s.stop?._id === stopId) || (s._id === stopId)
+      );
+  
+      if (!stopToDelete) {
+        throw new Error("Stop not found in current route");
       }
+  
+      // Use the most reliable ID available
+      const mongoStopId = stopToDelete.stop?._id || stopToDelete._id;
+      const routeIdToUse = currentRoute._id || currentRoute.routeId;
+  
+      // Use Zustand store action
+      await useRouteStore.getState().deleteStopFromRoute(routeIdToUse, mongoStopId);
+  
+      // Optional: Refresh local state if needed
+      if (getStopsForRoute) {
+        await getStopsForRoute(routeIdToUse);
+      }
+  
+      setSuccess("Stop deleted successfully!");
+      
+    } catch (err) {
+      console.error('Delete error:', err);
+      setError(err.message || "Failed to delete stop");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -195,20 +348,22 @@ const ManageRouteStops = () => {
           </button>
           <h2 className="text-2xl font-bold">Manage Route Stops</h2>
         </div>
-
-        {/* Success and Error Messages */}
+  
+        {/* Status messages */}
         {success && (
           <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
             {success}
+            <button onClick={() => setSuccess(null)} className="float-right">×</button>
           </div>
         )}
         {error && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
             {error}
+            <button onClick={() => setError(null)} className="float-right">×</button>
           </div>
         )}
-
-        {/* Route Selection */}
+  
+        {/* Route selection */}
         <div className="mb-6">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Select Route
@@ -227,78 +382,74 @@ const ManageRouteStops = () => {
             ))}
           </select>
         </div>
-
+  
         {currentRoute && (
           <>
-            {/* Route Information */}
+            {/* Route info */}
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <h3 className="text-lg font-semibold mb-2">
                 {currentRoute.routeName}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <p>
-                  <span className="font-medium">Start:</span>{" "}
-                  {currentRoute.startLocation}
-                </p>
-                <p>
-                  <span className="font-medium">End:</span>{" "}
-                  {currentRoute.endLocation}
-                </p>
-                <p>
-                  <span className="font-medium">Distance:</span>{" "}
-                  {currentRoute.totalDistance} km
-                </p>
-                <p>
-                  <span className="font-medium">Status:</span>{" "}
-                  {currentRoute.status}
-                </p>
+                <p><span className="font-medium">Start:</span> {currentRoute.startLocation}</p>
+                <p><span className="font-medium">End:</span> {currentRoute.endLocation}</p>
+                <p><span className="font-medium">Distance:</span> {currentRoute.totalDistance} km</p>
+                <p><span className="font-medium">Status:</span> {currentRoute.status}</p>
               </div>
             </div>
-
-            {/* Current Stops */}
+  
+            {/* Current stops */}
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-3">Current Stops</h3>
-
               {routeStops.length === 0 ? (
-                <p className="text-gray-500">
-                  No stops added to this route yet.
-                </p>
+                <div className="p-4 border rounded-lg bg-gray-50">
+                  <p className="text-gray-500">
+                    {loading ? 'Loading stops...' : 'No stops found for this route'}
+                  </p>
+                  {!loading && (
+                    <button 
+                      onClick={() => handleRouteSelect(currentRoute._id)}
+                      className="mt-2 text-blue-500 hover:text-blue-700"
+                    >
+                      Retry loading stops
+                    </button>
+                  )}
+                </div>
               ) : (
                 <div className="space-y-3">
                   {routeStops
                     .sort((a, b) => a.order - b.order)
-                    .map((stop) => {
-                      // Find the matching stop info from allStops
-                      const stopInfo =
-                        allStops.find((s) => s._id === stop._id) ||
-                        allStops.find((s) => s.stopId === stop.stopId);
-
+                    .map((routeStop) => {
+                      const stopId = routeStop.stop?._id || routeStop._id;
+                      const stopName = routeStop.stopName || routeStop.stop?.stopName;
+                      
                       return (
                         <div
-                          key={stop._id || `${stop.stopId}-${stop.order}`}
+                          key={stopId}
                           className="p-3 border rounded-lg flex justify-between items-center"
                         >
                           <div>
                             <p className="font-medium">
-                              {stopInfo?.stopName || "Unknown Stop"} (Order:{" "}
-                              {stop.order})
+                              {stopName} (Order: {routeStop.order})
                             </p>
                             <p className="text-sm text-gray-600">
-                              Type: {stop.stopType}
+                              Type: {routeStop.stopType}
                             </p>
                           </div>
                           <div className="flex space-x-2">
                             <button
-                              onClick={() => startEditingStop(stop)}
+                              onClick={() => startEditingStop(routeStop)}
                               className="text-blue-500 hover:text-blue-700"
                               disabled={loading}
+                              title="Edit stop"
                             >
                               <Pencil size={18} />
                             </button>
                             <button
-                              onClick={() => deleteStopHandler(stop.stopId)}
+                              onClick={() => deleteStopHandler(stopId)}
                               className="text-red-500 hover:text-red-700"
                               disabled={loading}
+                              title="Delete stop"
                             >
                               <Trash2 size={18} />
                             </button>
@@ -309,36 +460,41 @@ const ManageRouteStops = () => {
                 </div>
               )}
             </div>
-
-            {/* Add/Edit Stop Form */}
+  
+            {/* Add/Edit form */}
             <div className="p-4 border rounded-lg bg-gray-50">
-              <h3 className="text-lg font-semibold mb-3">
-                {isEditing ? "Edit Stop" : "Add New Stop"}
-              </h3>
+        <h3 className="text-lg font-semibold mb-3">
+          {isEditing ? "Edit Stop" : "Add New Stop"}
+        </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Stop*
-                  </label>
-                  <select
-                    name="stopId"
-                    value={isEditing ? editStopData.stopId : newStop.stopId}
-                    onChange={
-                      isEditing ? handleEditStopChange : handleNewStopChange
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    required
-                  >
-                    <option value="">Select Stop</option>
-                    {allStops.map((stop) => (
-                      <option key={stop._id} value={stop.stopId}>
-                        {stop.stopName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Stop*
+            </label>
+            <select
+                name="stopId"
+                value={isEditing ? editStopData.stopId : newStop.stopId}
+                onChange={isEditing ? handleEditStopChange : handleNewStopChange}
+                className="w-full p-2 border border-gray-300 rounded-md"
+                required
+                disabled={isEditing || loading}
+              >
+                <option value="">Select Stop</option>
+                {isEditing ? (
+                  <option value={editStopData.stopId}>
+                    {editStopData.stop?.stopName || editStopData.stopName}
+                  </option>
+                ) : (
+                  getAvailableStops().map((stop) => (
+                    <option key={stop._id} value={stop._id}>
+                      {stop.stopName} ({stop.status})
+                    </option>
+                  ))
+                )}
+              </select>
+          </div>
+  
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     Type*
@@ -346,9 +502,7 @@ const ManageRouteStops = () => {
                   <select
                     name="stopType"
                     value={isEditing ? editStopData.stopType : newStop.stopType}
-                    onChange={
-                      isEditing ? handleEditStopChange : handleNewStopChange
-                    }
+                    onChange={isEditing ? handleEditStopChange : handleNewStopChange}
                     className="w-full p-2 border border-gray-300 rounded-md"
                     required
                   >
@@ -356,7 +510,7 @@ const ManageRouteStops = () => {
                     <option value="dropping">Dropping</option>
                   </select>
                 </div>
-
+  
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     Order*
@@ -365,21 +519,18 @@ const ManageRouteStops = () => {
                     type="number"
                     name="order"
                     value={isEditing ? editStopData.order : newStop.order}
-                    onChange={
-                      isEditing ? handleEditStopChange : handleNewStopChange
-                    }
+                    onChange={isEditing ? handleEditStopChange : handleNewStopChange}
                     className="w-full p-2 border border-gray-300 rounded-md"
                     min="1"
-                    max={currentRoute.stops.length + 1}
+                    max={routeStops.length + 1}
                     required
                   />
                 </div>
               </div>
-
+  
               <div className="flex justify-end space-x-3">
                 {isEditing && (
                   <button
-                    type="button"
                     onClick={cancelEditing}
                     className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
                     disabled={loading}
@@ -388,18 +539,23 @@ const ManageRouteStops = () => {
                   </button>
                 )}
                 <button
-                  type="button"
-                  onClick={
-                    isEditing ? updateStopHandler : addStopToRouteHandler
-                  }
-                  className="px-4 py-2 bg-deepOrange text-white rounded-md hover:bg-sunsetOrange"
+                  onClick={isEditing ? updateStopHandler : addStopToRouteHandler}
+                  className={`px-4 py-2 bg-deepOrange text-white rounded-md hover:bg-sunsetOrange ${
+                    loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                   disabled={loading}
                 >
-                  {loading
-                    ? "Processing..."
-                    : isEditing
-                      ? "Update Stop"
-                      : "Add Stop"}
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {isEditing ? "Updating..." : "Adding..."}
+                    </span>
+                  ) : (
+                    isEditing ? "Update Stop" : "Add Stop"
+                  )}
                 </button>
               </div>
             </div>
@@ -408,6 +564,6 @@ const ManageRouteStops = () => {
       </div>
     </AdminLayout>
   );
-};
+}
 
-export default ManageRouteStops;
+export default ManageRouteStops; 
