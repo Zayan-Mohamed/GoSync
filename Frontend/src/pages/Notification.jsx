@@ -1,16 +1,19 @@
-import React, { useEffect, useState } from 'react'; 
+import React, { useEffect, useState } from 'react';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import "../styles/notification.css"; 
 import AdminLayout from '../layouts/AdminLayout';
+import { jsPDF } from "jspdf";
 
 const Notification = () => {
     const [notifications, setNotifications] = useState([]);
+    const [filteredNotifications, setFilteredNotifications] = useState([]);
     const [loading, setLoading] = useState(false); // Add loading state
+    const [searchDate, setSearchDate] = useState("");
 
-    const API_URI = import.meta.env.VITE_API_URL
+    const API_URI = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -24,6 +27,7 @@ const Notification = () => {
                     (notif) => notif.status !== "archive"
                 );
                 setNotifications(activeNotifications);
+                setFilteredNotifications(activeNotifications); // Ensure the filtered notifications are set initially
             } catch (error) {
                 console.error("Error fetching notifications:", error);
                 alert("Failed to fetch notifications.");
@@ -35,24 +39,73 @@ const Notification = () => {
         fetchNotifications();
     }, []);
 
+    // Handle search by date
+    const handleSearchByDate = () => {
+        if (searchDate) {
+            const filtered = notifications.filter(notification => {
+                const notificationDate = new Date(notification.createdAt).toLocaleDateString();
+                return notificationDate === new Date(searchDate).toLocaleDateString();
+            });
+            setFilteredNotifications(filtered);
+        } else {
+            setFilteredNotifications(notifications); // Show all if no date is selected
+        }
+    };
+
+    // Handle PDF generation
+    const generatePDF = () => {
+        const doc = new jsPDF();
+
+        // Title
+        doc.setFontSize(20);
+        doc.text("Notifications", 10, 10);
+
+        // Table Header
+        doc.setFontSize(12);
+        doc.text("Notification ID", 10, 20);
+        doc.text("Type", 40, 20);
+        doc.text("Message", 80, 20);
+        doc.text("Status", 150, 20);
+        doc.text("Expiration Date", 180, 20);
+        doc.text("Created At", 220, 20);
+
+        // Table Rows
+        let yPosition = 30;
+        filteredNotifications.forEach((notif) => {
+            doc.text(notif.notificationId.toString(), 10, yPosition);
+            doc.text(notif.type, 40, yPosition);
+            doc.text(notif.message, 80, yPosition);
+            doc.text(notif.status, 150, yPosition);
+            doc.text(notif.expiredAt ? new Date(notif.expiredAt).toLocaleString() : "N/A", 180, yPosition);
+            doc.text(new Date(notif.createdAt).toLocaleString(), 220, yPosition);
+            yPosition += 10;
+        });
+
+        // Save the PDF
+        doc.save("notifications.pdf");
+    };
+
     const handleDelete = async (notificationId) => {
         const notification = notifications.find(n => n.notificationId === notificationId);
-        
+
         // Check if the status is 'archive' before confirming the delete
         if (notification.status === 'archive') {
             alert("Archived notifications cannot be deleted.");
             return;
         }
-    
+
         const confirmDelete = window.confirm("Are you sure you want to delete this message?");
         if (!confirmDelete) return;
-    
+
         try {
             await axios.delete(`${API_URI}/api/notifications/${notificationId}`);
             alert("Notification deleted successfully!");
-    
+
             // Remove the deleted notification from the state
             setNotifications((prevNotifications) =>
+                prevNotifications.filter((notification) => notification.notificationId !== notificationId)
+            );
+            setFilteredNotifications((prevNotifications) =>
                 prevNotifications.filter((notification) => notification.notificationId !== notificationId)
             );
         } catch (error) {
@@ -60,20 +113,14 @@ const Notification = () => {
             alert("Failed to delete notification.");
         }
     };
-    
-      
+
     const checkExpiration = (expiredAt) => {
         if (!expiredAt) {
-            console.log("No expiration date for notification"); // Log if no expiration date is present
             return false; // No expiration date means it's not expired
         }
 
         const currentDate = new Date();
         const expiration = new Date(expiredAt);
-        
-        // Debugging: Check how the expiration date is being parsed
-        console.log("Expiration Date:", expiredAt, "Parsed Date:", expiration);
-
         return expiration <= currentDate;
     };
 
@@ -85,6 +132,30 @@ const Notification = () => {
                     <Link to="/add-notification" className="btn btn-primary">
                         Create <i className="fa-regular fa-bell"></i>
                     </Link>
+                </div>
+                <div className="mb-4 flex justify-end">
+                    {/* Date Search Input */}
+                    <input
+                        type="date"
+                        className="form-control"
+                        style={{ width: "160px" }}  // Reduced width for search input
+                        value={searchDate}
+                        onChange={(e) => setSearchDate(e.target.value)}
+                    />
+                    <button 
+                        onClick={handleSearchByDate} 
+                        className="btn"
+                        style={{ backgroundColor: "#ff8400", color: "#fff" }}
+                    >
+                        Search
+                    </button>
+                    <button 
+                        onClick={generatePDF} 
+                        className="btn btn-success ml-3" // Add a button for generating PDF
+                        style={{ backgroundColor: "#ff8400", color: "#fff" }}
+                    >
+                        Generate PDF
+                    </button>
                 </div>
 
                 <div className="overflow-auto flex-1">
@@ -114,7 +185,7 @@ const Notification = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                notifications.map((notification) => (
+                                filteredNotifications.map((notification) => (
                                     <tr 
                                         key={notification.notificationId} 
                                         className={checkExpiration(notification.expiredAt) ? "bg-gray-300" : ""}  // Use expiredAt here
