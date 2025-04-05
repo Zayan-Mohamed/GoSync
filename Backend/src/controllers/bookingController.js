@@ -290,24 +290,28 @@ export const getUserReservedSeats = async (req, res) => {
 
   try {
     const reservedSeats = await Seat.find({
-      reservedUntil: { $gt: new Date() }, // Active reservations
-      reservedBy: userId, // Only this user's reservations
+      reservedUntil: { $gt: new Date() },
+      reservedBy: userId,
     })
-      .populate("busId", "busNumber routeId")
       .populate({
         path: "busId",
-        populate: { path: "routeId", select: "startLocation endLocation" },
+        select: "busNumber routeId",
+        populate: {
+          path: "routeId",
+          model: "Route",
+          select: "startLocation endLocation",
+        },
       });
 
     const grouped = reservedSeats.reduce((acc, seat) => {
       const key = `${seat.busId._id}-${seat.scheduleId}`;
       if (!acc[key]) {
         acc[key] = {
-          busId: seat.busId._id,
-          scheduleId: seat.scheduleId,
+          busId: seat.busId._id.toString(), // Ensure string for frontend
+          scheduleId: seat.scheduleId.toString(),
           busNumber: seat.busId.busNumber,
-          from: seat.busId.routeId.startLocation,
-          to: seat.busId.routeId.endLocation,
+          from: seat.busId.routeId?.startLocation || "Unknown", // Fallback
+          to: seat.busId.routeId?.endLocation || "Unknown",
           seatNumbers: [],
           reservedUntil: seat.reservedUntil,
         };
@@ -409,17 +413,50 @@ export const updatePayment = async (req, res) => {
   console.log("Update payment request:", { bookingId, paymentStatus, userId });
 
   try {
-    const booking = await Booking.findOne({ bookingId, userId });
+    const booking = await Booking.findOne({ bookingId, userId })
+      .populate("busId")
+      .populate("userId", "name email")
+      .populate("seats", "seatNumber");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
     if (booking.paymentStatus === "completed") {
       return res.status(400).json({ message: "Payment already completed" });
     }
 
+    // Update payment status
     await Booking.updateOne({ bookingId }, { paymentStatus });
 
-    res.status(200).json({ message: "Payment status updated" });
+    // Fetch route for email content
+    const route = await Route.findOne({ routeId: booking.busId.routeId });
+    if (!route) return res.status(404).json({ message: "Route not found" });
+
+    // Prepare and send email
+    const emailContent = `
+      <h2>GoSync Payment Confirmation</h2>
+      <p>Dear ${booking.userId.name},</p>
+      <p>Your payment for booking ${booking.bookingId} has been successfully processed!</p>
+      <ul>
+        <li><strong>Booking ID:</strong> ${booking.bookingId}</li>
+        <li><strong>Bus Number:</strong> ${booking.busId.busNumber}</li>
+        <li><strong>Route:</strong> ${booking.busId.busRouteNumber} (${route.startLocation} to ${route.endLocation})</li>
+        <li><strong>Seats:</strong> ${booking.seats.map((seat) => seat.seatNumber).join(", ")}</li>
+        <li><strong>Total Fare:</strong> $${booking.fareTotal}</li>
+        <li><strong>Payment Status:</strong> ${paymentStatus}</li>
+        <li><strong>Booked At:</strong> ${booking.createdAt.toLocaleString()}</li>
+      </ul>
+      <p>Thank you for choosing GoSync!<br>Best regards,<br>The GoSync Team</p>
+    `;
+
+    await transporter.sendMail({
+      from: `"GoSync Team" <${process.env.EMAIL_USER}>`,
+      to: booking.userId.email,
+      subject: `Payment Confirmation - ${booking.bookingId}`,
+      html: emailContent,
+    });
+
+    console.log(`Payment confirmation email sent to ${booking.userId.email}`);
+    res.status(200).json({ message: "Payment status updated and confirmation email sent" });
   } catch (error) {
-    console.error("Error updating payment:", error);
-    res.status(500).json({ message: "Failed to update payment" });
+    console.error("Error updating payment or sending email:", error);
+    res.status(500).json({ message: "Failed to update payment or send email", error: error.message });
   }
 };
