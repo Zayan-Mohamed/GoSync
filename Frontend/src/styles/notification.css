@@ -1,86 +1,79 @@
 .notificationTable {
-  width: 80%;
-  margin: auto;
+  width: 90%;
+  margin: 30px auto;
   background-color: #ffffff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e0e0e0;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border: none;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 150px);
+  max-height: calc(100vh - 180px);
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: box-shadow 0.3s ease;
 }
 
 .notificationTable:hover {
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
 
-/* Make the table wrapper scrollable */
 .table-container {
   overflow-y: auto;
   flex-grow: 1;
-  padding-right: 10px;
+  padding-right: 12px;
 }
 
-/* Table Styles */
 .notificationTable table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
-  border-radius: 10px;
-  overflow: hidden;
+  margin-top: 15px;
   background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Table Header */
 .notificationTable thead th {
-  background-color: #ff7043; /* Soft Orange */
+  background-color: #fd7600e2; /* Soft Orange */
   color: white;
-  padding: 16px;
+  padding: 14px 18px;
   text-align: center;
-  border: 1px solid #ddd;
-  font-weight: 700; /* Bolder font weight */
-  font-size: 16px; /* Slightly larger font size */
-  position: sticky;
-  top: 0;
-  z-index: 2;
+ font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  border: 1px solid #e0e0e0; /* Added border to header */
+  font-weight: 700;
+  font-size: 15px;
   text-transform: uppercase;
-  letter-spacing: 1px; /* Increased letter spacing */
+  letter-spacing: 1.2px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Table Body */
 .notificationTable tbody td {
-  padding: 16px;
+  padding: 14px 18px;
   text-align: center;
   font-family: 'Roboto', sans-serif;
   font-size: 14px;
   vertical-align: middle;
-  border: 1px solid #e0e0e0;
+  border-top: 1px solid #eee;
   color: #333;
-  background-color: #f9f9f9;
+  background-color: #fafafa;
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-/* Hover effect on table rows */
 .notificationTable tbody tr:hover td {
-  background-color: #ffe0b2; /* Light orange on hover */
+  background-color: #f2f2f2;
   transform: translateY(-1px);
 }
 
-/* Action Buttons */
 .actionButtons {
   display: flex;
-  justify-content: center;
-  gap: 14px;
-  margin-top: 20px;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 25px;
   align-items: center;
 }
 
 .actionButtons button {
-  padding: 12px 18px;
+  padding: 10px 20px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -93,7 +86,6 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Approve & Reject Buttons */
 .actionButtons .approve {
   background-color: #ff5722; /* Strong Orange */
   color: white;
@@ -104,18 +96,16 @@
   color: #212121;
 }
 
-/* Button Hover Effect */
 .actionButtons button:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   opacity: 0.9;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive Design */
 @media (max-width: 1024px) {
   .notificationTable {
     width: 95%;
-    padding: 20px;
+    padding: 18px;
   }
 
   .notificationTable table {
@@ -124,7 +114,7 @@
 
   .actionButtons {
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
 
   .actionButtons button {

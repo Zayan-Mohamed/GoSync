@@ -24,9 +24,13 @@ const notificationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  createdBy: {
+    type: "String",
+    required: true
+  },
   expiredAt: {
     type: Date,
-    required: false, // Optional field, doesn't need to be required
+    required: false, 
   },
 });
 

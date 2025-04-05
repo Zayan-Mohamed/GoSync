@@ -9,6 +9,10 @@ const shedSchema = new mongoose.Schema({
   message: { type: String, required: true },
   shedDate: { type: String, required: true }, // YYYY-MM-DD
   shedTime: { type: String, required: true }, // HH:mm
+  createdBy: {
+    type: "String",
+    required: true
+  },
   status: { type: String, enum: ["pending", "sent", "archived"], default: "pending" },
   expiredAt: {
     type: Date,

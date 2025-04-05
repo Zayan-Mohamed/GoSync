@@ -7,13 +7,15 @@ const io = setupWebSocket();
 
 export const shedMessage = async (req, res) => {
   try {
-    const { message, shedDate, shedTime, expiryDate } = req.body;
+    const { type, message, shedDate, shedTime, expiryDate } = req.body;
 
     const newMessage = new ShedMessage({
+      type,
       message,
       shedDate, // YYYY-MM-DD
       shedTime, // HH:mm
       status: "pending",
+      createdBy: req.user.name,
       expiredAt: expiryDate ? new Date(expiryDate) : null, // Optional expiry date
     });
 

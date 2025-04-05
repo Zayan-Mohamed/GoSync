@@ -40,6 +40,7 @@ import SeatAnalytics from "../pages/SeatAnalytics.jsx";
 import BookingManagement from "../pages/BookingManagement.jsx";
 import AddBooking from "../pages/AddBooking.jsx";
 import BookingAnalytics from "../pages/BookingAnalytics.jsx";
+import UpdateMessage from "../pages/UpdateMessage.jsx";
 
 const AppRoutes = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -69,7 +70,9 @@ const AppRoutes = () => {
             <Route
               path="/update-notification/:id"
               element={<UpdateNotification />}
+             
             />
+             <Route path="/update-message/:id" element={<UpdateMessage />} />
             <Route path="/current-routes" element={<CurrentRoutes />} />
             <Route path="/Schedule-notification" element={<ShedTable />} />
             <Route path="/add-message" element={<AddMessage />} />
@@ -77,7 +80,7 @@ const AppRoutes = () => {
             <Route path="/stop-management" element={<StopList />} />
             <Route path="/schedule-management" element={<ScheduleList />} />
             <Route path="/insert-schedule" element={<InsertSchedule />} />
-            <Route
+            <Route 
               path="/schedule-search"
               element={<ScheduleSearchResults />}
             />

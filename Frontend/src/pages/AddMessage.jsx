@@ -19,32 +19,40 @@ const AddMessage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+  
+    // Form validation
+    if (!message || !shedDate || !shedTime || !type) {
+      alert("Please fill in all required fields.");
+      setLoading(false);
+      return;
+    }
+  
     // Check if expiry date is valid
     if (expiryDate && new Date(expiryDate) <= new Date()) {
       alert("Expiry date must be in the future.");
       setLoading(false);
       return;
     }
-
+  
     const newMessage = {
       message,
-      shedDate: shedDate.toISOString().split("T")[0], // Convert to YYYY-MM-DD format
+      shedDate: shedDate.toISOString().split("T")[0],
       shedTime,
       status,
       type,
-      expiryDate: expiryDate ? new Date(expiryDate).toISOString() : null, // Set expiry date
+      expiryDate: expiryDate ? new Date(expiryDate).toISOString() : null,
     };
-
+  
     try {
-      await axios.post(`${API_URL}/api/shed/shed`, newMessage);
+      await axios.post(`${API_URL}/api/shed/shed`, newMessage, { withCredentials: true });
       alert("Message Scheduled Successfully!");
+      // Reset form fields after successful submission
       setMessage("");
       setShedDate(new Date());
       setShedTime("");
       setStatus("pending");
-      setType(""); // Reset the type field after successful submission
-      setExpiryDate(""); // Clear the expiry date after submission
+      setType("");
+      setExpiryDate("");
     } catch (error) {
       console.error("Error sending message:", error);
       alert("Failed to send message.");
@@ -52,6 +60,7 @@ const AddMessage = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <AdminLayout>

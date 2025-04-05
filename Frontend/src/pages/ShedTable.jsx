@@ -13,24 +13,26 @@ const ShedTable = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const response = await axios.get(`${API_URI}/api/shed/messages`);
-
+        const response = await axios.get(`${API_URI}/api/shed/messages`, { withCredentials: true });
+  
         const sortedMessages = response.data.data.sort((a, b) => {
           const aDateTime = new Date(`${a.shedDate}T${a.shedTime}:00`);
           const bDateTime = new Date(`${b.shedDate}T${b.shedTime}:00`);
           return bDateTime - aDateTime;
         });
-
+  
         setMessages(sortedMessages);
       } catch (error) {
         setError("Error fetching messages.");
         console.error("Error fetching messages:", error);
       }
     };
-
+  
     fetchMessages();
   }, []);
-
+  
+  
+  
   const handleDelete = async (messageId) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this message?");
     if (!confirmDelete) return;
@@ -67,6 +69,7 @@ const ShedTable = () => {
               <th>Message</th>
               <th>Date</th>
               <th>Time</th>
+              <th>CreatedBy</th>
               <th>Status</th>
               <th>Expiry</th>
               <th>Actions</th>
@@ -80,6 +83,7 @@ const ShedTable = () => {
                   <td>{msg.message}</td>
                   <td>{msg.shedDate}</td>
                   <td>{msg.shedTime}</td>
+                  <td>{msg.createdBy || 'N/A'}</td>
                   <td className={msg.status === "sent" ? "sent" : "pending"}>
                     {msg.status}
                   </td>
@@ -89,18 +93,28 @@ const ShedTable = () => {
                       : "N/A"}
                   </td>
                   <td className="actionButtons">
-                    <Link to={`/update-message/${msg._id}`} className="btn btn-info">
-                      <i className="fa-solid fa-pen-to-square"></i>
-                    </Link>
-                    <button className="btn btn-danger" onClick={() => handleDelete(msg._id)}>
-                      <i className="fa-solid fa-trash"></i>
-                    </button>
+                    {/* Allow updates and deletes only for 'pending' messages that are not archived */}
+                    {msg.status === "pending" && !msg.archived ? (
+                      <>
+                        <Link to={`/update-message/${msg._id}`} className="btn btn-info">
+                          <i className="fa-solid fa-pen-to-square"></i>
+                        </Link>
+                        <button 
+                          className="btn btn-danger" 
+                          onClick={() => handleDelete(msg._id)}
+                        >
+                          <i className="fa-solid fa-trash"></i>
+                        </button>
+                      </>
+                    ) : (
+                      <span className="disabled-actions">disabled</span> // Label for archived/sent messages
+                    )}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="7">No messages scheduled</td>
+                <td colSpan="8">No messages scheduled</td>
               </tr>
             )}
           </tbody>
