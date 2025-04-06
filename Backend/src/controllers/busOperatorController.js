@@ -59,7 +59,6 @@ export const assignOperatorToBus = async (req, res) => {
       { operator: operatorId },
       { new: true }
     ).populate('operator');
-
     res.json(updatedBus);
   } catch (err) {
     res.status(500).json({ error: 'Assignment failed', details: err.message });

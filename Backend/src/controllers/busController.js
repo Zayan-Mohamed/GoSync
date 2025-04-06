@@ -47,13 +47,16 @@ export const createBus = async (req, res) => {
 
 export const getAllBuses = async (req, res) => {
   try {
-    const buses = await Bus.find({}).populate("routeId");
+    const buses = await Bus.find({})
+      .populate("routeId")
+      .populate("operator"); // <--- populate operator here
     res.status(200).json(buses);
   } catch (error) {
-    res.status(400).json({ message: "Error fetching buses", error });
     console.log("Error fetching buses:", error);
+    res.status(400).json({ message: "Error fetching buses", error });
   }
 };
+
 
 export const getBusById = async (req, res) => {
   try {
