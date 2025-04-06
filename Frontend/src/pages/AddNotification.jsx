@@ -32,7 +32,9 @@ const AddNotification = () => {
         };
 
         try {
-            await axios.post(`${API_URI}/api/notifications`, newNotification);
+            await axios.post(`${API_URI}/api/notifications`, newNotification, {
+                withCredentials: true
+            });
             alert("Notification Sent Successfully!");
             
             setType("");

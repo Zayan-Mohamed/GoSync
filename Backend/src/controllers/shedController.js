@@ -1,19 +1,22 @@
 import ShedMessage from "../models/shedModel.js";
 import cron from "node-cron";
-import { setupWebSocket } from "../websocket.js"; 
+import { setupWebSocket } from "../websocket.js";
 
 // WebSocket connection setup
 const io = setupWebSocket();
 
 export const shedMessage = async (req, res) => {
   try {
-    const { message, shedDate, shedTime } = req.body;
+    const { type, message, shedDate, shedTime, expiryDate } = req.body;
 
     const newMessage = new ShedMessage({
+      type,
       message,
       shedDate, // YYYY-MM-DD
       shedTime, // HH:mm
       status: "pending",
+      createdBy: req.user.name,
+      expiredAt: expiryDate ? new Date(expiryDate) : null, // Optional expiry date
     });
 
     await newMessage.save();
@@ -33,9 +36,7 @@ export const shedMessage = async (req, res) => {
 export const getAllShedMessages = async (req, res) => {
   try {
     // Fetch all shed messages and sort by shedDate and shedTime (newest first)
-    const messages = await ShedMessage.find()
-      .sort({ shedDate: -1, shedTime: -1 }); // Sorting by shedDate and shedTime, most recent first
-    
+    const messages = await ShedMessage.find().sort({ shedDate: -1, shedTime: -1 });
     res.status(200).json({ success: true, data: messages });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -110,10 +111,31 @@ cron.schedule("* * * * *", async () => {
         });
       }
     }
+
+    // Check for expired messages and change status to "archived"
+    const expiredMessages = await ShedMessage.find({
+      status: { $ne: "archived" },
+      expiredAt: { $lte: now },
+    });
+
+    for (let expiredMessage of expiredMessages) {
+      expiredMessage.status = "archived";
+      await expiredMessage.save();
+
+      // Emit WebSocket notification for archived message
+      if (io) {
+        io.emit("newNotification", {
+          _id: expiredMessage._id,
+          message: `Message Archived: ${expiredMessage.message}`,
+        });
+      }
+    }
+
   } catch (error) {
     console.error("Error in scheduled job:", error.message);
   }
 });
+
 export const getShedMessageById = async (req, res) => {
   try {
     const { id } = req.params;
