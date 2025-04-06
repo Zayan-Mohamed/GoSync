@@ -35,6 +35,8 @@ import CancelTicket from "../pages/CancelTicket";
 import InsertSchedule from "../pages/InsertSchedule.jsx";
 import ScheduleSearchResults from "../pages/ScheduleSearchResults.jsx";
 import ScheduleList from "../pages/ScheduleList.jsx";
+import AddBusOperators from "../pages/addBusOperators.jsx";
+import BusAssignmentPage from "../pages/BusAssignmentPage.jsx";
 
 
 const AppRoutes = () => {
@@ -60,6 +62,7 @@ const AppRoutes = () => {
           <Route path="/bus-management" element={<BusList />} />
           <Route path="/add-bus" element={<InsertBus />} />
           <Route path="/bus-analytics" element={<BusList />} />
+          <Route path="/bus-assign" element={<BusAssignmentPage />} />
           <Route path="/busop-man" element={<BusOperatorsList />} />
 
             <Route path="/notification-management" element={<Notification />} />
@@ -78,6 +81,7 @@ const AppRoutes = () => {
             <Route path="/schedule-search" element={<ScheduleSearchResults />} />
             <Route path="/add-route" element={<AddRoute />} />
             <Route path="/route-stops" element={<ManageRouteStops />} />
+            <Route path="/add-operorator" element={<AddBusOperators />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>

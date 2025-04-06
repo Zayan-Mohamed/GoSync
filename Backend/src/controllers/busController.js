@@ -116,6 +116,17 @@ export const getBusesByTravelName = async (req, res) => {
   }
 };
 
+// controllers/busController.js (add this function)
+export const getUnassignedBuses = async (req, res) => {
+  try {
+    const buses = await Bus.find({ operator: null });
+    res.status(200).json(buses);
+  } catch (error) {
+    res.status(400).json({ message: "Error fetching unassigned buses", error });
+  }
+};
+
+
 
 export const searchBuses = async (req, res) => {
   try {

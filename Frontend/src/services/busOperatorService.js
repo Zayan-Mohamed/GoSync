@@ -18,7 +18,7 @@ export const getBusOperators = async () => {
 // Add a new bus operator
 export const addBusOperator = async (operatorData) => {
   try {
-    const response = await axios.post(`${API_URL}`, operatorData);
+    const response = await axios.post(`${API_URL}/add`, operatorData);
     return response.data;
   } catch (error) {
     console.error("Error adding bus operator:", error);
