@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Bus } from "lucide-react";
 import useStopStore from "../store/stopStore";
 import { useNavigate } from "react-router-dom";
+import "../styles/BookingForm.css"; // Assuming you have a CSS file for styles
 
 const BookingForm = ({ isVisible }) => {
   const [fromLocation, setFromLocation] = useState("");

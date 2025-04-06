@@ -1,16 +1,14 @@
 import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema({
-   
- 
   notificationId: {
     type: String,
-    unique: true, // Make sure it's unique
-    required: true, // Ensure that notificationId is required
+    unique: true,
+    required: true,
   },
   type: {
     type: String,
-    enum: ['travel disruption', 'promotions', 'discounts', 'alert', 'info'],
+    enum: ['travel disruption', 'promotions', 'discounts', 'alert', 'reminders', 'info'],
     default: 'info',
   },
   message: {
@@ -19,12 +17,27 @@ const notificationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['sent', 'failed'],
+    enum: ['sent', 'archive'],
     default: 'sent',
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-})
-     export default mongoose.model("Notifications",notificationSchema)
+  createdBy: {
+    type: "String",
+    required: true
+  },
+  expiredAt: {
+    type: Date,
+    required: false, 
+  },
+});
+
+notificationSchema.methods.isExpired = function () {
+  const currentDate = new Date();
+  const expiration = this.expiredAt ? new Date(this.expiredAt) : null;
+  return expiration && expiration <= currentDate;
+};
+
+export default mongoose.model("Notifications", notificationSchema);

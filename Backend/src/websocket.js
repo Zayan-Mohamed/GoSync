@@ -10,7 +10,7 @@ export const setupWebSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(`🔗 User connected: ${socket.id}`);
+    console.log(`User connected: ${socket.id}`);
     socket.emit("serverMessage", "Connected to WebSocket Server!");
 
     // Optional: Join a room based on busId or scheduleId for targeted updates

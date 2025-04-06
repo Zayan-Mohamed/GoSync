@@ -1,23 +1,27 @@
-// src/controllers/shedController.js
 import ShedMessage from "../models/shedModel.js";
 import cron from "node-cron";
-import { setupWebSocket } from "../websocket.js"; // ✅ Import WebSocket setup
+import { setupWebSocket } from "../websocket.js";
 
-// Shed and Save a New Message
+// WebSocket connection setup
+const io = setupWebSocket();
+
 export const shedMessage = async (req, res) => {
   try {
-    const { message, shedDate, shedTime } = req.body;
-    const io = req.app.get("io"); // ✅ Get io instance from Express app
+    const { type, message, shedDate, shedTime, expiryDate } = req.body;
 
     const newMessage = new ShedMessage({
+      type,
       message,
       shedDate, // YYYY-MM-DD
       shedTime, // HH:mm
       status: "pending",
+      createdBy: req.user.name,
+      expiredAt: expiryDate ? new Date(expiryDate) : null, // Optional expiry date
     });
 
     await newMessage.save();
 
+    // Emit WebSocket notification
     io.emit("newNotification", {
       _id: newMessage._id,
       message: `New message scheduled: ${newMessage.message}`,
@@ -29,28 +33,26 @@ export const shedMessage = async (req, res) => {
   }
 };
 
-// Get All Shed Messages
 export const getAllShedMessages = async (req, res) => {
   try {
-    const messages = await ShedMessage.find();
+    // Fetch all shed messages and sort by shedDate and shedTime (newest first)
+    const messages = await ShedMessage.find().sort({ shedDate: -1, shedTime: -1 });
     res.status(200).json({ success: true, data: messages });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// Update Shed Message
 export const updateShedMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const io = req.app.get("io"); // ✅ Get io instance from Express app
     const updatedMessage = await ShedMessage.findByIdAndUpdate(id, req.body, { new: true });
 
     if (!updatedMessage) {
       return res.status(404).json({ success: false, message: "Message not found!" });
     }
 
-    // Emit real-time notification when a message is updated
+    // Emit WebSocket notification
     io.emit("newNotification", {
       _id: updatedMessage._id,
       message: `Message updated: ${updatedMessage.message}`,
@@ -62,18 +64,16 @@ export const updateShedMessage = async (req, res) => {
   }
 };
 
-// Delete Shed Message
 export const deleteShedMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const io = req.app.get("io"); // ✅ Get io instance from Express app
     const deletedMessage = await ShedMessage.findByIdAndDelete(id);
 
     if (!deletedMessage) {
       return res.status(404).json({ success: false, message: "Message not found!" });
     }
 
-    // Emit real-time notification when a message is deleted
+    // Emit WebSocket notification
     io.emit("newNotification", {
       _id: deletedMessage._id,
       message: `Message deleted: ${deletedMessage.message}`,
@@ -86,7 +86,6 @@ export const deleteShedMessage = async (req, res) => {
 };
 
 // Cron Job to Send Scheduled Messages
-const io = setupWebSocket(); // ✅ Get WebSocket instance
 cron.schedule("* * * * *", async () => {
   try {
     const now = new Date();
@@ -100,10 +99,11 @@ cron.schedule("* * * * *", async () => {
     });
 
     for (let msg of messagesToSend) {
-      console.log(`🚀 Sending scheduled message: "${msg.message}"`);
+      console.log(`Sending scheduled message: "${msg.message}"`);
       msg.status = "sent";
       await msg.save();
 
+      // Emit WebSocket notification for each sent message
       if (io) {
         io.emit("newNotification", {
           _id: msg._id,
@@ -111,7 +111,42 @@ cron.schedule("* * * * *", async () => {
         });
       }
     }
+
+    // Check for expired messages and change status to "archived"
+    const expiredMessages = await ShedMessage.find({
+      status: { $ne: "archived" },
+      expiredAt: { $lte: now },
+    });
+
+    for (let expiredMessage of expiredMessages) {
+      expiredMessage.status = "archived";
+      await expiredMessage.save();
+
+      // Emit WebSocket notification for archived message
+      if (io) {
+        io.emit("newNotification", {
+          _id: expiredMessage._id,
+          message: `Message Archived: ${expiredMessage.message}`,
+        });
+      }
+    }
+
   } catch (error) {
-    console.error("❌ Error in scheduled job:", error.message);
+    console.error("Error in scheduled job:", error.message);
   }
 });
+
+export const getShedMessageById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const message = await ShedMessage.findById(id);
+
+    if (!message) {
+      return res.status(404).json({ success: false, message: "Message not found!" });
+    }
+
+    res.status(200).json({ success: true, data: message });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

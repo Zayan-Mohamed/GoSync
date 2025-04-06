@@ -6,7 +6,8 @@ import connectDB from "./config/db.js";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { setupWebSocket } from "./websocket.js";
-import authRoutes from "./routes/authRoutes.js"; // Renamed from userRoutes for clarity
+import authRoutes from "./routes/authRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import seatRoutes from "./routes/seatRoutes.js";
 import stopRoutes from "./routes/stopRoutes.js";
@@ -48,7 +49,8 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-app.use("/api/auth", authRoutes); // Updated from /users to match authRoutes
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/seats", seatRoutes);
 app.use("/api/bookings", bookingRoutes);

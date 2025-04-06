@@ -39,6 +39,8 @@ const AddRoute = () => {
   const [existingRoute, setExistingRoute] = useState(null);
   const [existingMultipleRoutes, setExistingMultipleRoutes] = useState([]);
 
+  const API_URI = import.meta.env.VITE_API_URL
+
   // Clear messages when switching tabs
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -50,7 +52,7 @@ const AddRoute = () => {
   useEffect(() => {
     const fetchStops = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/stops/get");
+        const response = await axios.get(`${API_URI}/api/stops/get`);
         if (response.data && Array.isArray(response.data.stops)) {
           setAllStops(response.data.stops);
         }
@@ -65,7 +67,7 @@ const AddRoute = () => {
   const checkExistingRoute = async (routeName) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/routes/check-name?name=${encodeURIComponent(routeName)}`
+        `${API_URI}/api/routes/check-name?name=${encodeURIComponent(routeName)}`
       );
       return response.data.exists ? response.data.route : null;
     } catch (error) {
@@ -298,7 +300,7 @@ const AddRoute = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/routes/routes/bulk",
+        `${API_URI}/api/routes/routes/bulk`,
         multipleRoutesForm
       );
 
