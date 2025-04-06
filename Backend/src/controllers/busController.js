@@ -51,6 +51,7 @@ export const getAllBuses = async (req, res) => {
     res.status(200).json(buses);
   } catch (error) {
     res.status(400).json({ message: "Error fetching buses", error });
+    console.log("Error fetching buses:", error);
   }
 };
 

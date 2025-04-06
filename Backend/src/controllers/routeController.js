@@ -413,6 +413,7 @@ export const getAllRoutes = async (req, res) => {
   } catch (error) {
     console.error('Error fetching routes:', error);
     res.status(500).json({ error: 'Error fetching routes', details: error.message });
+    
   }
 };
 
