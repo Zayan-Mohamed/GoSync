@@ -40,6 +40,9 @@ import SeatAnalytics from "../pages/SeatAnalytics.jsx";
 import BookingManagement from "../pages/BookingManagement.jsx";
 import AddBooking from "../pages/AddBooking.jsx";
 import BookingAnalytics from "../pages/BookingAnalytics.jsx";
+import RouteAnalytics from "../pages/RouteAnalytics.jsx";
+import StopAnalytics from "../pages/StopAnalytics.jsx";
+
 
 const AppRoutes = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -87,9 +90,14 @@ const AppRoutes = () => {
             <Route path="/booking-management" element={<BookingManagement />} />
             <Route path="/add-booking" element={<AddBooking />} />
             <Route path="/booking-analytics" element={<BookingAnalytics />} />
-            <Route path="/schedule-search" element={<ScheduleSearchResults />} />
+            <Route
+              path="/schedule-search"
+              element={<ScheduleSearchResults />}
+            />
             <Route path="/add-routes" element={<AddRoute />} />
             <Route path="/route-stops" element={<ManageRouteStops />} />
+            <Route path="/route-analytics" element={<RouteAnalytics />} />
+            <Route path="/stop-analytics" element={<StopAnalytics />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
