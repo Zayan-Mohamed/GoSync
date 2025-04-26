@@ -29,6 +29,7 @@
     "mongoose-sequence": "^6.0.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.10.0",
+    "qrcode": "^1.5.4",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.4.1",
     "socket.io": "^4.8.1",
