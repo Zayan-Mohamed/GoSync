@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL
 const useAuthStore = create(
   persist(
     (set) => ({
-      user: null, // Will hold { _id, name, email, role }
+      user: null,
       isAuthenticated: false,
 
       login: async (email, password) => {
@@ -15,7 +15,7 @@ const useAuthStore = create(
           const { data } = await axios.post(
             `${API_URL}/api/auth/login`,
             { email, password },
-            { withCredentials: true } // Ensures cookie is sent/stored
+            { withCredentials: true }
           );
           console.log("Login API response:", data); // Debug response
           set({

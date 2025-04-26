@@ -5,7 +5,7 @@ import AdminLayout from "../layouts/AdminLayout";
 import { Bar, Line, Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale, LineElement, PointElement } from "chart.js";
 import GoSyncLoader from "../components/Loader";
-
+import API from "../services/authService";
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale, LineElement, PointElement);
 
 const BookingAnalytics = () => {
