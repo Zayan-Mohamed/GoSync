@@ -10,7 +10,8 @@
      cancelBooking,
      updatePayment,
      verifyQRCode,
-     getQRCode
+     getQRCode,
+     verifyQRAndGetTicket,
    } from "../controllers/bookingController.js";
 
    const router = express.Router();
@@ -24,5 +25,6 @@
    router.post("/cancel", protect, cancelBooking);
    router.post("/update-payment", protect, updatePayment);
    router.get("/getQRCode/:bookingId", protect, getQRCode);
+   router.get("/verifyQRAndGetTicket", protect, verifyQRAndGetTicket);
 
    export default router;

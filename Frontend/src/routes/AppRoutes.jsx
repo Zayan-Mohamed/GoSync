@@ -38,7 +38,7 @@ import ScheduleManagement from "../pages/ScheduleManagement.jsx";
 import AddSchedule from "../pages/AddSchedule.jsx";
 import EditSchedule from "../pages/EditSchedule.jsx";
 import ScheduleAnalytics from "../pages/ScheduleAnalytics.jsx";
-
+import TicketDownload from "../components/TicketDownload";
 
 import SeatManagement from "../pages/SeatManagement.jsx";
 import AddSeat from "../pages/AddSeat.jsx";
@@ -120,6 +120,7 @@ const AppRoutes = () => {
               element={<div>Booking Confirmed</div>}
             />
           </Route>
+          <Route path="/ticket-download" element={<TicketDownload />} />
           <Route path="/settings" element={<UserSettings />} />
 
           {/* ✅ Catch-all for unauthorized access */}

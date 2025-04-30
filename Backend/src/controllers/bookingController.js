@@ -110,8 +110,19 @@ export const getQRCode = async (req, res) => {
   try {
     const booking = await Booking.findOne({ bookingId, userId });
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (!booking.qrCode) return res.status(404).json({ message: "QR code not available" });
-    res.status(200).json({ qrCode: booking.qrCode, qrPayload: booking.qrPayload });
+
+    // Generate QR code with ticket download URL
+    const qrPayload = createQRPayload({ bookingId, userId });
+    const qrUrl = `https://gosync.com/ticket-download?bookingId=${bookingId}&signature=${qrPayload.signature}`;
+    const qrImage = await generateQRCode(qrUrl);
+
+    // Update booking with new QR code and payload
+    await Booking.updateOne(
+      { bookingId },
+      { qrCode: qrImage, qrPayload }
+    );
+
+    res.status(200).json({ qrCode: qrImage, qrPayload });
   } catch (error) {
     console.error("Error fetching QR code:", error);
     res.status(500).json({ message: "Failed to fetch QR code", error: error.message });
@@ -158,7 +169,7 @@ export const sendBookingConfirmationEmail = async (req, res) => {
         <li><strong>Bus Number:</strong> ${booking.busId.busNumber}</li>
         <li><strong>Route:</strong> ${booking.busId.busRouteNumber} (${route.startLocation} to ${route.endLocation})</li>
         <li><strong>Seats:</strong> ${booking.seats.map((seat) => seat.seatNumber).join(", ")}</li>
-        <li><strong>Total Fare:</strong> $${booking.fareTotal}</li>
+        <li><strong>Total Fare:</strong> LKR ${booking.fareTotal}</li>
         <li><strong>Status:</strong> ${booking.status}</li>
         <li><strong>Payment Status:</strong> ${booking.paymentStatus}</li>
         <li><strong>Booked At:</strong> ${booking.createdAt.toLocaleString()}</li>
@@ -252,7 +263,73 @@ export const verifyQRCode = async (req, res) => {
   }
 };
 
-// Other functions (unchanged for brevity)
+export const verifyQRAndGetTicket = async (req, res) => {
+  const { bookingId, signature } = req.query;
+
+  console.log("Verify QR and get ticket request:", { bookingId, signature });
+
+  try {
+    if (!bookingId || !signature) {
+      return res.status(400).json({ message: "Missing bookingId or signature" });
+    }
+
+    const booking = await Booking.findOne({ bookingId })
+      .populate("busId", "busNumber busRouteNumber routeId")
+      .populate("seats", "seatNumber");
+    
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (!booking.busId) {
+      return res.status(400).json({ message: "Invalid bus information" });
+    }
+
+    if (booking.status !== "confirmed" || booking.paymentStatus !== "paid") {
+      return res.status(400).json({ message: "Invalid or cancelled booking" });
+    }
+
+    const payload = { bookingId, issuedAt: booking.qrPayload?.issuedAt, signature };
+    const isValid = verifyQRPayload(payload);
+    if (!isValid) {
+      return res.status(400).json({ message: "Invalid QR code signature" });
+    }
+
+    // Check QR code expiration (24 hours)
+    const issuedAt = new Date(booking.qrPayload?.issuedAt);
+    const now = new Date();
+    if ((now - issuedAt) > 24 * 60 * 60 * 1000) {
+      return res.status(400).json({ message: "QR code expired, please validate online" });
+    }
+
+    const route = await Route.findOne({ routeId: booking.busId.routeId });
+    if (!route) {
+      return res.status(404).json({ message: "Route not found" });
+    }
+
+    // Return ticket details
+    const ticketDetails = {
+      bookingId: booking.bookingId,
+      from: route.startLocation,
+      to: route.endLocation,
+      seatNumbers: booking.seats.map((seat) => seat.seatNumber),
+      busNumber: booking.busId.busNumber,
+      createdAt: booking.createdAt,
+      status: booking.status,
+      paymentStatus: booking.paymentStatus,
+      fareTotal: booking.fareTotal,
+    };
+
+    console.log("Ticket details returned:", ticketDetails);
+
+    res.status(200).json({ message: "QR code valid", ticketDetails });
+  } catch (error) {
+    console.error("Error verifying QR for ticket:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+// Other functions (unchanged)
 export const getBookingSummary = async (req, res) => {
   const { userId } = req.params;
   const requestingUserId = req.user.id;
@@ -485,7 +562,7 @@ export const cancelBooking = async (req, res) => {
         <li><strong>Bus Number:</strong> ${booking.busId.busNumber}</li>
         <li><strong>Route:</strong> ${booking.busId.busRouteNumber} (${from} to ${to})</li>
         <li><strong>Seats:</strong> ${booking.seats.map((seat) => seat.seatNumber).join(", ")}</li>
-        <li><strong>Total Fare:</strong> Rs. ${booking.fareTotal}</li>
+        <li><strong>Total Fare:</strong> LKR ${booking.fareTotal}</li>
         <li><strong>Status:</strong> Cancelled</li>
         <li><strong>Cancelled At:</strong> ${new Date().toLocaleString()}</li>
       </ul>
@@ -584,7 +661,7 @@ export const updatePayment = async (req, res) => {
         <li><strong>Bus Number:</strong> ${booking.busId.busNumber}</li>
         <li><strong>Route:</strong> ${booking.busId.busRouteNumber} (${route.startLocation} to ${route.endLocation})</li>
         <li><strong>Seats:</strong> ${booking.seats.map((seat) => seat.seatNumber).join(", ")}</li>
-        <li><strong>Total Fare:</strong> $${booking.fareTotal}</li>
+        <li><strong>Total Fare:</strong> LKR ${booking.fareTotal}</li>
         <li><strong>Payment Status:</strong> ${paymentStatus}</li>
         <li><strong>Booked At:</strong> ${booking.createdAt.toLocaleString()}</li>
       </ul>
