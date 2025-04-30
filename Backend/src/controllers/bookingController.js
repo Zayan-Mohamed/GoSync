@@ -51,7 +51,6 @@ export const confirmBooking = async (req, res) => {
     const fareTotal = seatNumbers.length * bus.fareAmount;
     const bookingId = `BKG-${Date.now()}`;
 
-    // Generate QR code and payload
     const qrPayload = createQRPayload({ bookingId, userId, busId, scheduleId, seatNumbers });
     const qrImage = await generateQRCode(qrPayload);
 
@@ -65,7 +64,7 @@ export const confirmBooking = async (req, res) => {
       status: "confirmed",
       paymentStatus: "pending",
       qrCode: qrImage,
-      qrPayload, // Save raw payload
+      qrPayload,
     });
 
     await Seat.updateMany(
@@ -111,6 +110,7 @@ export const getQRCode = async (req, res) => {
     const booking = await Booking.findOne({ bookingId, userId });
     if (!booking) return res.status(404).json({ message: "Booking not found" });
     if (!booking.qrCode) return res.status(404).json({ message: "QR code not available" });
+    console.log("Returning QR data for:", { bookingId, qrPayload: booking.qrPayload });
     res.status(200).json({ qrCode: booking.qrCode, qrPayload: booking.qrPayload });
   } catch (error) {
     console.error("Error fetching QR code:", error);
@@ -133,11 +133,8 @@ export const sendBookingConfirmationEmail = async (req, res) => {
     const route = await Route.findOne({ routeId: booking.busId.routeId });
     if (!route) return res.status(404).json({ message: "Route not found" });
 
-    // Generate QR code for the email
-    const qrPayload = createQRPayload(booking);
-    const qrImage = await generateQRCode(qrPayload);
+    const qrImage = booking.qrCode;
 
-    // Validate QR image format
     if (!qrImage.startsWith("data:image/png;base64,")) {
       console.error("Invalid QR code format:", qrImage.substring(0, 50));
       throw new Error("Failed to generate valid QR code image");
@@ -175,14 +172,12 @@ export const sendBookingConfirmationEmail = async (req, res) => {
       subject: `Your Booking Confirmation - ${booking.bookingId}`,
       html: emailContent,
       attachments: [
-        // Inline image for email body
         {
           filename: `qr-${booking.bookingId}-inline.png`,
           content: Buffer.from(base64Content, "base64"),
           contentType: "image/png",
-          cid: `qrCode@${booking.bookingId}`, // Unique CID for inline image
+          cid: `qrCode@${booking.bookingId}`,
         },
-        // Separate attachment for download
         {
           filename: `qr-${booking.bookingId}.png`,
           content: Buffer.from(base64Content, "base64"),
@@ -191,7 +186,6 @@ export const sendBookingConfirmationEmail = async (req, res) => {
       ],
     };
 
-    // Log attachment details for debugging
     console.log("Sending email with attachments:", {
       inline: mailOptions.attachments[0].filename,
       attachment: mailOptions.attachments[1].filename,
@@ -211,23 +205,34 @@ export const sendBookingConfirmationEmail = async (req, res) => {
 export const verifyQRCode = async (req, res) => {
   const { bookingId, issuedAt, signature } = req.body;
 
+  console.log("Verifying QR code:", { bookingId, issuedAt, signature });
+  console.log("Requesting user ID:", req.user.id);
+  console.log("Hitting verifyQRCode endpoint");
+
   try {
     const payload = { bookingId, issuedAt, signature };
     const isValid = verifyQRPayload(payload);
     if (!isValid) {
+      console.log("Signature verification failed. Expected:", generateSignature({ bookingId, issuedAt }));
       return res.status(400).json({ message: "Invalid QR code" });
     }
 
     const booking = await Booking.findOne({ bookingId })
       .populate("busId")
       .populate("seats", "seatNumber");
-    if (!booking || booking.status !== "confirmed" || booking.paymentStatus !== "paid") {
+    if (!booking) {
+      console.log("Booking not found:", bookingId);
+      return res.status(404).json({ message: "Booking not found" });
+    }
+    if (booking.status !== "confirmed" || (booking.paymentStatus !== "paid" && booking.paymentStatus !== "completed")) {
+      console.log("Invalid booking status:", { status: booking.status, paymentStatus: booking.paymentStatus });
       return res.status(400).json({ message: "Invalid or cancelled booking" });
     }
 
     const issuedAtDate = new Date(issuedAt);
     const isExpired = Date.now() - issuedAtDate.getTime() > 24 * 60 * 60 * 1000; // 24 hours
     if (isExpired) {
+      console.log("QR code expired:", { issuedAt, now: new Date().toISOString() });
       return res.status(400).json({ message: "QR code expired, please validate online" });
     }
 
@@ -252,7 +257,102 @@ export const verifyQRCode = async (req, res) => {
   }
 };
 
-// Other functions (unchanged for brevity)
+export const updatePayment = async (req, res) => {
+  const { bookingId, paymentStatus } = req.body;
+  const userId = req.user.id;
+
+  console.log("Update payment request:", { bookingId, paymentStatus, userId });
+
+  try {
+    const validStatuses = ["pending", "paid", "failed"];
+    if (!validStatuses.includes(paymentStatus)) {
+      console.log("Invalid paymentStatus:", paymentStatus);
+      return res.status(400).json({ message: `Invalid payment status. Must be one of: ${validStatuses.join(", ")}` });
+    }
+
+    const booking = await Booking.findOne({ bookingId, userId })
+      .populate("busId")
+      .populate("userId", "name email")
+      .populate("seats", "seatNumber");
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (booking.paymentStatus === "paid" || booking.paymentStatus === "completed") {
+      return res.status(400).json({ message: "Payment already completed" });
+    }
+
+    await Booking.updateOne({ bookingId }, { paymentStatus });
+
+    const route = await Route.findOne({ routeId: booking.busId.routeId });
+    if (!route) return res.status(404).json({ message: "Route not found" });
+
+    const qrImage = booking.qrCode;
+
+    if (!qrImage.startsWith("data:image/png;base64,")) {
+      console.error("Invalid QR code format:", qrImage.substring(0, 50));
+      throw new Error("Failed to generate valid QR code image");
+    }
+
+    const base64Content = qrImage.split("base64,")[1];
+    if (!base64Content) {
+      console.error("Failed to extract Base64 content from QR image");
+      throw new Error("Invalid QR code Base64 content");
+    }
+
+    const emailContent = `
+      <h2>GoSync Payment Confirmation</h2>
+      <p>Dear ${booking.userId.name},</p>
+      <p>Your payment for booking ${booking.bookingId} has been successfully processed!</p>
+      <ul>
+        <li><strong>Booking ID:</strong> ${booking.bookingId}</li>
+        <li><strong>Bus Number:</strong> ${booking.busId.busNumber}</li>
+        <li><strong>Route:</strong> ${booking.busId.busRouteNumber} (${route.startLocation} to ${route.endLocation})</li>
+        <li><strong>Seats:</strong> ${booking.seats.map((seat) => seat.seatNumber).join(", ")}</li>
+        <li><strong>Total Fare:</strong> $${booking.fareTotal}</li>
+        <li><strong>Payment Status:</strong> ${paymentStatus}</li>
+        <li><strong>Booked At:</strong> ${booking.createdAt.toLocaleString()}</li>
+      </ul>
+      <p>Scan the QR code below to validate your ticket:</p>
+      <img src="cid:qrCode@${booking.bookingId}" alt="Booking QR Code" style="max-width: 200px;" />
+      <p>Please find the QR code attached as <strong>qr-${booking.bookingId}.png</strong> for offline use.</p>
+      <p>Thank you for choosing GoSync!<br>Best regards,<br>The GoSync Team</p>
+    `;
+
+    const mailOptions = {
+      from: `"GoSync Team" <${process.env.EMAIL_USER}>`,
+      to: booking.userId.email,
+      subject: `Payment Confirmation - ${booking.bookingId}`,
+      html: emailContent,
+      attachments: [
+        {
+          filename: `qr-${booking.bookingId}-inline.png`,
+          content: Buffer.from(base64Content, "base64"),
+          contentType: "image/png",
+          cid: `qrCode@${booking.bookingId}`,
+        },
+        {
+          filename: `qr-${booking.bookingId}.png`,
+          content: Buffer.from(base64Content, "base64"),
+          contentType: "image/png",
+        },
+      ],
+    };
+
+    console.log("Sending payment confirmation email with attachments:", {
+      inline: mailOptions.attachments[0].filename,
+      attachment: mailOptions.attachments[1].filename,
+      base64Length: base64Content.length,
+    });
+
+    await transporter.sendMail(mailOptions);
+
+    console.log(`Payment confirmation email sent to ${booking.userId.email} with QR code`);
+    res.status(200).json({ message: "Payment status updated and confirmation email sent with QR code" });
+  } catch (error) {
+    console.error("Error updating payment or sending email:", error);
+    res.status(500).json({ message: "Failed to update payment or send email", error: error.message });
+  }
+};
+
+// Other functions unchanged (omitted for brevity)
 export const getBookingSummary = async (req, res) => {
   const { userId } = req.params;
   const requestingUserId = req.user.id;
@@ -535,99 +635,5 @@ export const getUserBookings = async (req, res) => {
   } catch (error) {
     console.error("Error fetching bookings:", error);
     res.status(500).json({ message: "Failed to fetch bookings" });
-  }
-};
-
-export const updatePayment = async (req, res) => {
-  const { bookingId, paymentStatus } = req.body;
-  const userId = req.user.id;
-
-  console.log("Update payment request:", { bookingId, paymentStatus, userId });
-
-  try {
-    const booking = await Booking.findOne({ bookingId, userId })
-      .populate("busId")
-      .populate("userId", "name email")
-      .populate("seats", "seatNumber");
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.paymentStatus === "completed") {
-      return res.status(400).json({ message: "Payment already completed" });
-    }
-
-    await Booking.updateOne({ bookingId }, { paymentStatus });
-
-    const route = await Route.findOne({ routeId: booking.busId.routeId });
-    if (!route) return res.status(404).json({ message: "Route not found" });
-
-    // Generate QR code for the email
-    const qrPayload = createQRPayload(booking);
-    const qrImage = await generateQRCode(qrPayload);
-
-    // Validate QR image format
-    if (!qrImage.startsWith("data:image/png;base64,")) {
-      console.error("Invalid QR code format:", qrImage.substring(0, 50));
-      throw new Error("Failed to generate valid QR code image");
-    }
-
-    const base64Content = qrImage.split("base64,")[1];
-    if (!base64Content) {
-      console.error("Failed to extract Base64 content from QR image");
-      throw new Error("Invalid QR code Base64 content");
-    }
-
-    const emailContent = `
-      <h2>GoSync Payment Confirmation</h2>
-      <p>Dear ${booking.userId.name},</p>
-      <p>Your payment for booking ${booking.bookingId} has been successfully processed!</p>
-      <ul>
-        <li><strong>Booking ID:</strong> ${booking.bookingId}</li>
-        <li><strong>Bus Number:</strong> ${booking.busId.busNumber}</li>
-        <li><strong>Route:</strong> ${booking.busId.busRouteNumber} (${route.startLocation} to ${route.endLocation})</li>
-        <li><strong>Seats:</strong> ${booking.seats.map((seat) => seat.seatNumber).join(", ")}</li>
-        <li><strong>Total Fare:</strong> $${booking.fareTotal}</li>
-        <li><strong>Payment Status:</strong> ${paymentStatus}</li>
-        <li><strong>Booked At:</strong> ${booking.createdAt.toLocaleString()}</li>
-      </ul>
-      <p>Scan the QR code below to validate your ticket:</p>
-      <img src="cid:qrCode@${booking.bookingId}" alt="Booking QR Code" style="max-width: 200px;" />
-      <p>Please find the QR code attached as <strong>qr-${booking.bookingId}.png</strong> for offline use.</p>
-      <p>Thank you for choosing GoSync!<br>Best regards,<br>The GoSync Team</p>
-    `;
-
-    const mailOptions = {
-      from: `"GoSync Team" <${process.env.EMAIL_USER}>`,
-      to: booking.userId.email,
-      subject: `Payment Confirmation - ${booking.bookingId}`,
-      html: emailContent,
-      attachments: [
-        // Inline image for email body
-        {
-          filename: `qr-${booking.bookingId}-inline.png`,
-          content: Buffer.from(base64Content, "base64"),
-          contentType: "image/png",
-          cid: `qrCode@${booking.bookingId}`,
-        },
-        // Separate attachment for download
-        {
-          filename: `qr-${booking.bookingId}.png`,
-          content: Buffer.from(base64Content, "base64"),
-          contentType: "image/png",
-        },
-      ],
-    };
-
-    console.log("Sending payment confirmation email with attachments:", {
-      inline: mailOptions.attachments[0].filename,
-      attachment: mailOptions.attachments[1].filename,
-      base64Length: base64Content.length,
-    });
-
-    await transporter.sendMail(mailOptions);
-
-    console.log(`Payment confirmation email sent to ${booking.userId.email} with QR code`);
-    res.status(200).json({ message: "Payment status updated and confirmation email sent with QR code" });
-  } catch (error) {
-    console.error("Error updating payment or sending email:", error);
-    res.status(500).json({ message: "Failed to update payment or send email", error: error.message });
   }
 };
