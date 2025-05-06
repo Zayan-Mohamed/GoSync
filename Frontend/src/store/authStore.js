@@ -2,12 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL;
 
 const useAuthStore = create(
   persist(
     (set) => ({
-      user: null, // Will hold { _id, name, email, role }
+      user: null,
       isAuthenticated: false,
 
       login: async (email, password) => {
@@ -15,7 +15,7 @@ const useAuthStore = create(
           const { data } = await axios.post(
             `${API_URL}/api/auth/login`,
             { email, password },
-            { withCredentials: true } // Ensures cookie is sent/stored
+            { withCredentials: true }
           );
           console.log("Login API response:", data); // Debug response
           set({
@@ -23,8 +23,12 @@ const useAuthStore = create(
               _id: data._id,
               name: data.name,
               email: data.email,
-              phone:data.phone,
+              phone: data.phone,
               role: data.role,
+              profilePicture: data.profilePicture || null,
+              profilePictureData: data.profilePictureData || null,
+              address: data.address || null,
+              notificationPreferences: data.notificationPreferences || null,
             },
             isAuthenticated: true,
           });

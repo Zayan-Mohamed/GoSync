@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/PassengerHomepage.css";
 import Navbar1 from "../components/Navbar1";
-import { useNavigate } from "react-router-dom";
 import Footer1 from "../components/Footer1";
 import BookingForm from "../components/BookingForm";
 import useStopStore from "../store/stopStore.js";
@@ -10,13 +9,9 @@ import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 const PassengerHomepage = () => {
-  const [fromLocation, setFromLocation] = useState("");
-  const [toLocation, setToLocation] = useState("");
-  const [journeyDate, setJourneyDate] = useState("");
   const [promotionsAndDiscounts, setPromotionsAndDiscounts] = useState([]);
   const [scheduledMessages, setScheduledMessages] = useState([]);
-  const navigate = useNavigate();
-  const { stops, loading, error, fetchStops } = useStopStore();
+  const { fetchStops } = useStopStore();
 
   const API_URI = import.meta.env.VITE_API_URL;
 
@@ -42,7 +37,7 @@ const PassengerHomepage = () => {
     };
 
     fetchPromotionsAndDiscounts();
-  }, []); // Empty dependency array to run once after initial render
+  }, [API_URI]); // Empty dependency array to run once after initial render
 
   useEffect(() => {
     const fetchScheduledMessages = async () => {
@@ -62,30 +57,7 @@ const PassengerHomepage = () => {
     };
 
     fetchScheduledMessages();
-  }, []); // Empty dependency array to run once after initial render
-
-  const findBuses = () => {
-    if (!fromLocation || !toLocation) {
-      alert("Please select both from and to locations");
-      return;
-    }
-
-    navigate("/bus-search-results", {
-      state: {
-        fromLocation,
-        toLocation,
-        journeyDate,
-      },
-    });
-  };
-
-  const locations =
-    loading || error
-      ? []
-      : stops
-          ?.filter((stop) => stop.status === "active")
-          .map((stop) => stop.stopName)
-          .sort();
+  }, [API_URI]); // Empty dependency array to run once after initial render
 
   // Popular routes data
   const popularRoutes = [
@@ -123,7 +95,7 @@ const PassengerHomepage = () => {
   const partners = [
     { id: 1, name: "SLTB", logo: "/logos/sltb.png" },
     { id: 2, name: "Private Bus Association", logo: "/logos/pba.png" },
-    { id: 3, name: "Intercity Express", logo: "/logos/intercity.png" },
+    { id: 3, name: "Intercity Express", logo: "/logos/intercity.jpeg" },
     { id: 4, name: "Lanka Ashok Leyland", logo: "/logos/lal.png" },
     { id: 5, name: "Tourism Board", logo: "/logos/tourism-board.png" },
   ];

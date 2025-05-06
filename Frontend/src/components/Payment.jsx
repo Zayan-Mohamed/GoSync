@@ -7,6 +7,7 @@ import Footer1 from "./Footer1";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import L from "leaflet";
 import Loader from "./Loader";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 
 const Payment = () => {
@@ -50,17 +51,30 @@ const Payment = () => {
   const handlePayment = async () => {
     setLoading(true);
     try {
+      const paymentStatus = "paid"; // Hardcoded for successful payment; replace with payment gateway response if applicable
+      console.log("Sending payment update:", { bookingId: bookingSummary.bookingId, paymentStatus });
+
+      // Optional: Integrate payment gateway (e.g., Stripe)
+      // const paymentResult = await processPaymentGateway();
+      // const paymentStatus = paymentResult.success ? "paid" : "failed";
+
+      const validStatuses = ["pending", "paid", "failed"];
+      if (!validStatuses.includes(paymentStatus)) {
+        throw new Error(`Invalid payment status: ${paymentStatus}. Must be one of: ${validStatuses.join(", ")}`);
+      }
+
       const paymentResponse = await axios.post(
         `${API_URL}/api/bookings/update-payment`,
-        { bookingId: bookingSummary.bookingId, paymentStatus: "completed" },
+        { bookingId: bookingSummary.bookingId, paymentStatus },
         { withCredentials: true }
       );
-      console.log("Payment updated:", paymentResponse.data);
-      toast.success(paymentResponse.data.message); // Use backend message
+      console.log("Payment response:", paymentResponse.data);
+      toast.success(paymentResponse.data.message); // e.g., "Payment status updated and confirmation email sent with QR code"
       navigate("/passenger");
     } catch (err) {
-      console.error("Payment error:", err.response?.data);
-      toast.error(err.response?.data?.message || "Payment failed");
+      console.error("Payment error:", err.response?.data || err);
+      const errorMessage = err.response?.data?.message || err.message || "Payment failed";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -170,25 +184,25 @@ const Payment = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 font-medium">Payment Status:</span>
-                <span className={`text-${bookingSummary.paymentStatus === "pending" ? "yellow" : "green"}-600 font-semibold`}>
+                <span className={`text-${bookingSummary.paymentStatus === "pending" ? "yellow" : bookingSummary.paymentStatus === "paid" ? "green" : "red"}-600 font-semibold`}>
                   {bookingSummary.paymentStatus}
                 </span>
               </div>
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="text-gray-700 font-semibold">Total Fare:</span>
-                <span className="text-gray-900 font-bold text-lg">${bookingSummary.fareTotal}</span>
+                <span className="text-gray-900 font-bold text-lg">LKR. {bookingSummary.fareTotal}</span>
               </div>
             </div>
             <motion.button
               onClick={handlePayment}
-              disabled={loading}
+              disabled={loading || bookingSummary.paymentStatus === "paid"}
               className={`mt-6 w-full py-3 px-6 rounded-lg text-white font-semibold text-lg transition-all duration-300 ${
-                loading
+                loading || bookingSummary.paymentStatus === "paid"
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800"
               }`}
-              whileHover={!loading ? { scale: 1.05 } : {}}
-              whileTap={!loading ? { scale: 0.95 } : {}}
+              whileHover={!(loading || bookingSummary.paymentStatus === "paid") ? { scale: 1.05 } : {}}
+              whileTap={!(loading || bookingSummary.paymentStatus === "paid") ? { scale: 0.95 } : {}}
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -198,8 +212,10 @@ const Payment = () => {
                   </svg>
                   Processing...
                 </span>
+              ) : bookingSummary.paymentStatus === "paid" ? (
+                "Payment Completed"
               ) : (
-                `Pay Now ($${bookingSummary.fareTotal})`
+                `Pay Now (LKR. ${bookingSummary.fareTotal})`
               )}
             </motion.button>
           </motion.div>
