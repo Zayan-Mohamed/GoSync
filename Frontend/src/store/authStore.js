@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL;
 
 const useAuthStore = create(
   persist(
@@ -23,8 +23,12 @@ const useAuthStore = create(
               _id: data._id,
               name: data.name,
               email: data.email,
-              phone:data.phone,
+              phone: data.phone,
               role: data.role,
+              profilePicture: data.profilePicture || null,
+              profilePictureData: data.profilePictureData || null,
+              address: data.address || null,
+              notificationPreferences: data.notificationPreferences || null,
             },
             isAuthenticated: true,
           });

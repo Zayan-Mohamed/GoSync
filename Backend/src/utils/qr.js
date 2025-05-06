@@ -2,7 +2,7 @@
 import crypto from 'crypto';
 import QRCode from 'qrcode';
 
-const SECRET_KEY = process.env.QR_SECRET || 'supersecretkey123';
+const SECRET_KEY = process.env.QR_SECRET;
 
 // Generate Signature
 export function generateSignature(payload) {

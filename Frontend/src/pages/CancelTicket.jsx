@@ -23,11 +23,16 @@ const CancelTicket = () => {
 
     const fetchBookings = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/bookings/user", {
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/bookings/user",
+          {
+            withCredentials: true,
+          }
+        );
         console.log("Fetched bookings:", response.data);
-        const confirmedBookings = response.data.filter((b) => b.status === "confirmed");
+        const confirmedBookings = response.data.filter(
+          (b) => b.status === "confirmed"
+        );
         const bookingsWithQRCodes = await Promise.all(
           confirmedBookings.map(async (booking) => {
             try {
@@ -37,12 +42,19 @@ const CancelTicket = () => {
               );
               return { ...booking, qrCode: qrResponse.data.qrCode };
             } catch (err) {
-              console.error(`Failed to fetch QR for ${booking.bookingId}:`, err);
+              console.error(
+                `Failed to fetch QR for ${booking.bookingId}:`,
+                err
+              );
               return booking;
             }
           })
         );
-        setBookings(bookingsWithQRCodes);
+        // Sort by createdAt in descending order
+        const sortedBookings = bookingsWithQRCodes.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setBookings(sortedBookings);
       } catch (err) {
         console.error("Error fetching bookings:", err);
         toast.error(err.response?.data?.message || "Failed to load bookings");
@@ -55,7 +67,8 @@ const CancelTicket = () => {
   }, [isAuthenticated, user, navigate]);
 
   const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+    if (!window.confirm("Are you sure you want to cancel this booking?"))
+      return;
 
     try {
       const response = await axios.post(
@@ -85,7 +98,9 @@ const CancelTicket = () => {
         </h2>
         {bookings.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-lg text-gray-600">No confirmed bookings to cancel.</p>
+            <p className="text-lg text-gray-600">
+              No confirmed bookings to cancel.
+            </p>
             <button
               onClick={() => navigate("/")}
               className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"

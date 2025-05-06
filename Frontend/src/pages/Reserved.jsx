@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import useAuthStore from "../store/authStore";
 import Navbar1 from "../components/Navbar1";
 import Footer1 from "../components/Footer1";
-import GoSyncLoader from "../components/Loader"; // Import the new loader
+import GoSyncLoader from "../components/Loader";
 import { FiClock } from "react-icons/fi";
 
 const Reserved = () => {
@@ -23,9 +23,14 @@ const Reserved = () => {
         }
       );
       console.log("Fetched reserved seats:", response.data);
-      setReservedSeats(
-        response.data.filter((r) => new Date(r.reservedUntil) > new Date())
+      const filteredSeats = response.data.filter(
+        (r) => new Date(r.reservedUntil) > new Date()
       );
+      // Sort by reservedUntil in descending order
+      const sortedSeats = filteredSeats.sort(
+        (a, b) => new Date(b.reservedUntil) - new Date(a.reservedUntil)
+      );
+      setReservedSeats(sortedSeats);
     } catch (err) {
       console.error("Error fetching reserved seats:", err);
       toast.error(
@@ -65,12 +70,12 @@ const Reserved = () => {
     } catch (err) {
       console.error("Confirm error:", err.response?.data);
       toast.error(err.response?.data?.message || "Failed to confirm booking");
-      fetchReservedSeats(); // Refresh on failure
+      fetchReservedSeats(); 
     }
   };
 
   if (loading) {
-    return <GoSyncLoader />; // Use GoSyncLoader instead of Loader
+    return <GoSyncLoader />;
   }
 
   return (

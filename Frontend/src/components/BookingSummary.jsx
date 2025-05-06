@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import useAuthStore from "../store/authStore";
+import API from "../services/authService";
 
 const BookingSummary = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const BookingSummary = () => {
     };
 
     fetchSummary();
-  }, [user, isAuthenticated, navigate]);
+  }, [user, isAuthenticated, navigate, API_URI]);
 
   if (loading) return <div>Loading...</div>;
 
