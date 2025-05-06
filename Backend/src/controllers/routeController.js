@@ -305,7 +305,7 @@ export const addStopToRoute = async (req, res) => {
 // Update getAllRoutes function
 export const getAllRoutes = async (req, res) => {
   try {
-    const routes = await Route.find().populate("stops.stop");
+    const routes = await Route.find().populate("stops.stop").sort({ createdAt: -1 });;
 
     // Format the routes to match the expected frontend structure
     const formattedRoutes = routes.map((route) => {
@@ -332,7 +332,7 @@ export const getAllRoutes = async (req, res) => {
         },
         stops: sortedStops, // Return sorted stops
       };
-    });
+    }).reverse();
 
     res.status(200).json({ routes: formattedRoutes });
   } catch (error) {

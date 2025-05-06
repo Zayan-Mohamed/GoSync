@@ -126,65 +126,78 @@ const CurrentRoutes = () => {
 
   const generatePDF = () => {
     const doc = new jsPDF();
-    
+  
     doc.setFontSize(18);
     doc.text('Routes List', 14, 15);
-    
-    // Prepare data with only the first 4 columns
-    const pdfData = filteredRoutes.map(route => [
-      `${route.routeName || "Unnamed Route"}\nID: ${route.routeId || route._id}`,
-      route.stops?.length > 0 ? 
-        route.stops.map(stop => 
-          `${stop.stop?.stopName || stop.stopName || "Unknown Stop"} (${stop.stopType || 'unknown'})`
-        ).join('\n') : 
-        'No stops',
-      `From: ${route.startLocation || "N/A"}\n` +
-      `To: ${route.endLocation || "N/A"}\n` +
-      `Distance: ${route.totalDistance || "N/A"} km`,
-      route.status || "N/A"
-    ]);
-    
+  
+    const pdfData = filteredRoutes.map(route => {
+      const boardingStops = route.stops
+        ?.filter(stop => stop.stopType === 'boarding')
+        .map(stop => stop.stop?.stopName || "Unknown Stop") || [];
+      const droppingStops = route.stops
+        ?.filter(stop => stop.stopType === 'dropping')
+        .map(stop => stop.stop?.stopName || "Unknown Stop") || [];
+  
+      return [
+        route.routeName || "Unnamed Route",
+        boardingStops.length > 0 ? boardingStops.join('\n') : 'No Stops',
+        droppingStops.length > 0 ? droppingStops.join('\n') : 'No Stops',
+        `From: ${route.startLocation || "N/A"}\nTo: ${route.endLocation || "N/A"}\nDistance: ${route.totalDistance || "N/A"} km`,
+        route.status || "N/A"
+      ];
+    });
+  
     autoTable(doc, {
-      head: [['Route Name', 'Stops', 'Details', 'Status']], // Only 4 columns
+      head: [['Route Name', 'Boarding Stops', 'Dropping Stops', 'Details', 'Status']],
       body: pdfData,
       startY: 25,
+      margin: { left: 20, right: 20 }, // Add margins on both sides
+      tableWidth: 'auto', // Let the table adjust width based on content and margins
       styles: {
         fontSize: 10,
         cellPadding: 2,
-        valign: 'middle'
+        valign: 'middle',
+        overflow: 'linebreak'
       },
       columnStyles: {
-        0: { cellWidth: 60 },  // Route Name
-        1: { cellWidth: 50 },  // Stops
-        2: { cellWidth: 50 },  // Details
-        3: { cellWidth: 20 }   // Status
+        0: { cellWidth: 40 },  // Route Name
+        1: { cellWidth: 40 },  // Boarding Stops
+        2: { cellWidth: 40 },  // Dropping Stops
+        3: { cellWidth: 45 },  // Details
+        4: { cellWidth: 20 }   // Status
       },
       didDrawCell: (data) => {
-        // Status column styling
-        if (data.section === 'body' && data.column.index === 3) {
+        if (data.section === 'body' && data.column.index === 4) {
           const status = data.cell.raw;
-          doc.setFillColor(status === 'active' ? '#d1fae5' : '#fee2e2');
-          doc.setDrawColor(status === 'active' ? '#10b981' : '#ef4444');
-          doc.rect(
-            data.cell.x,
-            data.cell.y,
-            data.cell.width,
-            data.cell.height,
-            'FD'
-          );
-          doc.setTextColor(status === 'active' ? '#065f46' : '#991b1b');
-          doc.text(
+          const fillColor = status === 'active' ? '#d1fae5' : '#fee2e2';
+          const borderColor = status === 'active' ? '#10b981' : '#ef4444';
+          const textColor = status === 'active' ? '#065f46' : '#991b1b';
+  
+          const { x, y, width, height } = data.cell;
+  
+          data.doc.setFillColor(fillColor);
+          data.doc.setDrawColor(borderColor);
+          data.doc.rect(x, y, width, height, 'FD');
+  
+          data.doc.setTextColor(textColor);
+          data.doc.setFontSize(10);
+  
+          data.doc.text(
             status,
-            data.cell.x + data.cell.width / 2,
-            data.cell.y + data.cell.height / 2 + 2,
-            { align: 'center' }
+            x + width / 2,
+            y + height / 2 + 2,
+            { align: 'center', maxWidth: width - 4 }
           );
+  
+          data.cell.text = '';
         }
       }
     });
-    
+  
     doc.save('routes-list.pdf');
   };
+  
+  
 
   const columns = [
     {
@@ -312,7 +325,7 @@ const CurrentRoutes = () => {
     {
       header: "Status",
       accessor: "status",
-      width: "10%",
+      width: "15%",
       render: (route) =>
         editingRoute.id === route._id ? (
           <Select
