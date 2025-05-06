@@ -13,7 +13,7 @@ const bookingSchema = new mongoose.Schema({
     { type: mongoose.Schema.Types.ObjectId, ref: "Seat", required: true },
   ],
   fareTotal: { type: Number, required: true },
-  bookingId: { type: String, required: true, unique: true }, // Custom bookingId
+  bookingId: { type: String, required: true, unique: true },
   status: {
     type: String,
     enum: ["pending", "confirmed", "cancelled"],
@@ -24,6 +24,8 @@ const bookingSchema = new mongoose.Schema({
     enum: ["pending", "paid", "failed"],
     default: "pending",
   },
+  qrCode: { type: String }, // Base64 QR code image
+  qrPayload: { type: Object }, // Raw QR code payload
   createdAt: { type: Date, default: Date.now },
 });
 

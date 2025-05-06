@@ -12,7 +12,7 @@ import {
   deleteRoute,
   updateStopType,
   addMultipleStopsWithTypes,
-  toggleRouteStatus
+  toggleRouteStatus, 
 } from '../controllers/routeController.js';
 
 const router = express.Router();
@@ -26,11 +26,8 @@ router.get('/:id', getRouteById);
 router.put('/:routeId/status', toggleRouteStatus);
 router.post('/add-multiple-stops', addMultipleStopsWithTypes);
 router.put('/:routeId', updateRoute);
-//router.put('/:stopId', updateStop);
 router.put('/:routeId/stops/:stopId', updateStopInRoute);
 router.get('/routes/:routeId/stops', getStopsForRoute);
 router.delete('/routes/:routeId/stops/:stopId', deleteStopFromRoute);
 router.delete('/routes/:routeId', deleteRoute);
-//router.post('/update-multiple-stop-types', updateMultipleStopTypes);
-//router.post('/add-multiple-stops', addMultipleStopsToRoute);
 export default router;

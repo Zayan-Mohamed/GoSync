@@ -1,88 +1,111 @@
 .notificationTable {
-  width: 80%;
-  margin: auto; /* Centering */
-  background-color: #ffffff; /* White background */
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f5f5f5; /* Light gray border */
+  width: 90%;
+  margin: 30px auto;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border: none;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 150px); /* Prevents overflow */
-  overflow: hidden; /* Hide excess content */
+  max-height: calc(100vh - 180px);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
 }
 
-/* Make table wrapper scrollable instead of the whole page */
+.notificationTable:hover {
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
 .table-container {
   overflow-y: auto;
   flex-grow: 1;
+  padding-right: 12px;
 }
 
-/* Table Styles */
 .notificationTable table {
   width: 100%;
   border-collapse: collapse;
-  border: 2px solid gray; /* Black table border */
+  margin-top: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .notificationTable thead th {
-  background-color: #ef6b25; /* Deep Orange */
+  background-color: #fd7600e2; /* Soft Orange */
   color: white;
-  padding: 12px;
+  padding: 14px 18px;
   text-align: center;
-  border: 1px solid gray;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+ font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  border: 1px solid #e0e0e0; /* Added border to header */
+  font-weight: 700;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Table Body */
 .notificationTable tbody td {
-  padding: 12px;
+  padding: 14px 18px;
   text-align: center;
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
   vertical-align: middle;
-  border: 2px solid gray;
-  color: #212121; /* Dark text */
+  border-top: 1px solid #eee;
+  color: #333;
+  background-color: #fafafa;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-/* Action Buttons */
+.notificationTable tbody tr:hover td {
+  background-color: #f2f2f2;
+  transform: translateY(-1px);
+}
+
 .actionButtons {
   display: flex;
-  justify-content: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 25px;
   align-items: center;
 }
 
 .actionButtons button {
-  padding: 8px 12px;
+  padding: 10px 20px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  width: auto;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Approve & Reject Buttons */
 .actionButtons .approve {
-  background-color: #ff8f00; /* Sunset Orange */
+  background-color: #ff5722; /* Strong Orange */
   color: white;
 }
 
 .actionButtons .reject {
-  background-color: #ffc107; /* Golden Yellow */
-  color: #212121; /* Dark text for contrast */
+  background-color: #ffeb3b; /* Bright Yellow */
+  color: #212121;
 }
 
-/* Hover Effect */
 .actionButtons button:hover {
-  opacity: 0.85;
+  transform: translateY(-2px);
+  opacity: 0.9;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive Fixes */
 @media (max-width: 1024px) {
   .notificationTable {
     width: 95%;
-    padding: 20px;
+    padding: 18px;
   }
 
   .notificationTable table {
@@ -91,11 +114,32 @@
 
   .actionButtons {
     flex-direction: column;
-    gap: 5px;
+    gap: 12px;
   }
 
   .actionButtons button {
     width: 100%;
-    padding: 6px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .notificationTable {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .notificationTable thead th {
+    font-size: 12px;
+    padding: 12px;
+  }
+
+  .notificationTable tbody td {
+    font-size: 12px;
+    padding: 12px;
+  }
+
+  .actionButtons button {
+    font-size: 12px;
   }
 }

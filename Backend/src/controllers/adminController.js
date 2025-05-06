@@ -47,7 +47,7 @@ export const registerAdmin = async (req, res) => {
     email,
     phone,
     password: hashedPassword,
-    role: "admin", // ✅ Ensure the role is "admin"
+    role: "admin", //Ensure the role is "admin"
   });
 
   res.status(201).json({

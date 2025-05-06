@@ -23,15 +23,14 @@ export const getNotificationById = async (req, res) => {
 };
 export const create = async (req, res) => {
   try {
-    const customNotificationId = req.body.notificationId || `notif-${new Date().getTime()}`;
-
-    // Allow setting expiration date
+    const customNotificationId = req.body.notificationId || `notif-${Date.now()}`;
     const expiredAt = req.body.expiredAt ? new Date(req.body.expiredAt) : null;
 
     const notificationData = {
       ...req.body,
       notificationId: customNotificationId,
-      expiredAt: expiredAt, // Set the expiration date
+      expiredAt: expiredAt,
+      createdBy: req.user.name, // ✅ Save the admin's name
     };
 
     const newNotification = new Notification(notificationData);
@@ -48,6 +47,7 @@ export const create = async (req, res) => {
     });
   }
 };
+
 
 // Get All Notifications
 export const getAllNotifications = async (req, res) => {
@@ -132,3 +132,5 @@ cron.schedule('0 0 * * *', async () => {
     console.error("Error during cron job:", error);
   }
 });
+
+

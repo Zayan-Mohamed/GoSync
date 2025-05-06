@@ -14,17 +14,20 @@ const UpdateMessage = () => {
   const [shedTime, setShedTime] = useState("");
   const [status, setStatus] = useState("pending");
   const [loading, setLoading] = useState(false);
-  const API_URI = import.meta.env.VITE_API_URL
+  const [type, setType] = useState("");
+  const [expiryDate, setExpiryDate] = useState(""); // Initialize expiryDate state
+  const API_URI = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchMessage = async () => {
       try {
         const response = await axios.get(`${API_URI}/api/shed/messages/${id}`);
-        const { message, shedDate, shedTime, status } = response.data.data;
+        const { message, shedDate, shedTime, status, expiredAt } = response.data.data;
         setMessage(message);
         setShedDate(new Date(shedDate));
         setShedTime(shedTime);
         setStatus(status);
+        setExpiryDate(expiredAt ? new Date(expiredAt).toISOString().slice(0, 16) : ""); // Set the expiry date if available
       } catch (error) {
         console.error("Error fetching message details:", error);
         alert("Failed to fetch message details.");
@@ -38,16 +41,18 @@ const UpdateMessage = () => {
     setLoading(true);
 
     const updatedMessage = {
+      type,
       message,
       shedDate: shedDate.toISOString().split("T")[0],
       shedTime,
       status,
+      expiredAt: expiryDate ? new Date(expiryDate).toISOString() : null, // Convert expiry date to ISO format if present
     };
 
     try {
       await axios.put(`${API_URI}/api/shed/messages/${id}`, updatedMessage);
       alert("Message updated successfully!");
-      navigate("/messages");
+      navigate("/Schedule-notification");
     } catch (error) {
       console.error("Error updating message:", error);
       alert("Failed to update message.");
@@ -58,63 +63,72 @@ const UpdateMessage = () => {
 
   return (
     <AdminLayout>
-    <div className="form-container">
-      <h2 className="form-title">Update Scheduled Message</h2>
-      <form onSubmit={handleSubmit} className="message-form">
-        <div className="mb-3">
-          <label htmlFor="message" className="form-label">Message</label>
-          <textarea
-            id="message"
-            className="form-control"
-            rows="3"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            required
-          ></textarea>
-        </div>
+      <div className="form-container">
+        <h2 className="form-title">Update Scheduled Message</h2>
+        <form onSubmit={handleSubmit} className="message-form">
 
-        <div className="mb-3">
-          <label htmlFor="shedDate" className="form-label">Scheduled Date</label>
-          <DatePicker
-            selected={shedDate}
-            onChange={(date) => setShedDate(date)}
-            dateFormat="yyyy-MM-dd"
-            className="form-control"
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="shedTime" className="form-label">Scheduled Time</label>
-          <input
-            type="time"
-            id="shedTime"
-            className="form-control"
-            value={shedTime}
-            onChange={(e) => setShedTime(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="status" className="form-label">Status</label>
-          <select
-            id="status"
-            className="form-select"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            required
-          >
-            <option value="pending">Pending</option>
-            <option value="sent">Sent</option>
+          {/* Notification Type */}
+          <label style={{ fontWeight: "bold" }}>Notification Type</label>
+          <select value={type} onChange={(e) => setType(e.target.value)} required>
+            <option value="">Select Type</option>
+            <option value="travel disruption">Travel Disruption</option>
+            <option value="promotions">Promotions</option>
+            <option value="discounts">Discounts</option>
+            <option value="alert">Alert</option>
+            <option value="reminders">Reminders</option>
+            <option value="info">Info</option>
           </select>
-        </div>
 
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Updating..." : "Update Message"}
-        </button>
-      </form>
-    </div>
+          <div className="mb-3">
+            <label htmlFor="message" className="form-label">Message</label>
+            <textarea
+              id="message"
+              className="form-control"
+              rows="3"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              required
+            ></textarea>
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="shedDate" className="form-label">Scheduled Date</label>
+            <DatePicker
+              selected={shedDate}
+              onChange={(date) => setShedDate(date)}
+              dateFormat="yyyy-MM-dd"
+              className="form-control"
+              required
+            />
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="shedTime" className="form-label">Scheduled Time</label>
+            <input
+              type="time"
+              id="shedTime"
+              className="form-control"
+              value={shedTime}
+              onChange={(e) => setShedTime(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Expiry Date */}
+          <div className="form-group">
+            <label>Expiration Date (Optional)</label>
+            <input
+              type="datetime-local"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+            />
+          </div>
+
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? "Updating..." : "Update Message"}
+          </button>
+        </form>
+      </div>
     </AdminLayout>
   );
 };

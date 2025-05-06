@@ -45,14 +45,16 @@ const Sidebar = () => {
         { to: "/bus-management", label: "Current Buses", icon: <FiTruck /> },
         { to: "/add-bus", label: "Add Bus", icon: <FiPlus /> },
         { to: "/bus-analytics", label: "Bus Analytics", icon: <MdAutoGraph /> },
+        { to: "/bus-assign", label: "Bus Assignments", icon: <FiMap /> },
+        { to: "/add-operorator", label: "Add Bus Operator", icon: <FiPlus /> },
+        { to: "/busop-man", label: "Current Bus Operators", icon: <FiUserCheck /> },
       ],
     },
     {
       title: "Schedule Management",
       links: [
         { to: "/schedule-management", label: "Current Schedule", icon: <FiCalendar /> },
-        { to: "/insert-schedule", label: "Insert Schedule", icon: <FiPlus /> },
-        { to: "/schedule-search", label: "Search Schedule", icon: <FiCalendar /> },
+        { to: "/add-schedule", label: "Insert Schedule", icon: <FiPlus /> },
         { to: "/schedule-analytics", label: "Schedule Analytics", icon: <BsGraphUpArrow /> },
       ],
     },

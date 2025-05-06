@@ -1,6 +1,6 @@
 // routes/busOperatorRoutes.js
 import express from "express";
-import { createOperator, getAllOperators, updateOperator, deleteOperator } from "../controllers/busOperatorController.js"; // Import the controller functions
+import { createOperator, getAllOperators, updateOperator, deleteOperator, assignOperatorToBus } from "../controllers/busOperatorController.js"; // Import the controller functions
 
 const router = express.Router();
 
@@ -15,5 +15,8 @@ router.put("/update/:id", updateOperator);
 
 // Delete a bus operator
 router.delete("/delete/:id", deleteOperator);
+
+// routes/busOperatorRoutes.js (add this route)
+router.put("/assign/:busId",  assignOperatorToBus);
 
 export default router;

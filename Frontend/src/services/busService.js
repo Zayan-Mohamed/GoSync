@@ -33,7 +33,7 @@ export const getBusById = async (id) => {
 // Add a New Bus
 export const addBus = async (busData) => {
   try {
-    const response = await axios.post(API_URL, busData, {
+    const response = await axios.post(`${API_URL}`, busData, {
       withCredentials: true, // Ensure cookies are sent for authentication
     });
     return response.data;
