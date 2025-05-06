@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; 
 import axios from "axios";
 import "../styles/AddNoti.css";
 import { useNavigate } from "react-router-dom";
@@ -6,41 +6,147 @@ import AdminLayout from "../layouts/AdminLayout";
 
 const AddNotification = () => {
     const [type, setType] = useState("");
+    const [subType, setSubType] = useState("");
     const [message, setMessage] = useState("");
-    const [status] = useState("sent");  // Default status set to 'sent'
-    const [expirationDate, setExpirationDate] = useState("");  // New field for expiration date
+    const [expirationDate, setExpirationDate] = useState("");
+    const [breakdownDate, setBreakdownDate] = useState("");
+    const [maintenanceStartDate, setMaintenanceStartDate] = useState("");
+    const [maintenanceEndDate, setMaintenanceEndDate] = useState("");
+    const [disruptionStartDate, setDisruptionStartDate] = useState("");
+    const [disruptionEndDate, setDisruptionEndDate] = useState("");
+    const [selectedBus, setSelectedBus] = useState("");
+    const [selectedRoute, setSelectedRoute] = useState("");
+    const [allBuses, setAllBuses] = useState([]);
+    const [routes, setRoutes] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [status] = useState("sent");
     const navigate = useNavigate();
-    const API_URI = import.meta.env.VITE_API_URL
+    const API_URI = import.meta.env.VITE_API_URL;
 
+    useEffect(() => {
+        if (type === "travel disruption" && subType !== "route disruption") {
+            axios
+                .get(`${API_URI}/api/buses/buses`, { withCredentials: true })
+                .then((res) => setAllBuses(res.data))
+                .catch((err) => console.error("Failed to fetch buses", err));
+        }
+    }, [type, subType]);
+
+    useEffect(() => {
+        if (subType === "route disruption") {
+            const fetchRoutes = async () => {
+                try {
+                    const response = await axios.get(`${API_URI}/api/routes/routes`, {
+                        withCredentials: true,
+                    });
+                    if (Array.isArray(response.data.routes)) {
+                        setRoutes(response.data.routes);
+                    } else {
+                        console.error("Unexpected API response:", response.data);
+                        setRoutes([]);
+                    }
+                } catch (err) {
+                    console.error("Error fetching routes:", err);
+                    setRoutes([]);
+                }
+            };
+            fetchRoutes();
+        }
+    }, [subType]);
+
+    useEffect(() => {
+        if ((subType === "bus delay" || subType === "bus breakdown") && selectedRoute) {
+            axios
+                .get(`${API_URI}/api/buses/route/${selectedRoute}`, { withCredentials: true })
+                .then((res) => {
+                    if (Array.isArray(res.data.buses)) {
+                        setAllBuses(res.data.buses);
+                    } else {
+                        setAllBuses([]);
+                    }
+                })
+                .catch((err) => console.error("Failed to fetch buses by route", err));
+        }
+    }, [selectedRoute, subType]);
+
+    useEffect(() => {
+        if (subType && selectedBus) {
+            if (subType === "bus breakdown" && breakdownDate) {
+                const readableDate = new Date(breakdownDate).toLocaleDateString();
+                setMessage(`Bus ${selectedBus} broke down on ${readableDate}. We apologize for the inconvenience.`);
+            } else if (subType === "bus delay") {
+                setMessage(`Bus ${selectedBus} is currently delayed. We apologize for any inconvenience caused.`);
+            } else if (subType === "bus maintenance" && maintenanceStartDate && maintenanceEndDate) {
+                const start = new Date(maintenanceStartDate).toLocaleDateString();
+                const end = new Date(maintenanceEndDate).toLocaleDateString();
+                setMessage(`Bus ${selectedBus} will be under maintenance from ${start} to ${end}. Sorry for the inconvenience.`);
+            }
+        } else if (subType === "route disruption" && selectedRoute && disruptionStartDate && disruptionEndDate) {
+            const start = new Date(disruptionStartDate).toLocaleDateString();
+            const end = new Date(disruptionEndDate).toLocaleDateString();
+            const routeName = routes.find(r => r._id === selectedRoute)?.routeName || "the route";
+            setMessage(`Route ${routeName} will be disrupted from ${start} to ${end} due to maintenance work. Please plan accordingly.`);
+        }
+    }, [subType, selectedBus, breakdownDate, maintenanceStartDate, maintenanceEndDate, selectedRoute, disruptionStartDate, disruptionEndDate]);
+
+    useEffect(() => {
+        if (type === "promotions") {
+          setMessage("🎉 GoSync Offer: Enjoy exciting travel promotions! Book now and save more on your journey.");
+        } else if (type === "discounts") {
+          setMessage("🚌 GoSync Discount: Get up to 25% off on your next ticket booking! Limited time offer.");
+        }
+      }, [type]);
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
-        // Check if expiration date is valid
         if (expirationDate && new Date(expirationDate) <= new Date()) {
             alert("Expiration date must be in the future.");
             setLoading(false);
             return;
         }
 
-        const newNotification = { 
-            type, 
-            message, 
-            status, 
-            expiredAt: expirationDate ? new Date(expirationDate).toISOString() : null  // Set expiration date
+        const newNotification = {
+            type,
+            subType: type === "travel disruption" ? subType : undefined,
+            busesAffected:
+                type === "travel disruption"
+                    ? (subType === "route disruption"
+                        ? [] // <-- FIX: do not treat selectedRoute as bus ID
+                        : selectedBus ? [selectedBus] : [])
+                    : [],
+            message,
+            status,
+            expiredAt: expirationDate ? new Date(expirationDate).toISOString() : null,
+            breakdownDate: breakdownDate || null,
+            maintenancePeriod: maintenanceStartDate && maintenanceEndDate
+                ? { from: maintenanceStartDate, to: maintenanceEndDate }
+                : null,
+            disruptionPeriod: disruptionStartDate && disruptionEndDate
+                ? { from: disruptionStartDate, to: disruptionEndDate }
+                : null,
+            affectedRoute: subType === "route disruption" ? selectedRoute : null, // Optional: use separate field
+            createdBy: "admin123",
         };
 
         try {
             await axios.post(`${API_URI}/api/notifications`, newNotification, {
-                withCredentials: true
+                withCredentials: true,
             });
             alert("Notification Sent Successfully!");
-            
             setType("");
+            setSubType("");
+            setSelectedBus("");
+            setSelectedRoute("");
             setMessage("");
-            setExpirationDate("");  // Clear expiration date after sending notification
-            navigate('/notification-management');
+            setExpirationDate("");
+            setBreakdownDate("");
+            setMaintenanceStartDate("");
+            setMaintenanceEndDate("");
+            setDisruptionStartDate("");
+            setDisruptionEndDate("");
+            navigate("/notification-management");
         } catch (error) {
             console.error("Error sending notification:", error);
             alert("Failed to send notification.");
@@ -54,9 +160,19 @@ const AddNotification = () => {
             <div className="notification-form-container">
                 <h2>Create Notification</h2>
                 <form onSubmit={handleSubmit}>
+                    {/* Type */}
                     <div className="form-group">
                         <label>Notification Type</label>
-                        <select value={type} onChange={(e) => setType(e.target.value)} required>
+                        <select
+                            value={type}
+                            onChange={(e) => {
+                                setType(e.target.value);
+                                setSubType("");
+                                setSelectedBus("");
+                                setSelectedRoute("");
+                            }}
+                            required
+                        >
                             <option value="">Select Type</option>
                             <option value="travel disruption">Travel Disruption</option>
                             <option value="promotions">Promotions</option>
@@ -67,6 +183,126 @@ const AddNotification = () => {
                         </select>
                     </div>
 
+                    {/* Sub Type */}
+                    {type === "travel disruption" && (
+                        <div className="form-group">
+                            <label>Sub Type</label>
+                            <select
+                                value={subType}
+                                onChange={(e) => {
+                                    setSubType(e.target.value);
+                                    setSelectedBus("");
+                                    setSelectedRoute("");
+                                }}
+                                required
+                            >
+                                <option value="">Select Sub Type</option>
+                                <option value="bus maintenance">Bus Maintenance</option>
+                                <option value="bus delay">Bus Delay</option>
+                                <option value="bus breakdown">Bus Breakdown</option>
+                                <option value="route disruption">Route Disruption</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Bus Selection */}
+                    {type === "travel disruption" && subType && subType !== "route disruption" && (
+                        <div className="form-group">
+                            <label>Select Affected Bus</label>
+                            <select
+                                value={selectedBus}
+                                onChange={(e) => setSelectedBus(e.target.value)}
+                                required
+                            >
+                                <option value="">Select a Bus</option>
+                                {[...allBuses]
+                                    .sort((a, b) => a.busNumber.localeCompare(b.busNumber))
+                                    .map((bus) => (
+                                        <option key={bus.busNumber} value={bus.busNumber}>
+                                            {bus.busNumber}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Breakdown Date */}
+                    {subType === "bus breakdown" && (
+                        <div className="form-group">
+                            <label>Breakdown Date</label>
+                            <input
+                                type="date"
+                                value={breakdownDate}
+                                onChange={(e) => setBreakdownDate(e.target.value)}
+                                required
+                            />
+                        </div>
+                    )}
+
+                    {/* Maintenance Dates */}
+                    {subType === "bus maintenance" && (
+                        <>
+                            <div className="form-group">
+                                <label>Maintenance Start Date</label>
+                                <input
+                                    type="date"
+                                    value={maintenanceStartDate}
+                                    onChange={(e) => setMaintenanceStartDate(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Maintenance End Date</label>
+                                <input
+                                    type="date"
+                                    value={maintenanceEndDate}
+                                    onChange={(e) => setMaintenanceEndDate(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {/* Route Disruption Fields */}
+                    {subType === "route disruption" && (
+                        <>
+                            <div className="form-group">
+                                <label>Select Affected Route</label>
+                                <select
+                                    value={selectedRoute}
+                                    onChange={(e) => setSelectedRoute(e.target.value)}
+                                    required
+                                >
+                                    <option value="">Select a Route</option>
+                                    {routes.map((route) => (
+                                        <option key={route._id} value={route._id}>
+                                            {route.routeName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Disruption Start Date</label>
+                                <input
+                                    type="date"
+                                    value={disruptionStartDate}
+                                    onChange={(e) => setDisruptionStartDate(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Disruption End Date</label>
+                                <input
+                                    type="date"
+                                    value={disruptionEndDate}
+                                    onChange={(e) => setDisruptionEndDate(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {/* Message */}
                     <div className="form-group">
                         <label>Message</label>
                         <textarea
@@ -77,6 +313,7 @@ const AddNotification = () => {
                         />
                     </div>
 
+                    {/* Expiry Date */}
                     <div className="form-group">
                         <label>Expiration Date (Optional)</label>
                         <input
@@ -86,7 +323,7 @@ const AddNotification = () => {
                         />
                     </div>
 
-                    <button type="submit" className="send-btn" disabled={loading}>
+                    <button type="submit" className="btn btn-primary" disabled={loading}>
                         {loading ? "Sending..." : "Send Notification"}
                     </button>
                 </form>

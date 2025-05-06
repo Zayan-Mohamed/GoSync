@@ -10,7 +10,20 @@ const notificationSchema = new mongoose.Schema({
     type: String,
     enum: ['travel disruption', 'promotions', 'discounts', 'alert', 'reminders', 'info'],
     default: 'info',
+ 
+},
+subType: {
+  type: String,
+  enum: ['bus maintenance', 'bus delay', 'bus breakdown', 'route disruption'],
+  required: function() { return this.type === 'travel disruption'; }, // Only required if travel disruption
+},
+busesAffected: [{
+  type: String, // Storing busNumber instead of ObjectId
+  required: function() {
+    return this.type === 'travel disruption' && this.subType !== 'route disruption';
   },
+}],
+
   message: {
     type: String,
     required: true,

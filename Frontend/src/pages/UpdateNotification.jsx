@@ -40,7 +40,7 @@ const UpdateNotification = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Show confirmation dialog before submitting the form
+        
         const confirmUpdate = window.confirm("Are you sure you want to update this notification?");
         
         // If the user clicks "Cancel", do nothing

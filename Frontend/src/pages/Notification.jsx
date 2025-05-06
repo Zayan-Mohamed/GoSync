@@ -1,4 +1,3 @@
-// ... all your existing imports
 import React, { useEffect, useState } from 'react';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -23,7 +22,7 @@ const Notification = () => {
                 const response = await axios.get(`${API_URI}/api/notifications`, {
                     withCredentials: true
                 });
-                console.log(response)
+                console.log(response);
                 const activeNotifications = response.data.filter(notif => notif.status !== "archive");
                 setNotifications(activeNotifications);
                 setFilteredNotifications(activeNotifications);
@@ -57,23 +56,27 @@ const Notification = () => {
         doc.text("Notifications", 10, 10);
 
         doc.setFontSize(10);
-        doc.text("ID", 10, 20);
-        doc.text("Type", 25, 20);
-        doc.text("Message", 50, 20);
-        doc.text("Status", 120, 20);
-        doc.text("Expires", 150, 20);
-        doc.text("Created At", 180, 20);
-        doc.text("Created By", 220, 20);
+        doc.text("Notification ID", 10, 20);
+        doc.text("Type", 30, 20);
+        doc.text("Sub Type", 50, 20);
+        // doc.text("Buses Affected", 80, 20);
+        doc.text("Message", 150, 20);
+        doc.text("Status", 180, 20);
+        doc.text("Expiration Date", 200, 20);
+        doc.text("Created At", 220, 20);
+        doc.text("Created By", 240, 20);
 
         let y = 30;
         filteredNotifications.forEach((notif) => {
-            doc.text(notif.notificationId.toString(), 10, y);
-            doc.text(notif.type, 25, y);
-            doc.text(notif.message.slice(0, 50), 50, y); // limit msg
-            doc.text(notif.status, 120, y);
-            doc.text(notif.expiredAt ? new Date(notif.expiredAt).toLocaleString() : "N/A", 150, y);
-            doc.text(new Date(notif.createdAt).toLocaleString(), 180, y);
-            doc.text(notif.createdBy || "N/A", 220, y);
+            doc.text(notif.notificationId, 10, y);
+            doc.text(notif.type, 30, y);
+            doc.text(notif.subType || "N/A", 50, y);
+            // doc.text(notif.busesAffected ? notif.busesAffected.join(", ") : "N/A", 80, y); // Handling busesAffected
+            doc.text(notif.message.slice(0, 50), 150, y); // limit msg length
+            doc.text(notif.status, 180, y);
+            doc.text(notif.expiredAt ? new Date(notif.expiredAt).toLocaleString() : "N/A", 200, y);
+            doc.text(new Date(notif.createdAt).toLocaleString(), 220, y);
+            doc.text(notif.createdBy || "N/A", 240, y);
             y += 10;
         });
 
@@ -145,6 +148,8 @@ const Notification = () => {
                             <tr>
                                 <th>Notification ID</th>
                                 <th>Type</th>
+                                <th>Sub Type</th>
+                                {/* <th>Buses Affected</th> New column added */}
                                 <th>Message</th>
                                 <th>Status</th>
                                 <th>Expiration Date</th>
@@ -155,9 +160,9 @@ const Notification = () => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="8" className="text-center">Loading...</td></tr>
+                                <tr><td colSpan="10" className="text-center">Loading...</td></tr>
                             ) : notifications.length === 0 ? (
-                                <tr><td colSpan="8" className="text-center">No notifications available.</td></tr>
+                                <tr><td colSpan="10" className="text-center">No notifications available.</td></tr>
                             ) : (
                                 filteredNotifications.map(notification => (
                                     <tr 
@@ -166,6 +171,8 @@ const Notification = () => {
                                     >
                                         <td>{notification.notificationId}</td>
                                         <td>{notification.type}</td>
+                                        <td>{notification.subType || 'N/A'}</td>
+                                        {/* <td>{notification.busesAffected ? notification.busesAffected.join(", ") : 'N/A'}</td> Display busesAffected */}
                                         <td>{notification.message}</td>
                                         <td>
                                             {checkExpiration(notification.expiredAt) 
