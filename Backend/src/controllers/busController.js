@@ -49,7 +49,7 @@ export const getAllBuses = async (req, res) => {
   try {
     const buses = await Bus.find({})
       .populate("routeId")
-      .populate("operator"); // <--- populate operator here
+      .populate("operator");
     res.status(200).json(buses);
   } catch (error) {
     console.log("Error fetching buses:", error);
