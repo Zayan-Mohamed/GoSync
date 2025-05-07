@@ -1,5 +1,9 @@
 import Stop from '../models/stopModel.js';
 import generateStopId from '../utils/generateStopId.js';
+import mongoose from 'mongoose';
+import Route from '../models/routeModel.js';
+import Booking from '../models/bookingModel.js';  
+import Schedule from '../models/scheduleModel.js';
 
 // Create a new stop
 export const createStop = async (req, res) => {
@@ -251,5 +255,175 @@ export const toggleStopStatus = async (req, res) => {
     res.status(200).json(stop);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+// Stop analytics endpoint
+export const getStopAnalytics = async (req, res) => {
+  try {
+    const { routeId, status, startDate, endDate } = req.query;
+
+    // Build query filters
+    const stopQuery = {};
+    if (status) stopQuery.status = status;
+
+    const bookingQuery = { status: 'confirmed' };
+    if (startDate && endDate) {
+      bookingQuery.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    // Aggregate stop data
+    const [totalStopsResult, activeStopsResult, inactiveStopsResult, stopsByRoute, topStops, bookingCounts] = await Promise.all([
+      // Total stops
+      Stop.countDocuments(stopQuery),
+      // Active stops
+      Stop.countDocuments({ ...stopQuery, status: 'active' }),
+      // Inactive stops
+      Stop.countDocuments({ ...stopQuery, status: 'inactive' }),
+      // Stops by route
+      Route.aggregate([
+        { $match: routeId ? { _id: new mongoose.Types.ObjectId(routeId) } : {} },
+        { $unwind: '$stops' },
+        {
+          $group: {
+            _id: '$routeName',
+            stopCount: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            routeName: '$_id',
+            stopCount: 1,
+            _id: 0,
+          },
+        },
+        { $sort: { stopCount: -1 } },
+      ]),
+      // Top stops by usage (bookings)
+      Booking.aggregate([
+        { $match: bookingQuery },
+        {
+          $lookup: {
+            from: 'schedules',
+            localField: 'scheduleId',
+            foreignField: '_id',
+            as: 'schedule',
+          },
+        },
+        { $unwind: '$schedule' },
+        {
+          $lookup: {
+            from: 'routes',
+            localField: 'schedule.routeId',
+            foreignField: '_id',
+            as: 'route',
+          },
+        },
+        { $unwind: '$route' },
+        { $unwind: '$route.stops' },
+        { $match: routeId ? { 'schedule.routeId': new mongoose.Types.ObjectId(routeId) } : {} },
+        {
+          $lookup: {
+            from: 'stops',
+            localField: 'route.stops.stop',
+            foreignField: '_id',
+            as: 'stop',
+          },
+        },
+        { $unwind: '$stop' },
+        {
+          $match: stopQuery.status ? { 'stop.status': stopQuery.status } : {},
+        },
+        {
+          $group: {
+            _id: '$stop._id',
+            stopName: { $first: '$stop.stopName' },
+            status: { $first: '$stop.status' },
+            bookingCount: { $sum: 1 },
+            routes: { $addToSet: '$route._id' },
+          },
+        },
+        {
+          $project: {
+            stopName: 1,
+            status: 1,
+            bookingCount: 1,
+            routeCount: { $size: '$routes' },
+            _id: 0,
+          },
+        },
+        { $sort: { bookingCount: -1 } },
+        { $limit: 5 },
+      ]),
+      // Most used stop
+      Booking.aggregate([
+        { $match: bookingQuery },
+        {
+          $lookup: {
+            from: 'schedules',
+            localField: 'scheduleId',
+            foreignField: '_id',
+            as: 'schedule',
+          },
+        },
+        { $unwind: '$schedule' },
+        {
+          $lookup: {
+            from: 'routes',
+            localField: 'schedule.routeId',
+            foreignField: '_id',
+            as: 'route',
+          },
+        },
+        { $unwind: '$route' },
+        { $unwind: '$route.stops' },
+        { $match: routeId ? { 'schedule.routeId': new mongoose.Types.ObjectId(routeId) } : {} },
+        {
+          $lookup: {
+            from: 'stops',
+            localField: 'route.stops.stop',
+            foreignField: '_id',
+            as: 'stop',
+          },
+        },
+        { $unwind: '$stop' },
+        {
+          $match: stopQuery.status ? { 'stop.status': stopQuery.status } : {},
+        },
+        {
+          $group: {
+            _id: '$stop._id',
+            stopName: { $first: '$stop.stopName' },
+            bookingCount: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            stopName: 1,
+            bookingCount: 1,
+            _id: 0,
+          },
+        },
+        { $sort: { bookingCount: -1 } },
+        { $limit: 1 },
+      ]),
+    ]);
+
+    const mostUsedStop = bookingCounts[0] || { stopName: 'No data', bookingCount: 0 };
+
+    res.status(200).json({
+      totalStops: totalStopsResult,
+      activeStops: activeStopsResult,
+      inactiveStops: inactiveStopsResult,
+      mostUsedStop,
+      stopsByRoute,
+      topStops,
+    });
+  } catch (error) {
+    console.error('Stop analytics error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };

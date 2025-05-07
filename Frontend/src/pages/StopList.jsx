@@ -19,9 +19,11 @@ import Table from "../components/Table";
 import CustomButton from "../components/Button";
 import { jsPDF } from "jspdf";
 import autoTable from  "jspdf-autotable";
+import Loader from "../components/Loader";
 
 function StopList() {
     const [stops, setStops] = useState([]);
+    
     const [searchTerm, setSearchTerm] = useState("");
     const [editingStop, setEditingStop] = useState({
       id: null,
@@ -297,6 +299,16 @@ function StopList() {
     // Save the PDF
     doc.save('stops-list.pdf');
   };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex justify-center items-center h-screen">
+          <Loader />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

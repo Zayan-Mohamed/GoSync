@@ -2,6 +2,7 @@ import Route from "../models/routeModel.js";
 import Stop from "../models/stopModel.js";
 import generateRouteId from "../utils/generateRouteId.js";
 import mongoose from "mongoose";
+import Booking from "../models/bookingModel.js";
 
 export const createRoute = async (req, res) => {
   try {
@@ -693,7 +694,7 @@ export const updateStopType = async (req, res) => {
 
 //
 
-export const addMultipleStopsWithTypes = async (req, res) => {
+export const addMultipleStops = async (req, res) => {
   try {
     const { routeId, stops } = req.body; // stops is an array of { stopId, order, stopType }
     const validStopTypes = ["boarding", "dropping"];
@@ -899,6 +900,212 @@ export const updateStopInRoute = async (req, res) => {
   }
 };
 
+// Route analytics endpoint
+export const getRouteAnalytics = async (req, res) => {
+  try {
+    const { status, startDate, endDate } = req.query;
 
+    // Build query filters
+    const routeQuery = {};
+    if (status) routeQuery.status = status;
+
+    const bookingQuery = { status: 'confirmed' };
+    if (startDate && endDate) {
+      bookingQuery.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    // Aggregate route data
+    const [
+      totalRoutesResult,
+      activeRoutesResult,
+      inactiveRoutesResult,
+      bookingsByRoute,
+      bookingsOverTime,
+      topRoutes,
+      mostPopularRouteResult,
+      avgStopsPerRouteResult,
+    ] = await Promise.all([
+      // Total routes
+      Route.countDocuments(routeQuery),
+      // Active routes
+      Route.countDocuments({ ...routeQuery, status: 'active' }),
+      // Inactive routes
+      Route.countDocuments({ ...routeQuery, status: 'inactive' }),
+      // Bookings by route
+      Booking.aggregate([
+        { $match: bookingQuery },
+        {
+          $lookup: {
+            from: 'schedules',
+            localField: 'scheduleId',
+            foreignField: '_id',
+            as: 'schedule',
+          },
+        },
+        { $unwind: '$schedule' },
+        {
+          $lookup: {
+            from: 'routes',
+            localField: 'schedule.routeId',
+            foreignField: '_id',
+            as: 'route',
+          },
+        },
+        { $unwind: '$route' },
+        {
+          $match: routeQuery.status ? { 'route.status': routeQuery.status } : {},
+        },
+        {
+          $group: {
+            _id: '$schedule.routeId',
+            bookingCount: { $sum: 1 },
+            routeName: { $first: '$route.routeName' },
+          },
+        },
+        {
+          $project: {
+            routeName: 1,
+            bookingCount: 1,
+            _id: 0,
+          },
+        },
+        { $sort: { bookingCount: -1 } },
+      ]),
+      // Bookings over time
+      Booking.aggregate([
+        { $match: bookingQuery },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      // Top routes by bookings
+      Booking.aggregate([
+        { $match: bookingQuery },
+        {
+          $lookup: {
+            from: 'schedules',
+            localField: 'scheduleId',
+            foreignField: '_id',
+            as: 'schedule',
+          },
+        },
+        { $unwind: '$schedule' },
+        {
+          $lookup: {
+            from: 'routes',
+            localField: 'schedule.routeId',
+            foreignField: '_id',
+            as: 'route',
+          },
+        },
+        { $unwind: '$route' },
+        {
+          $match: routeQuery.status ? { 'route.status': routeQuery.status } : {},
+        },
+        {
+          $group: {
+            _id: '$schedule.routeId',
+            routeName: { $first: '$route.routeName' },
+            status: { $first: '$route.status' },
+            stopCount: { $first: { $size: '$route.stops' } },
+            bookingCount: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            routeName: 1,
+            status: 1,
+            stopCount: 1,
+            bookingCount: 1,
+            _id: 0,
+          },
+        },
+        { $sort: { bookingCount: -1 } },
+        { $limit: 5 },
+      ]),
+      // Most popular route
+      Booking.aggregate([
+        { $match: bookingQuery },
+        {
+          $lookup: {
+            from: 'schedules',
+            localField: 'scheduleId',
+            foreignField: '_id',
+            as: 'schedule',
+          },
+        },
+        { $unwind: '$schedule' },
+        {
+          $lookup: {
+            from: 'routes',
+            localField: 'schedule.routeId',
+            foreignField: '_id',
+            as: 'route',
+          },
+        },
+        { $unwind: '$route' },
+        {
+          $match: routeQuery.status ? { 'route.status': routeQuery.status } : {},
+        },
+        {
+          $group: {
+            _id: '$schedule.routeId',
+            routeName: { $first: '$route.routeName' },
+            bookingCount: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            routeName: 1,
+            bookingCount: 1,
+            _id: 0,
+          },
+        },
+        { $sort: { bookingCount: -1 } },
+        { $limit: 1 },
+      ]),
+      // Average stops per route
+      Route.aggregate([
+        { $match: routeQuery },
+        {
+          $group: {
+            _id: null,
+            avgStops: { $avg: { $size: '$stops' } },
+          },
+        },
+        {
+          $project: {
+            avgStopsPerRoute: '$avgStops',
+            _id: 0,
+          },
+        },
+      ]),
+    ]);
+
+    const mostPopularRoute = mostPopularRouteResult[0] || { routeName: 'No data', bookingCount: 0 };
+    const avgStopsPerRoute = avgStopsPerRouteResult[0]?.avgStopsPerRoute || 0;
+
+    res.status(200).json({
+      totalRoutes: totalRoutesResult,
+      activeRoutes: activeRoutesResult,
+      inactiveRoutes: inactiveRoutesResult,
+      mostPopularRoute,
+      avgStopsPerRoute,
+      bookingsByRoute,
+      bookingsOverTime,
+      topRoutes,
+    });
+  } catch (error) {
+    console.error('Route analytics error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
 
 

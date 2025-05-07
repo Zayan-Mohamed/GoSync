@@ -47,6 +47,8 @@ import BookingManagement from "../pages/BookingManagement.jsx";
 import AddBooking from "../pages/AddBooking.jsx";
 import BookingAnalytics from "../pages/BookingAnalytics.jsx";
 import UpdateMessage from "../pages/UpdateMessage.jsx";
+import StopAnalytics from "../pages/StopAnalytics.jsx";
+import RouteAnalytics from "../pages/RouteAnalytics.jsx";
 
 const AppRoutes = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -73,7 +75,8 @@ const AppRoutes = () => {
           <Route path="/bus-analytics" element={<BusList />} />
           <Route path="/bus-assign" element={<BusAssignmentPage />} />
           <Route path="/busop-man" element={<BusOperatorsList />} />
-
+          <Route path="/stop-analytics" element={<StopAnalytics />} />
+          <Route path="/route-analytics" element={<RouteAnalytics />} />
             <Route path="/notification-management" element={<Notification />} />
             <Route path="/add-notification" element={<AddNotification />} />
             <Route
