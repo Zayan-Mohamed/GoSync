@@ -75,6 +75,15 @@ export const createRoute = async (req, res) => {
 
     await newRoute.save();
 
+    // Log the creation action
+    await logAction({
+      entityType: 'Route',
+      entityId: newRoute.routeId,
+      action: 'create',
+      userId: req.user?.id,
+      details: { routeName, startLocation, endLocation, totalDistance },
+    });
+
     res.status(201).json({
       message: "Route created successfully",
       route: newRoute,
@@ -285,6 +294,16 @@ export const addStopToRoute = async (req, res) => {
     // Populate the stop details in the response
     const populatedRoute = await Route.populate(route, { path: "stops.stop" });
 
+      // Log the update action
+      await logAction({
+        entityType: 'Route',
+        entityId: routeId,
+        action: 'add_stop',
+        userId: req.user?.id,
+        details: updateData,
+      });
+  
+
     res.status(200).json({
       message: "Stop added to route successfully",
       addedStop: populatedRoute.stops.find(
@@ -462,6 +481,16 @@ export const updateRoute = async (req, res) => {
       { new: true, runValidators: true } // Return updated document
     );
 
+      // Log the update action
+      await logAction({
+        entityType: 'Route',
+        entityId: routeId,
+        action: 'update',
+        userId: req.user?.id,
+        details: updateData,
+      });
+  
+
     res.status(200).json({
       message: "Route updated successfully",
       route: updatedRoute,
@@ -519,6 +548,16 @@ export const toggleRouteStatus = async (req, res) => {
     // Toggle the status
     route.status = route.status === "active" ? "inactive" : "active";
     await route.save();
+
+      // Log the update action
+      await logAction({
+        entityType: 'Route',
+        entityId: routeId,
+        action: 'toggle_status',
+        userId: req.user?.id,
+        details: updateData,
+      });
+  
 
     res.status(200).json({ message: "Route status toggled", route });
   } catch (error) {
@@ -610,6 +649,16 @@ export const deleteStopFromRoute = async (req, res) => {
     // Save the updated route
     const updatedRoute = await route.save();
 
+      // Log the update action
+      await logAction({
+        entityType: 'Route',
+        entityId: routeId,
+        action: 'remove_stop',
+        userId: req.user?.id,
+        details: updateData,
+      });
+  
+
     // Send a success response
     return res.status(200).json({
       message: "Stop successfully removed from route",
@@ -641,6 +690,16 @@ export const deleteRoute = async (req, res) => {
     }
     // Delete the route
     await Route.findByIdAndDelete(routeId);
+
+      // Log the update action
+      await logAction({
+        entityType: 'Route',
+        entityId: routeId,
+        action: 'delete',
+        userId: req.user?.id,
+        details: updateData,
+      });
+  
 
     res.status(200).json({ message: "Route deleted successfully" });
   } catch (error) {

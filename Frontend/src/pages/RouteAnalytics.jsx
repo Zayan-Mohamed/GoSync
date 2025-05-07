@@ -5,7 +5,7 @@ import AdminLayout from "../layouts/AdminLayout";
 import { Pie, Bar } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from "chart.js";
 import GoSyncLoader from "../components/Loader";
-import { FiMapPin, FiTrendingUp, FiGlobe } from "react-icons/fi";
+import { FiMapPin, FiTrendingUp, FiGlobe, FiDownload } from "react-icons/fi";
 import EmbeddedRouteMap from "../components/EmbeddedRouteMap";
 import { Marker, Polyline, Popup } from "react-leaflet";
 
@@ -17,6 +17,13 @@ const RouteAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ status: "", startDate: "", endDate: "" });
   const [selectedRoute, setSelectedRoute] = useState(null);
+  const [reportFilter, setReportFilter] = useState({
+    reportType: "route_modification",
+    routeId: "",
+    startDate: "",
+    endDate: "",
+    format: "pdf",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,12 +58,36 @@ const RouteAnalytics = () => {
     }
   };
 
-  // Helper functions for the map
+  const handleReportFilterChange = (e) => {
+    const { name, value } = e.target;
+    setReportFilter((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const generateReport = async () => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/reports/generate`,
+        reportFilter,
+        { responseType: 'blob' }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `report_${reportFilter.reportType}_${new Date().toISOString().split('T')[0]}.${reportFilter.format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Report generated successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to generate report');
+    }
+  };
+
   const getMapCenter = (route) => {
-    if (!route) return [20.5937, 78.9629]; // Default center (India)
+    if (!route) return [20.5937, 78.9629];
 
     const points = [];
-
     const startCoords =
       route.startLocationCoordinates &&
       route.startLocationCoordinates.latitude &&
@@ -82,11 +113,9 @@ const RouteAnalytics = () => {
       });
     }
 
-    if (points.length === 0) return [20.5937, 78.9629]; // Fallback
-
+    if (points.length === 0) return [20.5937, 78.9629];
     if (points.length === 1) return points[0];
 
-    // Calculate centroid of all points
     const latSum = points.reduce((sum, point) => sum + point[0], 0);
     const lngSum = points.reduce((sum, point) => sum + point[1], 0);
     return [latSum / points.length, lngSum / points.length];
@@ -110,7 +139,6 @@ const RouteAnalytics = () => {
 
     if (startCoords) points.push(startCoords);
 
-    // Add stops in order
     if (route.stops && route.stops.length > 0) {
       const sortedStops = [...route.stops].sort((a, b) => a.order - b.order);
       sortedStops.forEach((stop) => {
@@ -206,7 +234,6 @@ const RouteAnalytics = () => {
     ],
   };
 
-  // Route Distance Distribution Data
   const distanceBins = [
     { label: "0-100 km", min: 0, max: 100, count: 0 },
     { label: "100-500 km", min: 100, max: 500, count: 0 },
@@ -270,6 +297,81 @@ const RouteAnalytics = () => {
               onChange={handleFilterChange}
               className="mt-1 p-2 border rounded-md w-full sm:w-auto focus:ring-deepOrange focus:border-deepOrange"
             />
+          </div>
+        </div>
+
+        {/* Report Generation Section */}
+        <div className="mb-8 bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Generate Report</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Report Type</label>
+              <select
+                name="reportType"
+                value={reportFilter.reportType}
+                onChange={handleReportFilterChange}
+                className="mt-1 p-2 border rounded-md w-full focus:ring-deepOrange focus:border-deepOrange"
+              >
+                <option value="route_modification">Route Modification Report</option>
+                <option value="route_performance">Route Performance Report</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Route</label>
+              <select
+                name="routeId"
+                value={reportFilter.routeId}
+                onChange={handleReportFilterChange}
+                className="mt-1 p-2 border rounded-md w-full focus:ring-deepOrange focus:border-deepOrange"
+              >
+                <option value="">All Routes</option>
+                {analytics.routes.map((route) => (
+                  <option key={route._id} value={route._id}>
+                    {route.routeName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Start Date</label>
+              <input
+                type="date"
+                name="startDate"
+                value={reportFilter.startDate}
+                onChange={handleReportFilterChange}
+                className="mt-1 p-2 border rounded-md w-full focus:ring-deepOrange focus:border-deepOrange"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">End Date</label>
+              <input
+                type="date"
+                name="endDate"
+                value={reportFilter.endDate}
+                onChange={handleReportFilterChange}
+                className="mt-1 p-2 border rounded-md w-full focus:ring-deepOrange focus:border-deepOrange"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Format</label>
+              <select
+                name="format"
+                value={reportFilter.format}
+                onChange={handleReportFilterChange}
+                className="mt-1 p-2 border rounded-md w-full focus:ring-deepOrange focus:border-deepOrange"
+              >
+                <option value="pdf">PDF</option>
+                <option value="csv">CSV</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={generateReport}
+                className="w-full p-2 bg-deepOrange text-white rounded-md hover:bg-orange-600 flex items-center justify-center"
+              >
+                <FiDownload className="mr-2" /> Generate Report
+              </button>
+            </div>
           </div>
         </div>
 
