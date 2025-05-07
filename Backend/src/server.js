@@ -18,6 +18,7 @@ import scheduleRoutes from "./routes/scheduleRoutes.js";
 import shedRoutes from "./routes/shedRoutes.js";
 import busOperatorRoutes from "./routes/busOperatorRoutes.js";
 import busRouteRoutes from"./routes/busRouteRoutes.js";
+import notRoutes from "./routes/notRoutes.js";
 
 
 dotenv.config();
@@ -63,6 +64,7 @@ app.use("/api/buses", busRoutes);
 app.use("/api/shed", shedRoutes);
 app.use("/api/operator", busOperatorRoutes);
 app.use("/api/busRoute",busRouteRoutes);
+app.use("/api", notRoutes);
 
 // Note: searchBuses is now part of busRoutes (/api/buses/search-buses), so removing searchBusesRoutes
 

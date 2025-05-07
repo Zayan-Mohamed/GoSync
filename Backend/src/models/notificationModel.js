@@ -17,12 +17,7 @@ subType: {
   enum: ['bus maintenance', 'bus delay', 'bus breakdown', 'route disruption'],
   required: function() { return this.type === 'travel disruption'; }, // Only required if travel disruption
 },
-busesAffected: [{
-  type: String, // Storing busNumber instead of ObjectId
-  required: function() {
-    return this.type === 'travel disruption' && this.subType !== 'route disruption';
-  },
-}],
+
 
   message: {
     type: String,

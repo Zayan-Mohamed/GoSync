@@ -110,7 +110,8 @@ const ShedTable = () => {
           <thead>
             <tr>
               <th>Type</th>
-              <th>Message</th>
+              <th>SubType</th> 
+               <th>Message</th>
               <th>Date</th>
               <th>Time</th>
               <th>CreatedBy</th>
@@ -124,6 +125,7 @@ const ShedTable = () => {
               messages.map((msg) => (
                 <tr key={msg._id}>
                   <td>{msg.type}</td>
+                  <td>{msg.subType || "N/A"}</td>
                   <td>{msg.message}</td>
                   <td>{msg.shedDate}</td>
                   <td>{msg.shedTime}</td>

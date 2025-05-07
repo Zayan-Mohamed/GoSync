@@ -10,11 +10,13 @@ const io = setupWebSocket();
 
 export const shedMessage = async (req, res) => {
   try {
-    const { type, message, shedDate, shedTime, expiryDate } = req.body;
+    const { type,  subType, message, shedDate, shedTime, expiryDate } = req.body;
 
     const newMessage = new ShedMessage({
       type,
+      subType,
       message,
+    
       shedDate,
       shedTime,
       status: "pending",

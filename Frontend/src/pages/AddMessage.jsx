@@ -79,6 +79,10 @@ const AddMessage = () => {
 
   // Auto-generate message based on selected options
   useEffect(() => {
+    if (type === "promotions") {
+      setMessage("🎉 GoSync Offer: Enjoy exciting travel promotions! Book now and save more on your journey.");
+    } else if (type === "discounts") {
+        setMessage("🚌 GoSync Discount: Get up to 25% off on your next ticket booking! Limited time offer.");}
     if (subType && selectedBus) {
       if (subType === "bus breakdown" && breakdownDate) {
         const readableDate = new Date(breakdownDate).toLocaleDateString();
@@ -96,14 +100,14 @@ const AddMessage = () => {
       const routeName = routes.find(r => r._id === selectedRoute)?.routeName || "the route";
       setMessage(`Route ${routeName} will be disrupted from ${start} to ${end} due to maintenance work. Please plan accordingly.`);
     }
-  }, [subType, selectedBus, breakdownDate, maintenanceStartDate, maintenanceEndDate, selectedRoute, disruptionStartDate, disruptionEndDate]);
- useEffect(() => {
-        if (type === "promotions") {
-          setMessage("🎉 GoSync Offer: Enjoy exciting travel promotions! Book now and save more on your journey.");
-        } else if (type === "discounts") {
-          setMessage("🚌 GoSync Discount: Get up to 25% off on your next ticket booking! Limited time offer.");
-        }
-      }, [type]);
+  }, [type,subType, selectedBus, breakdownDate, maintenanceStartDate, maintenanceEndDate, selectedRoute, disruptionStartDate, disruptionEndDate]);
+//  useEffect(() => {
+//         if (type === "promotions") {
+//           setMessage("🎉 GoSync Offer: Enjoy exciting travel promotions! Book now and save more on your journey.");
+//         } else if (type === "discounts") {
+//           setMessage("🚌 GoSync Discount: Get up to 25% off on your next ticket booking! Limited time offer.");
+//         }
+//       }, [type]);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
