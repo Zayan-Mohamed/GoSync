@@ -2,18 +2,21 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import AdminLayout from "../layouts/AdminLayout";
-import { Pie, Bar, Line } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale, LineElement, PointElement } from "chart.js";
+import { Pie, Bar } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from "chart.js";
 import GoSyncLoader from "../components/Loader";
 import { FiMapPin, FiTrendingUp, FiGlobe } from "react-icons/fi";
+import EmbeddedRouteMap from "../components/EmbeddedRouteMap";
+import { Marker, Polyline, Popup } from "react-leaflet";
 
-ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale, LineElement, PointElement);
+ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const RouteAnalytics = () => {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ status: "", startDate: "", endDate: "" });
+  const [selectedRoute, setSelectedRoute] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,6 +39,131 @@ const RouteAnalytics = () => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: value }));
     setLoading(true);
+  };
+
+  const handleRouteChange = (e) => {
+    const routeId = e.target.value;
+    if (routeId === "") {
+      setSelectedRoute(null);
+    } else {
+      const route = analytics.routes.find((r) => r._id === routeId);
+      setSelectedRoute(route);
+    }
+  };
+
+  // Helper functions for the map
+  const getMapCenter = (route) => {
+    if (!route) return [20.5937, 78.9629]; // Default center (India)
+
+    const points = [];
+
+    const startCoords =
+      route.startLocationCoordinates &&
+      route.startLocationCoordinates.latitude &&
+      route.startLocationCoordinates.longitude
+        ? [route.startLocationCoordinates.latitude, route.startLocationCoordinates.longitude]
+        : null;
+
+    const endCoords =
+      route.endLocationCoordinates &&
+      route.endLocationCoordinates.latitude &&
+      route.endLocationCoordinates.longitude
+        ? [route.endLocationCoordinates.latitude, route.endLocationCoordinates.longitude]
+        : null;
+
+    if (startCoords) points.push(startCoords);
+    if (endCoords) points.push(endCoords);
+
+    if (route.stops && route.stops.length > 0) {
+      route.stops.forEach((stop) => {
+        if (stop.stop && stop.stop.latitude && stop.stop.longitude) {
+          points.push([stop.stop.latitude, stop.stop.longitude]);
+        }
+      });
+    }
+
+    if (points.length === 0) return [20.5937, 78.9629]; // Fallback
+
+    if (points.length === 1) return points[0];
+
+    // Calculate centroid of all points
+    const latSum = points.reduce((sum, point) => sum + point[0], 0);
+    const lngSum = points.reduce((sum, point) => sum + point[1], 0);
+    return [latSum / points.length, lngSum / points.length];
+  };
+
+  const renderRouteOnMap = (route) => {
+    const points = [];
+    const startCoords =
+      route.startLocationCoordinates &&
+      route.startLocationCoordinates.latitude &&
+      route.startLocationCoordinates.longitude
+        ? [route.startLocationCoordinates.latitude, route.startLocationCoordinates.longitude]
+        : null;
+
+    const endCoords =
+      route.endLocationCoordinates &&
+      route.endLocationCoordinates.latitude &&
+      route.endLocationCoordinates.longitude
+        ? [route.endLocationCoordinates.latitude, route.endLocationCoordinates.longitude]
+        : null;
+
+    if (startCoords) points.push(startCoords);
+
+    // Add stops in order
+    if (route.stops && route.stops.length > 0) {
+      const sortedStops = [...route.stops].sort((a, b) => a.order - b.order);
+      sortedStops.forEach((stop) => {
+        if (stop.stop && stop.stop.latitude && stop.stop.longitude) {
+          points.push([stop.stop.latitude, stop.stop.longitude]);
+        }
+      });
+    }
+
+    if (endCoords) points.push(endCoords);
+
+    return (
+      <>
+        {startCoords && (
+          <Marker position={startCoords}>
+            <Popup>
+              <div>
+                <strong>Start:</strong> {route.startLocation || "Starting Point"}
+              </div>
+            </Popup>
+          </Marker>
+        )}
+        {route.stops &&
+          route.stops
+            .sort((a, b) => a.order - b.order)
+            .map((stop, index) =>
+              stop.stop && stop.stop.latitude && stop.stop.longitude ? (
+                <Marker
+                  key={stop.stopId}
+                  position={[stop.stop.latitude, stop.stop.longitude]}
+                >
+                  <Popup>
+                    <div>
+                      <strong>Stop {index + 1}:</strong> {stop.stopName || `Stop ${index + 1}`}
+                    </div>
+                  </Popup>
+                </Marker>
+              ) : null
+            )}
+        {endCoords && (
+          <Marker position={endCoords}>
+            <Popup>
+              <div>
+                <strong>End:</strong> {route.endLocation || "Ending Point"}
+              </div>
+            </Popup>
+          </Marker>
+        )}
+        {points.length > 1 && (
+          <Polyline positions={points} color="blue" weight={4} opacity={0.7} />
+        )}
+      </>
+    );
   };
 
   if (loading) {
@@ -78,15 +206,27 @@ const RouteAnalytics = () => {
     ],
   };
 
-  const bookingsOverTimeLineData = {
-    labels: analytics.bookingsOverTime.length ? analytics.bookingsOverTime.map((d) => d._id) : ["No Data"],
+  // Route Distance Distribution Data
+  const distanceBins = [
+    { label: "0-100 km", min: 0, max: 100, count: 0 },
+    { label: "100-500 km", min: 100, max: 500, count: 0 },
+    { label: "500-1000 km", min: 500, max: 1000, count: 0 },
+    { label: ">1000 km", min: 1000, max: Infinity, count: 0 },
+  ];
+
+  analytics.routes.forEach((route) => {
+    const distance = route.totalDistance || 0;
+    const bin = distanceBins.find((bin) => distance >= bin.min && distance < bin.max);
+    if (bin) bin.count += 1;
+  });
+
+  const distanceDistributionData = {
+    labels: distanceBins.map((bin) => bin.label),
     datasets: [
       {
-        label: "Bookings",
-        data: analytics.bookingsOverTime.length ? analytics.bookingsOverTime.map((d) => d.count) : [0],
-        fill: false,
-        borderColor: "#FF6384",
-        tension: 0.1,
+        label: "Number of Routes",
+        data: distanceBins.map((bin) => bin.count),
+        backgroundColor: "#FFCE56",
       },
     ],
   };
@@ -166,7 +306,7 @@ const RouteAnalytics = () => {
           </div>
         </div>
 
-        {/* Charts */}
+        {/* Charts - First Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-medium mb-4 text-gray-800">Route Status Distribution</h3>
@@ -196,17 +336,45 @@ const RouteAnalytics = () => {
               />
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6 col-span-1 lg:col-span-2">
-            <h3 className="text-lg font-medium mb-4 text-gray-800">Bookings Over Time</h3>
+        </div>
+
+        {/* Charts - Second Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-medium mb-4 text-gray-800">Route Distance Distribution</h3>
             <div className="h-64">
-              <Line
-                data={bookingsOverTimeLineData}
+              <Bar
+                data={distanceDistributionData}
                 options={{
                   responsive: true,
-                  scales: { y: { beginAtZero: true } },
+                  scales: {
+                    y: { beginAtZero: true, title: { display: true, text: "Number of Routes" } },
+                    x: { title: { display: true, text: "Distance (km)" } },
+                  },
                   plugins: { tooltip: { backgroundColor: "#2D3748" } },
                 }}
               />
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-medium mb-4 text-gray-800">Route Map</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Select Route</label>
+              <select
+                value={selectedRoute?._id || ""}
+                onChange={handleRouteChange}
+                className="mt-1 p-2 border rounded-md w-full focus:ring-deepOrange focus:border-deepOrange"
+              >
+                <option value="">Select a route</option>
+                {analytics.routes.map((route) => (
+                  <option key={route._id} value={route._id}>
+                    {route.routeName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="relative h-64">
+              <EmbeddedRouteMap route={selectedRoute} />
             </div>
           </div>
         </div>

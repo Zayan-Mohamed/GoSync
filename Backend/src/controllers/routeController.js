@@ -900,12 +900,10 @@ export const updateStopInRoute = async (req, res) => {
   }
 };
 
-// Route analytics endpoint
 export const getRouteAnalytics = async (req, res) => {
   try {
     const { status, startDate, endDate } = req.query;
 
-    // Build query filters
     const routeQuery = {};
     if (status) routeQuery.status = status;
 
@@ -917,7 +915,6 @@ export const getRouteAnalytics = async (req, res) => {
       };
     }
 
-    // Aggregate route data
     const [
       totalRoutesResult,
       activeRoutesResult,
@@ -927,14 +924,11 @@ export const getRouteAnalytics = async (req, res) => {
       topRoutes,
       mostPopularRouteResult,
       avgStopsPerRouteResult,
+      allRoutes,
     ] = await Promise.all([
-      // Total routes
       Route.countDocuments(routeQuery),
-      // Active routes
       Route.countDocuments({ ...routeQuery, status: 'active' }),
-      // Inactive routes
       Route.countDocuments({ ...routeQuery, status: 'inactive' }),
-      // Bookings by route
       Booking.aggregate([
         { $match: bookingQuery },
         {
@@ -974,7 +968,6 @@ export const getRouteAnalytics = async (req, res) => {
         },
         { $sort: { bookingCount: -1 } },
       ]),
-      // Bookings over time
       Booking.aggregate([
         { $match: bookingQuery },
         {
@@ -985,7 +978,6 @@ export const getRouteAnalytics = async (req, res) => {
         },
         { $sort: { _id: 1 } },
       ]),
-      // Top routes by bookings
       Booking.aggregate([
         { $match: bookingQuery },
         {
@@ -1030,7 +1022,6 @@ export const getRouteAnalytics = async (req, res) => {
         { $sort: { bookingCount: -1 } },
         { $limit: 5 },
       ]),
-      // Most popular route
       Booking.aggregate([
         { $match: bookingQuery },
         {
@@ -1071,7 +1062,6 @@ export const getRouteAnalytics = async (req, res) => {
         { $sort: { bookingCount: -1 } },
         { $limit: 1 },
       ]),
-      // Average stops per route
       Route.aggregate([
         { $match: routeQuery },
         {
@@ -1087,10 +1077,31 @@ export const getRouteAnalytics = async (req, res) => {
           },
         },
       ]),
+      Route.find(routeQuery)
+        .select('_id routeName startLocationCoordinates endLocationCoordinates startLocation endLocation status stops totalDistance')
+        .populate('stops.stop')
+        .lean(),
     ]);
 
     const mostPopularRoute = mostPopularRouteResult[0] || { routeName: 'No data', bookingCount: 0 };
     const avgStopsPerRoute = avgStopsPerRouteResult[0]?.avgStopsPerRoute || 0;
+
+    const formattedRoutes = allRoutes.map(route => ({
+      _id: route._id,
+      routeName: route.routeName,
+      startLocation: route.startLocation,
+      endLocation: route.endLocation,
+      status: route.status || 'active',
+      startLocationCoordinates: route.startLocationCoordinates || { latitude: 0, longitude: 0 },
+      endLocationCoordinates: route.endLocationCoordinates || { latitude: 0, longitude: 0 },
+      totalDistance: route.totalDistance || 0,
+      stops: route.stops.map(stop => ({
+        stopId: stop.stop._id,
+        stopName: stop.stop.stopName,
+        order: stop.order,
+        stopType: stop.stopType,
+      })),
+    }));
 
     res.status(200).json({
       totalRoutes: totalRoutesResult,
@@ -1101,11 +1112,10 @@ export const getRouteAnalytics = async (req, res) => {
       bookingsByRoute,
       bookingsOverTime,
       topRoutes,
+      routes: formattedRoutes,
     });
   } catch (error) {
     console.error('Route analytics error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
-
-
