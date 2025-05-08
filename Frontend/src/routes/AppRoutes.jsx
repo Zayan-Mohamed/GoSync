@@ -38,7 +38,7 @@ import ScheduleManagement from "../pages/ScheduleManagement.jsx";
 import AddSchedule from "../pages/AddSchedule.jsx";
 import EditSchedule from "../pages/EditSchedule.jsx";
 import ScheduleAnalytics from "../pages/ScheduleAnalytics.jsx";
-
+import ScheduleArchives from "../pages/ScheduleArchives.jsx";
 
 import SeatManagement from "../pages/SeatManagement.jsx";
 import AddSeat from "../pages/AddSeat.jsx";
@@ -91,6 +91,7 @@ const AppRoutes = () => {
             <Route path="/add-schedule" element={<AddSchedule />} />
             <Route path="/edit-schedule/:scheduleID" element={<EditSchedule />} />
             <Route path="/schedule-analytics" element={<ScheduleAnalytics />} />
+            <Route path="/schedule-archives" element={<ScheduleArchives />} />
             <Route path="/add-route" element={<AddRoute />} />
             
             

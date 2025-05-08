@@ -15,27 +15,77 @@ const ScheduleAnalytics = () => {
     weekdayDistribution: {},
     averageDuration: 0,
   });
+  const [lastUpdated, setLastUpdated] = useState(0); // Initialize to 0 instead of current time
 
-    const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL;
 
+  // Move fetchSchedules outside useEffect so it can be called from multiple places
+  const fetchSchedules = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API_URL}/api/schedules`, {
+        withCredentials: true,
+      });
+      
+      // Filter out past schedules - only keep present and future schedules
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const currentAndFutureSchedules = response.data.filter(schedule => {
+        const scheduleDate = new Date(schedule.departureDate);
+        scheduleDate.setHours(0, 0, 0, 0); // Remove time part for fair comparison
+        return scheduleDate >= today;
+      });
+      
+      setSchedules(currentAndFutureSchedules);
+      processAnalytics(currentAndFutureSchedules);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching schedules:", err);
+      setError("Failed to fetch schedule data");
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchSchedules();
+  };
+
+  // Initial fetch when component mounts
   useEffect(() => {
-    const fetchSchedules = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/api/schedules`, {
-          withCredentials: true,
-        });
-        setSchedules(response.data);
-        processAnalytics(response.data);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching schedules:", err);
-        setError("Failed to fetch schedule data");
-        setLoading(false);
+    fetchSchedules();
+    
+    // On mount, also check if there's already a timestamp in localStorage
+    const storedLastUpdated = localStorage.getItem('schedulesLastUpdated');
+    if (storedLastUpdated) {
+      setLastUpdated(parseInt(storedLastUpdated));
+    }
+  }, []);
+
+  // Listen for schedule changes via localStorage
+  useEffect(() => {
+    // Function to check local storage for updates
+    const checkForUpdates = () => {
+      const storedLastUpdated = localStorage.getItem('schedulesLastUpdated');
+      if (storedLastUpdated && parseInt(storedLastUpdated) > lastUpdated) {
+        console.log('Analytics detected update:', parseInt(storedLastUpdated), '>', lastUpdated);
+        setLastUpdated(parseInt(storedLastUpdated));
+        fetchSchedules();
       }
     };
+    
+    // Check for updates every 2 seconds (reduced from 5 for more responsive updates)
+    const intervalId = setInterval(checkForUpdates, 2000);
+    
+    // Also check when the component becomes visible
+    window.addEventListener('focus', checkForUpdates);
+    
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', checkForUpdates);
+    };
+  }, [lastUpdated]);
 
-    fetchSchedules();
-  }, []);
 
   const processAnalytics = (scheduleData) => {
     // Initialize analytics object
@@ -141,8 +191,14 @@ const ScheduleAnalytics = () => {
     <div className="flex h-screen">
       <Sidebar />
       <div className="flex-1 p-10 overflow-y-auto">
-        <h1 className="text-3xl font-bold mb-6">Schedule Analytics</h1>
-        
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Schedule Analytics</h1>
+          <button 
+          onClick={handleRefresh}
+          className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">
+          Refresh Data
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Schedules */}
           <div className="bg-white rounded-lg shadow p-6">

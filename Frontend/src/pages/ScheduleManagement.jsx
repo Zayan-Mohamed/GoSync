@@ -7,6 +7,7 @@ import Sidebar from "../components/Sidebar";
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { FiDownload } from "react-icons/fi";
+import Navbar from "../components/Navbar";
 
 const ScheduleManagement = () => {
   const [schedules, setSchedules] = useState([]);
@@ -17,12 +18,38 @@ const ScheduleManagement = () => {
 
   const API_URL = import.meta.env.VITE_API_URL
 
+  // Function to notify other components about schedule changes
+  const notifyScheduleChange = () => {
+    const timestamp = Date.now().toString();
+    localStorage.setItem('schedulesLastUpdated', timestamp);
+    console.log('Schedule change notified:', timestamp);
+  };
+
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/schedules`);
-        setSchedules(response.data);
-        setFilteredSchedules(response.data);
+        
+        // Get today's date at midnight for comparison (without time)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Filter out past schedules - only keep present and future schedules
+        const currentAndFutureSchedules = response.data.filter(schedule => {
+          const scheduleDate = new Date(schedule.departureDate);
+          scheduleDate.setHours(0, 0, 0, 0); // Remove time part for fair comparison
+          return scheduleDate >= today;
+        });
+        
+        // Sort filtered schedules by createdAt timestamp (newest first)
+        const sortedSchedules = [...currentAndFutureSchedules].sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+          return dateB - dateA;
+        });
+        
+        setSchedules(sortedSchedules);
+        setFilteredSchedules(sortedSchedules);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch schedules");
@@ -34,10 +61,32 @@ const ScheduleManagement = () => {
     fetchSchedules();
   }, []);
 
+  // Notify when schedules are first loaded
+  useEffect(() => {
+    if (schedules.length > 0) {
+      notifyScheduleChange();
+    }
+  }, [schedules.length]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (!searchDate) {
+      // Reset to all current and future schedules, maintaining the sort order
       setFilteredSchedules(schedules);
+      return;
+    }
+
+    // Make sure the search date is not in the past
+    const searchDateObj = new Date(searchDate);
+    searchDateObj.setHours(0, 0, 0, 0);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (searchDateObj < today) {
+      alert("Please select current or future dates only.");
+      setSearchDate(""); // Clear the invalid date
+      setFilteredSchedules(schedules); // Reset to all valid schedules
       return;
     }
 
@@ -46,15 +95,30 @@ const ScheduleManagement = () => {
       return scheduleDate === searchDate;
     });
 
-    setFilteredSchedules(filtered);
+    // Maintain the sort order (newest first by createdAt) for filtered results
+    const sortedFiltered = [...filtered].sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return dateB - dateA;
+    });
+    
+    setFilteredSchedules(sortedFiltered);
   };
 
   const handleDelete = async (scheduleID) => {
     if (window.confirm("Are you sure you want to delete this schedule?")) {
       try {
         await axios.delete(`${API_URL}/api/schedules/${scheduleID}`);
-        setSchedules(schedules.filter((schedule) => schedule.scheduleID !== scheduleID));
-        setFilteredSchedules(filteredSchedules.filter((schedule) => schedule.scheduleID !== scheduleID));
+        // Remove the deleted schedule from both arrays
+        const updatedSchedules = schedules.filter((schedule) => schedule.scheduleID !== scheduleID);
+        const updatedFilteredSchedules = filteredSchedules.filter((schedule) => schedule.scheduleID !== scheduleID);
+        
+        // Apply the same sorting to maintain the newest-first order
+        setSchedules(updatedSchedules);
+        setFilteredSchedules(updatedFilteredSchedules);
+
+        // Notify other components about this change
+        notifyScheduleChange();
       } catch (err) {
         console.error("Error deleting schedule:", err);
         alert("Failed to delete schedule");
@@ -189,6 +253,8 @@ const ScheduleManagement = () => {
   return (
     <div className="flex h-screen">
       <Sidebar />
+      <div className="flex-1 bg-[#F5F5F5] min-h-screen">
+      <Navbar />
       <div className="flex-1 p-10 overflow-y-auto">
         <h1 className="text-3xl font-bold mb-6">Current Schedules</h1>
         
@@ -209,8 +275,6 @@ const ScheduleManagement = () => {
             </button>
           </form>
           
-          
-
           <div className="flex space-x-4">
             <button 
               onClick={generatePDF} 
@@ -317,6 +381,7 @@ const ScheduleManagement = () => {
           </table>
         </div>
       </div>
+     </div>
     </div>
   );
 };
