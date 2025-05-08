@@ -14,6 +14,7 @@ import {
   addMultipleStops,
   toggleRouteStatus, 
   getRouteAnalytics,
+  reorderRouteStops, // <-- add this import
 } from '../controllers/routeController.js';
 import { adminOnly } from '../middlewares/authMiddleware.js';
 
@@ -24,7 +25,8 @@ router.post('/create', createRoute);
 router.post('/routes/bulk', createMultipleRoutes);
 router.post('/add-stop', addStopToRoute);
 router.post('/update-stop-type', updateStopType);
-router.post('/add-multiple-stops', addMultipleStops); // <-- move this UP
+router.post('/add-multiple-stops', addMultipleStops);
+router.post('/:routeId/reorder-stops', reorderRouteStops); // <-- move this UP
 router.get('/routes', getAllRoutes);
 router.put('/:routeId/status', toggleRouteStatus);
 router.put('/:routeId', updateRoute);

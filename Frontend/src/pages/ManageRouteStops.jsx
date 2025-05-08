@@ -6,6 +6,7 @@ import useRouteStore from "../store/routeStore";
 import axios from "axios";
 import { toast } from "react-toastify";
 import GoSyncLoader from "../components/Loader";
+import SortableRouteStops from "../components/SortableRouteStops";
 
 const ManageRouteStops = () => {
   const {
@@ -978,7 +979,7 @@ const ManageRouteStops = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {routeStops
+                  {/* {routeStops
                     .sort((a, b) => a.order - b.order)
                     .map((routeStop) => {
                       const stopId = routeStop.stop?._id || routeStop._id;
@@ -1018,7 +1019,15 @@ const ManageRouteStops = () => {
                           </div>
                         </div>
                       );
-                    })}
+                    })} */}
+
+                  <SortableRouteStops
+                    stops={routeStops}
+                    setStops={setRouteStops}
+                    routeId={selectedRouteId}
+                    onEdit={startEditingStop}
+                    onDelete={deleteStopHandler}
+                  />
                 </div>
               )}
             </div>

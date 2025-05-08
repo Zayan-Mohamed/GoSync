@@ -1224,3 +1224,75 @@ export const getRouteAnalytics = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+
+export const reorderRouteStops = async (req, res) => {
+  try {
+    const { routeId } = req.params;
+    const { stops } = req.body;
+
+    if (!Array.isArray(stops)) {
+      return res.status(400).json({ error: 'Invalid stops data format' });
+    }
+
+    // Find the route with more flexible id matching
+    const route = await Route.findOne({
+      $or: [
+        { _id: mongoose.Types.ObjectId.isValid(routeId) ? new mongoose.Types.ObjectId(routeId) : null },
+        { routeId: routeId }
+      ]
+    }).populate('stops.stop');
+
+    if (!route) {
+      return res.status(404).json({ error: 'Route not found' });
+    }
+
+    // Create a map for quick lookup using both possible ID formats
+    const orderMap = new Map();
+    stops.forEach(({ stopId, order }) => {
+      orderMap.set(stopId.toString(), order);
+      if (mongoose.Types.ObjectId.isValid(stopId)) {
+        orderMap.set(new mongoose.Types.ObjectId(stopId).toString(), order);
+      }
+    });
+
+    // Reorder stops with better type handling
+    route.stops = route.stops.map((s) => {
+      const stopId = s.stop?._id ? s.stop._id.toString() : s.stop.toString();
+      if (orderMap.has(stopId)) {
+        const stop = s.toObject();
+        return {
+          ...stop,
+          order: parseInt(orderMap.get(stopId))
+        };
+      }
+      return s;
+    });
+
+    // Sort the stops array by the new order
+    route.stops.sort((a, b) => a.order - b.order);
+
+    // Validate that all orders are present and unique
+    const orders = route.stops.map(s => s.order);
+    const uniqueOrders = new Set(orders);
+    if (orders.length !== uniqueOrders.size) {
+      return res.status(400).json({ error: 'Invalid order sequence - duplicate orders detected' });
+    }
+
+    await route.save();
+
+    // Send back the updated route data
+    const updatedRoute = await Route.findById(route._id).populate('stops.stop');
+    
+    res.status(200).json({ 
+      message: 'Stop order updated successfully',
+      route: updatedRoute
+    });
+  } catch (error) {
+    console.error('Error updating stop order:', error);
+    res.status(500).json({ 
+      error: 'Error updating stop order',
+      details: error.message
+    });
+  }
+};

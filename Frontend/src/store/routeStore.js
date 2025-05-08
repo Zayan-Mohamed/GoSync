@@ -5,11 +5,17 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const useRouteStore = create((set) => ({
   routes: [],
+  routeStops: [],
+  currentRoute: null,
+  loading: false,
+  error: null,
+  
   clearCurrentRoute: () => set({ 
     currentRoute: null, 
     routeStops: [] 
   }),
-  
+
+  setRouteStops: (stops) => set({ routeStops: stops }),
 
   // Fetch all routes
   fetchRoutes: async () => {
