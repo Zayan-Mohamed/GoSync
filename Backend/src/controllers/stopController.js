@@ -66,19 +66,27 @@ export const createMultipleStops = async (req, res) => {
       });
     }
 
+    // Transform input data to match expected format
+    const transformedStops = req.body.map(stop => ({
+      stopName: stop.stopName || stop["Stop Name"] || stop.name || stop.Name || "",
+      status: (stop.status || stop.Status || 'active').toLowerCase()
+    }));
+
+    // Filter out any entries with empty stop names
+    const validStops = transformedStops.filter(stop => stop.stopName && stop.stopName.trim() !== '');
+    
+    if (validStops.length === 0) {
+      return res.status(400).json({
+        error: "No valid stops found in the data. Each stop must have a valid stopName."
+      });
+    }
+
     // Process stops
     const stopsToInsert = [];
     const duplicateStops = [];
 
-    for (const stopData of req.body) {
-      // Validate each stop
-      if (!stopData.stopName || typeof stopData.stopName !== 'string') {
-        return res.status(400).json({
-          error: "Each stop must have a valid stopName"
-        });
-      }
-
-      const normalizedStopName = stopData.stopName.trim().toLowerCase();
+    for (const stopData of validStops) {
+      const normalizedStopName = stopData.stopName.trim();
       
       // Check for existing stop (case-insensitive)
       const existingStop = await Stop.findOne({ 
@@ -90,26 +98,30 @@ export const createMultipleStops = async (req, res) => {
       } else {
         stopsToInsert.push({
           stopId: generateStopId(),
-          stopName: stopData.stopName.trim(),
-          status: stopData.status || 'active'
+          stopName: normalizedStopName,
+          status: stopData.status
         });
       }
     }
 
     // If duplicates found, return them
-    if (duplicateStops.length > 0) {
+    if (duplicateStops.length > 0 && stopsToInsert.length === 0) {
       return res.status(409).json({
-        error: "Some stops already exist",
+        error: "All stops already exist",
         duplicates: duplicateStops
       });
     }
 
     // Insert all non-duplicate stops
-    const insertedStops = await Stop.insertMany(stopsToInsert);
+    let insertedStops = [];
+    if (stopsToInsert.length > 0) {
+      insertedStops = await Stop.insertMany(stopsToInsert);
+    }
     
     res.status(201).json({
-      message: `Successfully created ${insertedStops.length} stops`,
-      createdCount: insertedStops.length
+      message: `Successfully created ${insertedStops.length} stops${duplicateStops.length > 0 ? ` (${duplicateStops.length} duplicates skipped)` : ''}`,
+      createdCount: insertedStops.length,
+      duplicates: duplicateStops.length > 0 ? duplicateStops : undefined
     });
 
   } catch (error) {

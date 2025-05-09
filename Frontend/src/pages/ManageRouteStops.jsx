@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Pencil, Trash2, ArrowLeft, Plus, Minus } from "lucide-react";
+import { Pencil, Trash2, ArrowLeft, Plus, Minus, MapPin } from "lucide-react";
 import AdminLayout from "../layouts/AdminLayout";
 import useRouteStore from "../store/routeStore";
 import axios from "axios";
@@ -574,273 +574,175 @@ const ManageRouteStops = () => {
 
   return (
     <AdminLayout>
-      <div
-        ref={topRef}
-        className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md"
-      >
-        <div className="flex items-center mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="mr-4 text-gray-600 hover:text-deepOrange"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <h2 className="text-2xl font-bold">Manage Route Stops</h2>
-        </div>
-
-        {/* Route selection */}
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Select Route
-          </label>
-          <select
-            onChange={(e) => handleRouteSelect(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md"
-            disabled={loading}
-            value={selectedRouteId}
-          >
-            <option value="">-- Select a Route --</option>
-            {routes.map((route) => (
-              <option key={route._id} value={route._id}>
-                {route.routeName} ({route.startLocation} to {route.endLocation})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {currentRoute && selectedRouteId && (
-          <>
-            {/* Route info */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">
-                {currentRoute.routeName}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <p>
-                  <span className="font-medium">Start:</span>{" "}
-                  {currentRoute.startLocation}
-                </p>
-                <p>
-                  <span className="font-medium">End:</span>{" "}
-                  {currentRoute.endLocation}
-                </p>
-                <p>
-                  <span className="font-medium">Distance:</span>{" "}
-                  {currentRoute.totalDistance} km
-                </p>
-                <p>
-                  <span className="font-medium">Status:</span>{" "}
-                  {currentRoute.status}
-                </p>
-              </div>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div ref={topRef} className="max-w-5xl mx-auto">
+          {/* Header */}
+          <div className="bg-white rounded-lg shadow-sm mb-6 p-6">
+            <div className="flex items-center mb-6">
+              <button
+                onClick={() => navigate(-1)}
+                className="mr-4 text-gray-600 hover:text-deepOrange transition-colors duration-200"
+              >
+                <ArrowLeft size={24} />
+              </button>
+              <h2 className="text-3xl font-bold text-gray-800">
+                Manage Route Stops
+              </h2>
             </div>
 
-            {/* Replace your existing form UI with this code */}
-            {/* Add/Edit form */}
-            <div
-              ref={formRef}
-              className="p-4 border rounded-lg bg-gray-50 mb-4 relative"
-            >
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-lg font-semibold">
-                  {isEditing
-                    ? "Edit Stop"
-                    : multipleStopsMode
-                      ? "Add Multiple Stops"
-                      : "Add New Stop"}
+            {/* Route selection */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Route
+              </label>
+              <select
+                onChange={(e) => handleRouteSelect(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-deepOrange transition-shadow duration-200"
+                disabled={loading}
+                value={selectedRouteId}
+              >
+                <option value="">-- Select a Route --</option>
+                {routes.map((route) => (
+                  <option key={route._id} value={route._id}>
+                    {route.routeName} ({route.startLocation} to{" "}
+                    {route.endLocation})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {currentRoute && selectedRouteId && (
+            <>
+              {/* Route info card */}
+              <div className="bg-white rounded-lg shadow-sm mb-6 p-6 border-l-4 border-deepOrange">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  {currentRoute.routeName}
                 </h3>
-                {!isEditing && (
-                  <button
-                    onClick={toggleMultipleStopsMode}
-                    className="px-3 py-1 text-sm bg-deepOrange text-white rounded-md hover:bg-sunsetOrange"
-                  >
-                    {multipleStopsMode
-                      ? "Single Stop Mode"
-                      : "Multiple Stops Mode"}
-                  </button>
-                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-blue-50 rounded-full mr-3">
+                      <MapPin className="text-blue-600" size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Start Location</p>
+                      <p className="font-medium">{currentRoute.startLocation}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="p-2 bg-purple-50 rounded-full mr-3">
+                      <MapPin className="text-purple-600" size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">End Location</p>
+                      <p className="font-medium">{currentRoute.endLocation}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="p-2 bg-green-50 rounded-full mr-3">
+                      <svg
+                        className="w-5 h-5 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Total Distance</p>
+                      <p className="font-medium">{currentRoute.totalDistance} km</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="p-2 bg-yellow-50 rounded-full mr-3">
+                      <svg
+                        className="w-5 h-5 text-yellow-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      <p className="font-medium capitalize">{currentRoute.status}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {!multipleStopsMode ? (
-                /* Single Stop Form */
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Stop*
-                      </label>
-                      <select
-                        name="stopId"
-                        value={isEditing ? editStopData.stopId : newStop.stopId}
-                        onChange={
-                          isEditing ? handleEditStopChange : handleNewStopChange
-                        }
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                        disabled={isEditing || loading}
-                      >
-                        <option value="">Select Stop</option>
-                        {isEditing ? (
-                          <option value={editStopData.stopId}>
-                            {editStopData.stop?.stopName ||
-                              editStopData.stopName}
-                          </option>
-                        ) : (
-                          getAvailableStops().map((stop) => (
-                            <option key={stop._id} value={stop._id}>
-                              {stop.stopName} ({stop.status})
-                            </option>
-                          ))
-                        )}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Type*
-                      </label>
-                      <select
-                        name="stopType"
-                        value={
-                          isEditing ? editStopData.stopType : newStop.stopType
-                        }
-                        onChange={
-                          isEditing ? handleEditStopChange : handleNewStopChange
-                        }
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                      >
-                        <option value="boarding">Boarding</option>
-                        <option value="dropping">Dropping</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Order*
-                      </label>
-                      <input
-                        type="number"
-                        name="order"
-                        value={isEditing ? editStopData.order : newStop.order}
-                        onChange={
-                          isEditing ? handleEditStopChange : handleNewStopChange
-                        }
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        min="1"
-                        max={routeStops.length + 1}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-3">
-                    {isEditing && (
+              {/* Add/Edit form */}
+              <div
+                ref={formRef}
+                className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden"
+              >
+                <div className="p-6 border-b">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-bold text-gray-800">
+                      {isEditing
+                        ? "Edit Stop"
+                        : multipleStopsMode
+                        ? "Add Multiple Stops"
+                        : "Add New Stop"}
+                    </h3>
+                    {!isEditing && (
                       <button
-                        onClick={cancelEditing}
-                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                        disabled={loading}
+                        onClick={toggleMultipleStopsMode}
+                        className="px-4 py-2 bg-deepOrange text-white rounded-lg hover:bg-sunsetOrange transition-colors duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-deepOrange"
                       >
-                        Cancel
+                        {multipleStopsMode
+                          ? "Single Stop Mode"
+                          : "Multiple Stops Mode"}
                       </button>
                     )}
-                    <button
-                      onClick={
-                        isEditing ? updateStopHandler : addStopToRouteHandler
-                      }
-                      className={`px-4 py-2 bg-deepOrange text-white rounded-md hover:bg-sunsetOrange ${
-                        loading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <span className="flex items-center justify-center">
-                          <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          {isEditing ? "Updating..." : "Adding..."}
-                        </span>
-                      ) : isEditing ? (
-                        "Update Stop"
-                      ) : (
-                        "Add Stop"
-                      )}
-                    </button>
                   </div>
-                </>
-              ) : (
-                /* Multiple Stops Form */
-                <>
-                  {stopFields.map((field, index) => (
-                    <div key={index} className="mb-6 border-b pb-4">
-                      <div className="flex justify-between mb-2">
-                        <h4 className="font-medium text-gray-700">
-                          Stop #{index + 1}
-                        </h4>
-                        {index > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => removeStopField(index)}
-                            className="text-red-500 hover:text-red-700 flex items-center"
-                          >
-                            <Minus size={16} className="mr-1" /> Remove
-                          </button>
-                        )}
-                      </div>
+                </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-6 bg-gray-50">
+                  {!multipleStopsMode ? (
+                    /* Single Stop Form */
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1">
                             Stop*
                           </label>
                           <select
-                            value={field.stopId}
-                            onChange={(e) =>
-                              handleStopFieldChange(
-                                index,
-                                "stopId",
-                                e.target.value
-                              )
+                            name="stopId"
+                            value={isEditing ? editStopData.stopId : newStop.stopId}
+                            onChange={
+                              isEditing ? handleEditStopChange : handleNewStopChange
                             }
-                            className={`w-full p-2 border ${
-                              validationErrors[index] && !field.stopId
-                                ? "border-red-500"
-                                : "border-gray-300"
-                            } rounded-md`}
+                            className="w-full p-2 border border-gray-300 rounded-md"
                             required
+                            disabled={isEditing || loading}
                           >
                             <option value="">Select Stop</option>
-                            {getAvailableStops().map((stop) => (
-                              <option
-                                key={stop._id}
-                                value={stop.stopId || stop._id}
-                              >
-                                {stop.stopName} ({stop.status})
+                            {isEditing ? (
+                              <option value={editStopData.stopId}>
+                                {editStopData.stop?.stopName ||
+                                  editStopData.stopName}
                               </option>
-                            ))}
+                            ) : (
+                              getAvailableStops().map((stop) => (
+                                <option key={stop._id} value={stop._id}>
+                                  {stop.stopName} ({stop.status})
+                                </option>
+                              ))
+                            )}
                           </select>
-                          {validationErrors[index] && !field.stopId && (
-                            <p className="text-red-500 text-xs mt-1">
-                              {validationErrors[index]}
-                            </p>
-                          )}
                         </div>
 
                         <div>
@@ -848,13 +750,12 @@ const ManageRouteStops = () => {
                             Type*
                           </label>
                           <select
-                            value={field.stopType}
-                            onChange={(e) =>
-                              handleStopFieldChange(
-                                index,
-                                "stopType",
-                                e.target.value
-                              )
+                            name="stopType"
+                            value={
+                              isEditing ? editStopData.stopType : newStop.stopType
+                            }
+                            onChange={
+                              isEditing ? handleEditStopChange : handleNewStopChange
                             }
                             className="w-full p-2 border border-gray-300 rounded-md"
                             required
@@ -870,169 +771,299 @@ const ManageRouteStops = () => {
                           </label>
                           <input
                             type="number"
-                            value={field.order}
-                            onChange={(e) =>
-                              handleStopFieldChange(
-                                index,
-                                "order",
-                                e.target.value
-                              )
+                            name="order"
+                            value={isEditing ? editStopData.order : newStop.order}
+                            onChange={
+                              isEditing ? handleEditStopChange : handleNewStopChange
                             }
-                            className={`w-full p-2 border ${
-                              validationErrors[index] &&
-                              (!field.order || field.order < 1)
-                                ? "border-red-500"
-                                : "border-gray-300"
-                            } rounded-md`}
+                            className="w-full p-2 border border-gray-300 rounded-md"
                             min="1"
+                            max={routeStops.length + 1}
                             required
                           />
-                          {validationErrors[index] &&
-                            (!field.order || field.order < 1) && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {validationErrors[index]}
-                              </p>
-                            )}
                         </div>
                       </div>
-                    </div>
-                  ))}
 
-                  <div className="flex justify-between mb-6">
-                    <button
-                      type="button"
-                      onClick={addStopField}
-                      className="text-deepOrange hover:text-sunsetOrange flex items-center"
-                    >
-                      <Plus size={16} className="mr-1" /> Add Another Stop
-                    </button>
-                  </div>
-
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      onClick={toggleMultipleStopsMode}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                      disabled={loading}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={addMultipleStopsHandler}
-                      className={`px-4 py-2 bg-deepOrange text-white rounded-md hover:bg-sunsetOrange ${
-                        loading || actionLoading
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                      disabled={loading || actionLoading}
-                    >
-                      {actionLoading ? (
-                        <span className="flex items-center justify-center">
-                          <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
+                      <div className="flex justify-end space-x-3">
+                        {isEditing && (
+                          <button
+                            onClick={cancelEditing}
+                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                            disabled={loading}
                           >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          Adding Stops...
-                        </span>
-                      ) : (
-                        `Add ${stopFields.length} Stop${stopFields.length !== 1 ? "s" : ""}`
-                      )}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Current stops */}
-            <div className="mb-6 p-4">
-              <h3 className="text-lg font-semibold mb-3">Current Stops</h3>
-              {routeStops.length === 0 ? (
-                <div className="p-4 border rounded-lg bg-gray-50">
-                  <p className="text-gray-500">
-                    {loading
-                      ? "Loading stops..."
-                      : "No stops found for this route"}
-                  </p>
-                  {!loading && (
-                    <button
-                      onClick={() => handleRouteSelect(currentRoute._id)}
-                      className="mt-2 text-blue-500 hover:text-blue-700"
-                    >
-                      Retry loading stops
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {/* {routeStops
-                    .sort((a, b) => a.order - b.order)
-                    .map((routeStop) => {
-                      const stopId = routeStop.stop?._id || routeStop._id;
-                      const stopName =
-                        routeStop.stopName || routeStop.stop?.stopName;
-
-                      return (
-                        <div
-                          key={stopId}
-                          className="p-3 border rounded-lg flex justify-between items-center"
+                            Cancel
+                          </button>
+                        )}
+                        <button
+                          onClick={
+                            isEditing ? updateStopHandler : addStopToRouteHandler
+                          }
+                          className={`px-4 py-2 bg-deepOrange text-white rounded-md hover:bg-sunsetOrange ${
+                            loading ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
+                          disabled={loading}
                         >
-                          <div>
-                            <p className="font-medium">
-                              {stopName} (Order: {routeStop.order})
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Type: {routeStop.stopType}
-                            </p>
+                          {loading ? (
+                            <span className="flex items-center justify-center">
+                              <svg
+                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                              </svg>
+                              {isEditing ? "Updating..." : "Adding..."}
+                            </span>
+                          ) : isEditing ? (
+                            "Update Stop"
+                          ) : (
+                            "Add Stop"
+                          )}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    /* Multiple Stops Form */
+                    <>
+                      {stopFields.map((field, index) => (
+                        <div key={index} className="mb-6 border-b pb-4">
+                          <div className="flex justify-between mb-2">
+                            <h4 className="font-medium text-gray-700">
+                              Stop #{index + 1}
+                            </h4>
+                            {index > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => removeStopField(index)}
+                                className="text-red-500 hover:text-red-700 flex items-center"
+                              >
+                                <Minus size={16} className="mr-1" /> Remove
+                              </button>
+                            )}
                           </div>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => startEditingStop(routeStop)}
-                              className="text-blue-500 hover:text-blue-700"
-                              disabled={loading}
-                              title="Edit stop"
-                            >
-                              <Pencil size={18} />
-                            </button>
-                            <button
-                              onClick={() => deleteStopHandler(stopId)}
-                              className="text-red-500 hover:text-red-700"
-                              disabled={loading}
-                              title="Delete stop"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Stop*
+                              </label>
+                              <select
+                                value={field.stopId}
+                                onChange={(e) =>
+                                  handleStopFieldChange(
+                                    index,
+                                    "stopId",
+                                    e.target.value
+                                  )
+                                }
+                                className={`w-full p-2 border ${
+                                  validationErrors[index] && !field.stopId
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } rounded-md`}
+                                required
+                              >
+                                <option value="">Select Stop</option>
+                                {getAvailableStops().map((stop) => (
+                                  <option
+                                    key={stop._id}
+                                    value={stop.stopId || stop._id}
+                                  >
+                                    {stop.stopName} ({stop.status})
+                                  </option>
+                                ))}
+                              </select>
+                              {validationErrors[index] && !field.stopId && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {validationErrors[index]}
+                                </p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Type*
+                              </label>
+                              <select
+                                value={field.stopType}
+                                onChange={(e) =>
+                                  handleStopFieldChange(
+                                    index,
+                                    "stopType",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full p-2 border border-gray-300 rounded-md"
+                                required
+                              >
+                                <option value="boarding">Boarding</option>
+                                <option value="dropping">Dropping</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Order*
+                              </label>
+                              <input
+                                type="number"
+                                value={field.order}
+                                onChange={(e) =>
+                                  handleStopFieldChange(
+                                    index,
+                                    "order",
+                                    e.target.value
+                                  )
+                                }
+                                className={`w-full p-2 border ${
+                                  validationErrors[index] &&
+                                  (!field.order || field.order < 1)
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } rounded-md`}
+                                min="1"
+                                required
+                              />
+                              {validationErrors[index] &&
+                                (!field.order || field.order < 1) && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    {validationErrors[index]}
+                                  </p>
+                                )}
+                            </div>
                           </div>
                         </div>
-                      );
-                    })} */}
+                      ))}
 
-                  <SortableRouteStops
-                    stops={routeStops}
-                    setStops={setRouteStops}
-                    routeId={selectedRouteId}
-                    onEdit={startEditingStop}
-                    onDelete={deleteStopHandler}
-                  />
+                      <div className="flex justify-between mb-6">
+                        <button
+                          type="button"
+                          onClick={addStopField}
+                          className="text-deepOrange hover:text-sunsetOrange flex items-center"
+                        >
+                          <Plus size={16} className="mr-1" /> Add Another Stop
+                        </button>
+                      </div>
+
+                      <div className="flex justify-end space-x-3">
+                        <button
+                          onClick={toggleMultipleStopsMode}
+                          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                          disabled={loading}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={addMultipleStopsHandler}
+                          className={`px-4 py-2 bg-deepOrange text-white rounded-md hover:bg-sunsetOrange ${
+                            loading || actionLoading
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                          disabled={loading || actionLoading}
+                        >
+                          {actionLoading ? (
+                            <span className="flex items-center justify-center">
+                              <svg
+                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                              </svg>
+                              Adding Stops...
+                            </span>
+                          ) : (
+                            `Add ${stopFields.length} Stop${
+                              stopFields.length !== 1 ? "s" : ""
+                            }`
+                          )}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
-              )}
-            </div>
-          </>
-        )}
+              </div>
+
+              {/* Current stops */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-800">Current Stops</h3>
+                  <div className="text-sm text-gray-500">
+                    {routeStops.length}{" "}
+                    {routeStops.length === 1 ? "stop" : "stops"}
+                  </div>
+                </div>
+
+                {routeStops.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
+                    </svg>
+                    <p className="mt-2 text-sm text-gray-500">
+                      {loading
+                        ? "Loading stops..."
+                        : "No stops found for this route"}
+                    </p>
+                    {!loading && (
+                      <button
+                        onClick={() => handleRouteSelect(currentRoute._id)}
+                        className="mt-4 text-sm text-deepOrange hover:text-sunsetOrange transition-colors duration-200"
+                      >
+                        Retry loading stops
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <SortableRouteStops
+                      stops={routeStops}
+                      routeId={selectedRouteId}
+                      onEdit={startEditingStop}
+                      onDelete={deleteStopHandler}
+                    />
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </AdminLayout>
   );

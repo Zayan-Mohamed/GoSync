@@ -28,11 +28,13 @@ const SortableRouteStops = ({
 }) => {
   const setRouteStops = useRouteStore((state) => state.setRouteStops);
 
-  // Configure sensors for better interaction across devices
+  // Configure sensors with optimized settings for smoother interaction
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 8px of movement required before activation
+        distance: 5, // Reduced from 8 to make it more responsive
+        tolerance: 5, // Added tolerance for smoother initiation
+        delay: 0, // No delay for immediate response
       },
     }),
     useSensor(KeyboardSensor, {
@@ -40,8 +42,8 @@ const SortableRouteStops = ({
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250, // Delay for touch devices
-        tolerance: 5, // Tolerance for slight movements
+        delay: 50, // Reduced from 250 for faster touch response
+        tolerance: 8, // Increased tolerance for better touch control
       },
     })
   );
@@ -50,7 +52,6 @@ const SortableRouteStops = ({
     if (!over || active.id === over.id) return;
 
     try {
-      // Find the indices based on stop IDs
       const oldIndex = stops.findIndex(
         (s) => (s.stop?._id || s._id) === active.id
       );
@@ -58,25 +59,22 @@ const SortableRouteStops = ({
         (s) => (s.stop?._id || s._id) === over.id
       );
 
-      // Reorder the stops array
       const reordered = arrayMove([...stops], oldIndex, newIndex);
-
-      // Update order numbers
       const updatedStops = reordered.map((stop, idx) => ({
         ...stop,
         order: idx + 1,
       }));
 
-      // Update local state immediately for smooth UX
+      // Optimistically update UI
       setRouteStops(updatedStops);
 
-      // Prepare stops data for the API
+      // Prepare stops data for API
       const stopsForApi = updatedStops.map((stop) => ({
         stopId: stop.stop?._id || stop._id,
         order: stop.order,
       }));
 
-      // Make API call to update the order
+      // Make API call
       const API_URI = import.meta.env.VITE_API_URL.replace(/\/$/, "");
       await axios.post(
         `${API_URI}/api/routes/${routeId}/reorder-stops`,
@@ -93,7 +91,7 @@ const SortableRouteStops = ({
         position: "top-right",
       });
 
-      // Revert the changes if the API call fails
+      // Revert changes if API call fails
       const originalOrder = stops.map((stop, idx) => ({
         ...stop,
         order: idx + 1,
