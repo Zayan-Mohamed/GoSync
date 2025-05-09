@@ -37,8 +37,7 @@ fetchStops: async () => {
       const newStatus = currentStop.status === 'active' ? 'inactive' : 'active';
 
       // Call backend to update status
-      const response = await axios.put('/api/stops/:stopId/status', {
-        stopId,
+      const response = await axios.put(`/api/stops/id/${stopId}/status`, {
         status: newStatus
       });
 

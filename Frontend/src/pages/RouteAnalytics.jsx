@@ -212,11 +212,12 @@ const RouteAnalytics = () => {
     );
   }
 
+  // Add default values and null checks for the chart data
   const statusPieData = {
     labels: ["Active", "Inactive"],
     datasets: [
       {
-        data: [analytics.activeRoutes || 0, analytics.inactiveRoutes || 0],
+        data: [analytics?.activeRoutes || 0, analytics?.inactiveRoutes || 0],
         backgroundColor: ["#36A2EB", "#FF6384"],
         hoverBackgroundColor: ["#36A2EB", "#FF6384"],
       },
@@ -224,11 +225,11 @@ const RouteAnalytics = () => {
   };
 
   const bookingsByRouteBarData = {
-    labels: analytics.bookingsByRoute.length ? analytics.bookingsByRoute.map((r) => r.routeName) : ["No Data"],
+    labels: analytics?.bookingsByRoute?.map((r) => r.routeName) || ["No Data"],
     datasets: [
       {
         label: "Bookings",
-        data: analytics.bookingsByRoute.length ? analytics.bookingsByRoute.map((r) => r.bookingCount) : [0],
+        data: analytics?.bookingsByRoute?.map((r) => r.bookingCount) || [0],
         backgroundColor: "#4BC0C0",
       },
     ],
@@ -241,7 +242,8 @@ const RouteAnalytics = () => {
     { label: ">1000 km", min: 1000, max: Infinity, count: 0 },
   ];
 
-  analytics.routes.forEach((route) => {
+  // Add null check for routes
+  (analytics?.routes || []).forEach((route) => {
     const distance = route.totalDistance || 0;
     const bin = distanceBins.find((bin) => distance >= bin.min && distance < bin.max);
     if (bin) bin.count += 1;
@@ -383,7 +385,7 @@ const RouteAnalytics = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Routes</p>
-              <p className="text-2xl font-bold text-gray-800">{analytics.totalRoutes}</p>
+              <p className="text-2xl font-bold text-gray-800">{analytics?.totalRoutes || 0}</p>
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-6 flex items-center">
@@ -393,7 +395,7 @@ const RouteAnalytics = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Most Popular Route</p>
               <p className="text-lg font-bold text-gray-800 truncate">
-                {analytics.mostPopularRoute?.routeName || "No data"}
+                {analytics?.mostPopularRoute?.routeName || "No data"}
               </p>
             </div>
           </div>
@@ -403,7 +405,9 @@ const RouteAnalytics = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Average Stops per Route</p>
-              <p className="text-2xl font-bold text-gray-800">{analytics.avgStopsPerRoute.toFixed(1)}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {analytics?.avgStopsPerRoute ? analytics.avgStopsPerRoute.toFixed(1) : "0.0"}
+              </p>
             </div>
           </div>
         </div>
@@ -503,7 +507,7 @@ const RouteAnalytics = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {analytics.topRoutes.slice(0, 5).map((route, index) => (
+                {(analytics?.topRoutes || []).slice(0, 5).map((route, index) => (
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {route.routeName}

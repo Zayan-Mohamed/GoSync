@@ -1193,6 +1193,7 @@ export const getRouteAnalytics = async (req, res) => {
 
     const formattedRoutes = allRoutes.map(route => ({
       _id: route._id,
+      routeId: route.routeId,
       routeName: route.routeName,
       startLocation: route.startLocation,
       endLocation: route.endLocation,
@@ -1216,7 +1217,10 @@ export const getRouteAnalytics = async (req, res) => {
       avgStopsPerRoute,
       bookingsByRoute,
       bookingsOverTime,
-      topRoutes,
+      topRoutes: topRoutes.map(route => ({
+        ...route,
+        routeId: route._id // Ensure routeId is included
+      })),
       routes: formattedRoutes,
     });
   } catch (error) {
