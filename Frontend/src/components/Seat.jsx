@@ -4,12 +4,19 @@ import { MdEventSeat } from "react-icons/md";
 import { BsX } from "react-icons/bs";
 
 const Seat = ({ seat, onSelect }) => {
+  const isBooked = !seat.isAvailable;
+
   return (
     <div
-      className={`${styles.seat} ${seat.isSelected ? styles.selected : ""} ${!seat.isAvailable ? styles.unavailable : ""}`}
-      onClick={seat.isAvailable ? onSelect : null}
+      className={`${styles.seat} ${seat.isSelected ? styles.selected : ""} 
+                 ${isBooked ? styles.unavailable : ""} 
+                 ${seat.isDisabled ? styles.disabled : ""}`}
+      onClick={isBooked || seat.isDisabled ? null : onSelect}
+      title={
+        seat.isDisabled ? `${seat.seatNumber} (Unavailable)` : seat.seatNumber
+      }
     >
-      {seat.isAvailable ? <MdEventSeat /> : <BsX />}
+      {isBooked ? <BsX /> : <MdEventSeat />}
     </div>
   );
 };

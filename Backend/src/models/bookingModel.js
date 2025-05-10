@@ -24,8 +24,8 @@ const bookingSchema = new mongoose.Schema({
     enum: ["pending", "paid", "failed"],
     default: "pending",
   },
-  qrCode: { type: String }, // Base64 QR code image
-  qrPayload: { type: Object }, // Raw QR code payload
+  qrCode: { type: String }, 
+  qrPayload: { type: Object },
   createdAt: { type: Date, default: Date.now },
 });
 

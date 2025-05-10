@@ -28,7 +28,6 @@ const Navbar = () => {
   const [isAdminModalOpen, setAdminModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 

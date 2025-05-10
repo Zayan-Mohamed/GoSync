@@ -14,6 +14,7 @@ const CancelTicket = () => {
   const { user, isAuthenticated } = useAuthStore();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const API_URI = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -23,21 +24,28 @@ const CancelTicket = () => {
 
     const fetchBookings = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/bookings/user",
-          {
-            withCredentials: true,
-          }
-        );
+        const response = await axios.get(`${API_URI}/api/bookings/user`, {
+          withCredentials: true,
+        });
         console.log("Fetched bookings:", response.data);
-        const confirmedBookings = response.data.filter(
+        // Normalize the data to ensure busNumber is always accessible
+        const normalizedBookings = response.data.map((booking) => ({
+          ...booking,
+          // Ensure busNumber is always available directly, even if it's nested in busId
+          busNumber:
+            booking.busNumber ||
+            (booking.busId && booking.busId.busNumber) ||
+            "N/A",
+        }));
+
+        const confirmedBookings = normalizedBookings.filter(
           (b) => b.status === "confirmed"
         );
         const bookingsWithQRCodes = await Promise.all(
           confirmedBookings.map(async (booking) => {
             try {
               const qrResponse = await axios.get(
-                `http://localhost:5000/api/bookings/getQRCode/${booking.bookingId}`,
+                `${API_URI}/api/bookings/getQRCode/${booking.bookingId}`,
                 { withCredentials: true }
               );
               return { ...booking, qrCode: qrResponse.data.qrCode };
@@ -64,7 +72,7 @@ const CancelTicket = () => {
     };
 
     fetchBookings();
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, API_URI]);
 
   const handleCancelBooking = async (bookingId) => {
     if (!window.confirm("Are you sure you want to cancel this booking?"))
@@ -72,7 +80,7 @@ const CancelTicket = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/bookings/cancel",
+        `${API_URI}/api/bookings/cancel`,
         { bookingId },
         { withCredentials: true }
       );

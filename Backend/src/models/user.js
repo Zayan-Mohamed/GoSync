@@ -14,7 +14,7 @@ const userSchema = mongoose.Schema(
     },
     phone: {
       type: String,
-      required: true, // ✅ Make phone number mandatory
+      required: true,
       unique: true,
     },
     password: {
