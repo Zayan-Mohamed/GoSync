@@ -55,6 +55,8 @@ import Notices from "../pages/Notices.jsx";
 import AddNotice from "../pages/AddNotice.jsx";
 import EditNotice from "../pages/EditNotice.jsx";
 import Analytics from "../pages/Analytics.jsx";
+import BusAnalytics from '../pages/BusAnalytics';
+import BusMaintenance from "../pages/BusMaintenance";
 
 const AppRoutes = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -78,11 +80,14 @@ const AppRoutes = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/bus-management" element={<BusList />} />
           <Route path="/add-bus" element={<InsertBus />} />
-          <Route path="/bus-analytics" element={<BusList />} />
+          <Route path="/analytics" element={<BusAnalytics />} />
           <Route path="/bus-assign" element={<BusAssignmentPage />} />
           <Route path="/busop-man" element={<BusOperatorsList />} />
           <Route path="/stop-analytics" element={<StopAnalytics />} />
           <Route path="/route-analytics" element={<RouteAnalytics />} />
+         <Route path="/bus-maintenance" element={<BusMaintenance />} />
+ 
+
             <Route path="/notification-management" element={<Notification />} />
             <Route path="/add-notification" element={<AddNotification />} />
             <Route

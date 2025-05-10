@@ -22,6 +22,9 @@ import { VscGraphLine, VscGraphScatter } from "react-icons/vsc";
 import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import SidebarSection from "./SidebarSection";
+import { MdBuild } from "react-icons/md";
+
+
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -68,14 +71,13 @@ const Sidebar = () => {
       links: [
         { to: "/bus-management", label: "Current Buses", icon: <FiTruck /> },
         { to: "/add-bus", label: "Add Bus", icon: <FiPlus /> },
-        { to: "/bus-analytics", label: "Bus Analytics", icon: <MdAutoGraph /> },
+        { to: "/analytics", label: "Bus Analytics", icon: <MdAutoGraph /> },
         { to: "/bus-assign", label: "Bus Assignments", icon: <FiMap /> },
         { to: "/add-operorator", label: "Add Bus Operator", icon: <FiPlus /> },
-        {
-          to: "/busop-man",
-          label: "Current Bus Operators",
-          icon: <FiUserCheck />,
-        },
+        { to: "/busop-man", label: "Current Bus Operators", icon: <FiUserCheck /> },
+        { to: "/bus-maintenance", label: "Bus Maintenance", icon: <MdBuild /> },
+
+      
       ],
     },
     {

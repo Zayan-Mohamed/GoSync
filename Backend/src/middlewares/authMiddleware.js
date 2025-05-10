@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 import dotenv from "dotenv";
+import multer from "multer";
+import path from "path";
+
 
 dotenv.config();
 
