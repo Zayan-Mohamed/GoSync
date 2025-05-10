@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FiBell, FiX } from "react-icons/fi";
 import io from "socket.io-client";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
 
 const API_URI = import.meta.env.VITE_API_URL;
 const socket = io(`${API_URI}`);
@@ -90,7 +91,7 @@ const NotificationBell = ({ role = "default" }) => {
         if (Notification.permission === "granted") {
           new Notification("New Notification", {
             body: newNotif.message,
-            icon: "/public/assets/GoSync.png",
+            icon: "/assets/GoSync.png",
           });
         }
       }
@@ -142,7 +143,7 @@ const NotificationBell = ({ role = "default" }) => {
             if (timeDiff <= 30000) {
               new Notification("New Notification", {
                 body: msg.message,
-                icon: "/public/assets/GoSync.png",
+                icon: "/assets/GoSync.png",
               });
               setNotifiedTimestamps((prev) => [...prev, msg.timestamp]);
             }
@@ -191,37 +192,58 @@ const NotificationBell = ({ role = "default" }) => {
         )}
       </button>
 
-      {showDropdown && (
-        <div className="fixed right-4 top-16 w-72 bg-white shadow-lg rounded-lg overflow-hidden z-50 border border-gray-300">
-          <div className="p-2 h-[500px] overflow-y-auto">
-            <h3 className="font-semibold text-lg flex items-center space-x-2">
-              <img src="/public/assets/GoSync.png" alt="Bell" className="w-5 h-5" />
-              <span>Notifications</span>
-            </h3>
+      <AnimatePresence>
+        {showDropdown && (
+          <motion.div
+            className="absolute right-0 top-12 w-80 bg-white shadow-lg rounded-lg overflow-hidden z-50 border border-gray-200"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="p-3 border-b border-gray-200 bg-gray-50">
+              <h3 className="font-semibold text-lg text-gray-800 flex items-center space-x-2">
+                <img src="/assets/GoSync.png" alt="GoSync Logo" className="w-5 h-5" />
+                <span>Notifications</span>
+              </h3>
+            </div>
 
-            {notifications.length === 0 ? (
-              <p className="text-gray-500 py-2">No notifications</p>
-            ) : (
-              <ul className="space-y-2 mt-2">
-                {notifications.map((notif, index) => (
-                  <li
-                    key={index}
-                    className={`border-b pb-2 cursor-pointer ${
-                      notif.read ? "text-gray-500" : "text-black font-medium"
-                    }`}
-                    onClick={() => handleClick(notif)}
-                  >
-                    <div>{notif.message}</div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {formatDateTime(notif.timestamp)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
+            <div className="max-h-[500px] overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  No notifications
+                </div>
+              ) : (
+                <ul className="divide-y divide-gray-100">
+                  {notifications.map((notif, index) => (
+                    <li
+                      key={index}
+                      className={`p-3 hover:bg-gray-50 transition-colors cursor-pointer ${
+                        !notif.read ? "bg-blue-50" : ""
+                      }`}
+                      onClick={() => handleClick(notif)}
+                    >
+                      <div className="flex justify-between">
+                        <div>
+                          <p className={`${!notif.read ? "font-medium" : ""}`}>
+                            {notif.message}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {formatDateTime(notif.timestamp)}
+                          </p>
+                        </div>
+                        {!notif.read && (
+                          <span className="w-2 h-2 bg-blue-600 rounded-full mt-2"></span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {activeMessage && (
         <div

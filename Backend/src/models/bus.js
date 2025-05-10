@@ -48,6 +48,12 @@ const busSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    operator: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'BusOperator',
+      default: null
+    }
+    
   
   },
   {

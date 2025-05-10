@@ -4,7 +4,8 @@ import { toast } from "react-toastify";
 import AdminLayout from "../layouts/AdminLayout";
 import { Bar, Line, Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale, LineElement, PointElement } from "chart.js";
-
+import GoSyncLoader from "../components/Loader";
+import API from "../services/authService";
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale, LineElement, PointElement);
 
 const BookingAnalytics = () => {
@@ -38,7 +39,7 @@ const BookingAnalytics = () => {
     setLoading(true);
   };
 
-  if (loading) return <AdminLayout><div className="p-6">Loading...</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-6"> <GoSyncLoader/> </div></AdminLayout>;
   if (!analytics) return <AdminLayout><div className="p-6">No data available</div></AdminLayout>;
 
   const revenueBarData = {

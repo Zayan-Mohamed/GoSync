@@ -47,12 +47,16 @@ export const createBus = async (req, res) => {
 
 export const getAllBuses = async (req, res) => {
   try {
-    const buses = await Bus.find({}).populate("routeId");
+    const buses = await Bus.find({})
+      .populate("routeId")
+      .populate("operator"); // <--- populate operator here
     res.status(200).json(buses);
   } catch (error) {
+    console.log("Error fetching buses:", error);
     res.status(400).json({ message: "Error fetching buses", error });
   }
 };
+
 
 export const getBusById = async (req, res) => {
   try {
@@ -116,6 +120,17 @@ export const getBusesByTravelName = async (req, res) => {
   }
 };
 
+// controllers/busController.js (add this function)
+export const getUnassignedBuses = async (req, res) => {
+  try {
+    const buses = await Bus.find({ operator: null });
+    res.status(200).json(buses);
+  } catch (error) {
+    res.status(400).json({ message: "Error fetching unassigned buses", error });
+  }
+};
+
+
 
 export const searchBuses = async (req, res) => {
   try {
@@ -128,14 +143,14 @@ export const searchBuses = async (req, res) => {
           $lt: new Date(formattedDate.setHours(23, 59, 59, 999))
       };
 
-      // 1️⃣ Find routes that have fromLocation as a boarding stop and toLocation as a dropping stop
+      // Find routes that have fromLocation as a boarding stop and toLocation as a dropping stop
       const routes = await Route.find({})
           .populate({
               path: 'stops.stop',
               model: 'Stop'
           });
 
-      // 2️⃣ Filter routes that have fromLocation as boarding and toLocation as dropping
+      // Filter routes that have fromLocation as boarding and toLocation as dropping
       const validRoutes = routes.filter(route => {
           const fromStop = route.stops.find(stop => 
               stop.stop.stopName === fromLocation && stop.stopType === 'boarding'
@@ -155,7 +170,7 @@ export const searchBuses = async (req, res) => {
           });
       }
 
-      // 3️⃣ Get buses associated with valid routes using routeId
+      //Get buses associated with valid routes using routeId
       const routeIds = validRoutes.map(r => r.routeId);
       const buses = await Bus.find({ 
           routeId: { $in: routeIds },
@@ -168,7 +183,7 @@ export const searchBuses = async (req, res) => {
           });
       }
 
-      // 4️⃣ Get schedules for these buses on the selected date
+      //Get schedules for these buses on the selected date
       const schedules = await Schedule.find({
           busId: { $in: buses.map(b => b._id) },
           departureDate: dateQuery
@@ -180,7 +195,7 @@ export const searchBuses = async (req, res) => {
           });
       }
 
-      // 5️⃣ Format data for frontend
+      //Format data for frontend
       const searchResults = [];
       
       for (const bus of buses) {

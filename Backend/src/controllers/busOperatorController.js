@@ -1,5 +1,6 @@
 // controllers/busOperatorController.js
 import BusOperator from "../models/busOperatorModel.js";
+import Bus from "../models/bus.js"; // Import the Bus model
 
 // Create a new bus operator
 export const createOperator = async (req, res) => {
@@ -43,5 +44,23 @@ export const deleteOperator = async (req, res) => {
     res.status(200).json({ message: "Operator deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: "Error deleting operator", error: err });
+  }
+
+  
+};
+
+// controllers/busOperatorController.js (fix the function placement)
+export const assignOperatorToBus = async (req, res) => {
+  const { operatorId } = req.body;
+
+  try {
+    const updatedBus = await Bus.findByIdAndUpdate(
+      req.params.busId,
+      { operator: operatorId },
+      { new: true }
+    ).populate('operator');
+    res.json(updatedBus);
+  } catch (err) {
+    res.status(500).json({ error: 'Assignment failed', details: err.message });
   }
 };

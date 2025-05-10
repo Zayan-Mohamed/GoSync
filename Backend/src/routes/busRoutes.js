@@ -7,7 +7,8 @@ import {
   deleteBus,
   getBusesByRoute,
   getBusesByTravelName,
-  searchBuses
+  searchBuses,
+  getUnassignedBuses,
 } from "../controllers/busController.js";
 
 import { protect, adminOnly } from "../middlewares/authMiddleware.js";
@@ -22,6 +23,7 @@ router.get("/buses/route/:routeId", protect, getBusesByRoute); // Get buses by r
 router.get("/buses/travel/:travelName", protect, getBusesByTravelName); // Get buses by travel name
 
 // ✅ Admin-Only Routes
+router.get("/unassigned", protect, adminOnly, getUnassignedBuses);
 router.post("/", protect, adminOnly, createBus); // Create a bus
 router.put("/buses/:id", protect, adminOnly, updateBus); // Update a bus by ID
 router.delete("/buses/:id", protect, adminOnly, deleteBus); // Delete a bus by ID

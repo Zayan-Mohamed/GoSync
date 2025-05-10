@@ -6,7 +6,7 @@ const API_URL = `${API_URI}/api/schedules`;
 // Get All Schedules
 export const getSchedules = async () => {
   try {
-    const response = await fetch(`http://localhost:5001/api/schedules`, {
+    const response = await fetch(API_URL, {
       withCredentials: true,
     }
   );
@@ -25,7 +25,7 @@ export const getSchedules = async () => {
 // Get Schedules by Date
 export const getSchedulesByDate = async (date) => {
   try {
-    const response = await fetch(`${API_URL}/search?date=${date}`, {
+    const response = await fetch(`http://localhost:5001/search?date=${date}`, {
       withCredentials: true,
     });
     return response.data || [];
@@ -64,7 +64,7 @@ export const addSchedule = async (scheduleData) => {
 // Update Schedule
 export const updateSchedule = async (id, scheduleData) => {
   try {
-    const response = await axios.put(`${API_URL}/${id}`, scheduleData, {
+    const response = await axios.put(`http://localhost:5001/${id}`, scheduleData, {
       withCredentials: true,
     });
     return response.data;
@@ -77,7 +77,7 @@ export const updateSchedule = async (id, scheduleData) => {
 // Delete Schedule
 export const deleteSchedule = async (id) => {
   try {
-    await axios.delete(`${API_URL}/${id}`, {
+    await axios.delete(`http://localhost:5001/${id}`, {
       withCredentials: true,
     });
   } catch (error) {

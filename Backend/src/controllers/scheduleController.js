@@ -2,8 +2,10 @@ import Schedule from "../models/scheduleModel.js";
 import asyncHandler from "express-async-handler";
 import { v4 as uuidv4 } from "uuid";
 import Route from "../models/routeModel.js";
+import Bus from "../models/bus.js";
 
-// ✅ Create a new schedule
+
+
 export const createSchedule = asyncHandler(async (req, res) => {
   const { routeId, departureTime, arrivalTime, departureDate,arrivalDate, busId } = req.body;
 
@@ -11,7 +13,7 @@ export const createSchedule = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // Convert departure and arrival times into full Date objects
+
   const depTime = new Date(`${departureDate}T${departureTime}:00Z`);
   const arrTime = new Date(`${arrivalDate}T${arrivalTime}:00Z`);
 
@@ -23,14 +25,14 @@ export const createSchedule = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Arrival time must be after departure time" });
   }
 
-  // Calculate duration in hours and minutes
+
   const durationMs = arrTime - depTime;
   const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
   const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
   const duration = `${durationHours}h ${durationMinutes}m`;
 
   const schedule = await Schedule.create({
-    scheduleID: uuidv4(), // Generate unique scheduleID
+    scheduleID: uuidv4(), 
     routeId,
     departureTime,
     arrivalTime,
@@ -43,7 +45,7 @@ export const createSchedule = asyncHandler(async (req, res) => {
   res.status(201).json(schedule);
 });
 
-// ✅ Get all schedules
+
 export const getSchedules = asyncHandler(async (req, res) => {
   const schedules = await Schedule.find({})
     .populate("routeId", "startLocation endLocation")
@@ -51,7 +53,7 @@ export const getSchedules = asyncHandler(async (req, res) => {
   res.json(schedules);
 });
 
-// ✅ Get a schedule by scheduleID
+
 export const getScheduleById = asyncHandler(async (req, res) => {
   const schedule = await Schedule.findOne({ scheduleID: req.params.scheduleID })
     .populate("routeId", "startLocation endLocation")
@@ -64,7 +66,7 @@ export const getScheduleById = asyncHandler(async (req, res) => {
   }
 });
 
-// ✅ Update a schedule by scheduleID
+
 export const updateSchedule = asyncHandler(async (req, res) => {
 
 
@@ -95,7 +97,7 @@ const duration = `${durationHours}h ${durationMinutes}m`;
     
 );
 
-// ✅ Delete a schedule by scheduleID
+
 export const deleteSchedule = asyncHandler(async (req, res) => {
   const schedule = await Schedule.findOne({ scheduleID: req.params.scheduleID });
 
@@ -107,7 +109,7 @@ export const deleteSchedule = asyncHandler(async (req, res) => {
   }
 });
 
-// ✅ Get schedules by busId
+
 export const getSchedulesByBusId = asyncHandler(async (req, res) => {
   const { busId } = req.params;
 

@@ -11,6 +11,9 @@ export default {
         darkCharcoal: "#333333",
         softPeach: "#FFE082",
       },
+      fontFamily: {
+        helvetica: ["Helvetica Neu", "Helvetica", "Arial", "sans-serif"],
+      },
     },
   },
   plugins: [],

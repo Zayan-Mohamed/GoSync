@@ -6,6 +6,7 @@ import useAuthStore from "../store/authStore";
 import Navbar1 from "../components/Navbar1";
 import Footer1 from "../components/Footer1";
 import Loader from "../components/Loader";
+import BookingCard from "../components/BookingCard";
 import { FiXCircle } from "react-icons/fi";
 
 const CancelTicket = () => {
@@ -29,7 +30,31 @@ const CancelTicket = () => {
           }
         );
         console.log("Fetched bookings:", response.data);
-        setBookings(response.data.filter((b) => b.status === "confirmed"));
+        const confirmedBookings = response.data.filter(
+          (b) => b.status === "confirmed"
+        );
+        const bookingsWithQRCodes = await Promise.all(
+          confirmedBookings.map(async (booking) => {
+            try {
+              const qrResponse = await axios.get(
+                `http://localhost:5000/api/bookings/getQRCode/${booking.bookingId}`,
+                { withCredentials: true }
+              );
+              return { ...booking, qrCode: qrResponse.data.qrCode };
+            } catch (err) {
+              console.error(
+                `Failed to fetch QR for ${booking.bookingId}:`,
+                err
+              );
+              return booking;
+            }
+          })
+        );
+        // Sort by createdAt in descending order
+        const sortedBookings = bookingsWithQRCodes.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setBookings(sortedBookings);
       } catch (err) {
         console.error("Error fetching bookings:", err);
         toast.error(err.response?.data?.message || "Failed to load bookings");
@@ -42,7 +67,8 @@ const CancelTicket = () => {
   }, [isAuthenticated, user, navigate]);
 
   const handleCancelBooking = async (bookingId) => {
-    if (!confirm("Are you sure you want to cancel this booking?")) return;
+    if (!window.confirm("Are you sure you want to cancel this booking?"))
+      return;
 
     try {
       const response = await axios.post(
@@ -64,45 +90,33 @@ const CancelTicket = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar1 />
-      <div className="container mx-auto py-6 px-4 flex-grow">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-700 flex items-center">
-          <FiXCircle className="mr-2" /> Cancel Tickets
+      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 flex-grow">
+        <h2 className="text-3xl font-bold text-gray-800 mb-8 flex items-center">
+          <FiXCircle className="w-8 h-8 mr-3 text-red-600" /> Cancel Tickets
         </h2>
         {bookings.length === 0 ? (
-          <p className="text-gray-600">No confirmed bookings to cancel.</p>
+          <div className="text-center py-12">
+            <p className="text-lg text-gray-600">
+              No confirmed bookings to cancel.
+            </p>
+            <button
+              onClick={() => navigate("/")}
+              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Book a Ticket
+            </button>
+          </div>
         ) : (
-          <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <div className="grid gap-6">
             {bookings.map((booking) => (
-              <div
+              <BookingCard
                 key={booking.bookingId}
-                className="p-4 border border-gray-200 rounded-lg flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-semibold">{booking.bookingId}</p>
-                  <p>
-                    {booking.from} to {booking.to} | Seats:{" "}
-                    {booking.seatNumbers.join(", ")}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Booked on:{" "}
-                    {booking.createdAt
-                      ? new Date(booking.createdAt).toLocaleString()
-                      : "Date not available"}
-                  </p>
-                  <p className="text-sm">
-                    Status:{" "}
-                    <span className="text-green-600">{booking.status}</span>
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleCancelBooking(booking.bookingId)}
-                  className="px-4 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition"
-                >
-                  Cancel
-                </button>
-              </div>
+                booking={booking}
+                onCancel={handleCancelBooking}
+                showCancelButton={true}
+              />
             ))}
           </div>
         )}

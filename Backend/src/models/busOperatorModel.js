@@ -34,6 +34,12 @@ const busOperatorSchema = new mongoose.Schema(
       default: "Active",
       enum: ["Active", "Inactive"],
     },
+    BusNumber: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bus",
+      required: false,
+      trim: true,
+    },
   },
   {
     timestamps: true,

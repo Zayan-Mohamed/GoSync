@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; 
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/AddNoti.css";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,7 @@ const AddNotification = () => {
     const [routes, setRoutes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [status] = useState("sent");
+    const [departureTime, setDepartureTime] = useState("");
     const navigate = useNavigate();
     const API_URI = import.meta.env.VITE_API_URL;
 
@@ -55,27 +56,17 @@ const AddNotification = () => {
     }, [subType]);
 
     useEffect(() => {
-        if ((subType === "bus delay" || subType === "bus breakdown") && selectedRoute) {
-            axios
-                .get(`${API_URI}/api/buses/route/${selectedRoute}`, { withCredentials: true })
-                .then((res) => {
-                    if (Array.isArray(res.data.buses)) {
-                        setAllBuses(res.data.buses);
-                    } else {
-                        setAllBuses([]);
-                    }
-                })
-                .catch((err) => console.error("Failed to fetch buses by route", err));
-        }
-    }, [selectedRoute, subType]);
-
-    useEffect(() => {
         if (subType && selectedBus) {
             if (subType === "bus breakdown" && breakdownDate) {
                 const readableDate = new Date(breakdownDate).toLocaleDateString();
                 setMessage(`Bus ${selectedBus} broke down on ${readableDate}. We apologize for the inconvenience.`);
-            } else if (subType === "bus delay") {
-                setMessage(`Bus ${selectedBus} is currently delayed. We apologize for any inconvenience caused.`);
+            } else if (subType === "bus delay" && departureTime) {
+                const formattedTime = new Date(departureTime).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                setMessage(`Bus ${selectedBus} is now expected to depart at ${formattedTime}. We apologize for any inconvenience caused.`);
             } else if (subType === "bus maintenance" && maintenanceStartDate && maintenanceEndDate) {
                 const start = new Date(maintenanceStartDate).toLocaleDateString();
                 const end = new Date(maintenanceEndDate).toLocaleDateString();
@@ -87,7 +78,7 @@ const AddNotification = () => {
             const routeName = routes.find(r => r._id === selectedRoute)?.routeName || "the route";
             setMessage(`Route ${routeName} will be disrupted from ${start} to ${end} due to maintenance work. Please plan accordingly.`);
         }
-    }, [subType, selectedBus, breakdownDate, maintenanceStartDate, maintenanceEndDate, selectedRoute, disruptionStartDate, disruptionEndDate]);
+    }, [subType, selectedBus, breakdownDate, maintenanceStartDate, maintenanceEndDate, selectedRoute, disruptionStartDate, disruptionEndDate, departureTime]);
 
     useEffect(() => {
         if (type === "promotions") {
@@ -96,16 +87,34 @@ const AddNotification = () => {
           setMessage("🚌 GoSync Discount: Get up to 25% off on your next ticket booking! Limited time offer.");
         }
       }, [type]);
-    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
-        if (expirationDate && new Date(expirationDate) <= new Date()) {
-            alert("Expiration date must be in the future.");
-            setLoading(false);
-            return;
+        if (expirationDate) {
+            const today = new Date();
+            const selected = new Date(expirationDate);
+        
+            // Set both dates to the same time (midnight) to compare only the date
+            today.setHours(0, 0, 0, 0);
+            selected.setHours(0, 0, 0, 0);
+        
+            // Check if the selected date is in the past
+            if (selected < today) {
+                alert("Expiration date cannot be in the past.");
+                setLoading(false);
+                return;
+            }
+        
+            // If the selected date is today, ensure the time is in the future
+            if (selected.getTime() === today.getTime() && expirationDate <= new Date()) {
+                alert("Expiration time cannot be the current or past time.");
+                setLoading(false);
+                return;
+            }
         }
+        
 
         const newNotification = {
             type,
@@ -128,6 +137,7 @@ const AddNotification = () => {
                 : null,
             affectedRoute: subType === "route disruption" ? selectedRoute : null, // Optional: use separate field
             createdBy: "admin123",
+            departureTime: subType === "bus delay" ? departureTime : null,
         };
 
         try {
@@ -146,6 +156,7 @@ const AddNotification = () => {
             setMaintenanceEndDate("");
             setDisruptionStartDate("");
             setDisruptionEndDate("");
+            setDepartureTime("");
             navigate("/notification-management");
         } catch (error) {
             console.error("Error sending notification:", error);
@@ -234,6 +245,19 @@ const AddNotification = () => {
                                 type="date"
                                 value={breakdownDate}
                                 onChange={(e) => setBreakdownDate(e.target.value)}
+                                required
+                            />
+                        </div>
+                    )}
+
+                    {/* Departure Time for Bus Delay */}
+                    {subType === "bus delay" && (
+                        <div className="form-group">
+                            <label>Expected Departure Time</label>
+                            <input
+                                type="datetime-local"
+                                value={departureTime}
+                                onChange={(e) => setDepartureTime(e.target.value)}
                                 required
                             />
                         </div>

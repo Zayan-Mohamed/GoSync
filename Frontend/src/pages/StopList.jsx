@@ -45,7 +45,7 @@ function StopList() {
               ? data.stops 
               : []);
               
-          setStops(stopsData);
+          setStops(stopsData.reverse());
           setError(null);
         } catch (err) {
           console.error("Fetch error:", err);
@@ -69,6 +69,8 @@ function StopList() {
   };
 
   const handleDeleteStop = async (id) => {
+    const confirmed = window.confirm("Are you sure you want to delete this stop?");
+    if (!confirmed) return;
     try {
       await deleteStop(id);
       setStops(prev => prev.filter(stop => stop._id !== id));
@@ -232,7 +234,7 @@ function StopList() {
             </CustomButton>
             <CustomButton
               onClick={() => handleDeleteStop(stop._id)}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              variant="destructive" className="bg-red-500 hover:bg-red-600 text-white"
             >
               <Delete fontSize="small" />
             </CustomButton>
