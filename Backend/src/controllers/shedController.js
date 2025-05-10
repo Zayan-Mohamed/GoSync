@@ -1,30 +1,35 @@
-import ShedMessage from "../models/shedModel.js";
+// import ShedMessage from "../models/shedModel.js";
+// import cron from "node-cron";
+// import { setupWebSocket } from "../websocket.js";
+
+import ShedMessage from "../models/shedModel.js"; // Adjust the path to your model
 import cron from "node-cron";
 import { setupWebSocket } from "../websocket.js";
 
-// WebSocket connection setup
 const io = setupWebSocket();
 
 export const shedMessage = async (req, res) => {
   try {
-    const { type, message, shedDate, shedTime, expiryDate } = req.body;
+    const { type,  subType, message, shedDate, shedTime, expiryDate } = req.body;
 
     const newMessage = new ShedMessage({
       type,
+      subType,
       message,
-      shedDate, // YYYY-MM-DD
-      shedTime, // HH:mm
+    
+      shedDate,
+      shedTime,
       status: "pending",
       createdBy: req.user.name,
-      expiredAt: expiryDate ? new Date(expiryDate) : null, // Optional expiry date
+      expiredAt: expiryDate ? new Date(expiryDate) : null,
     });
 
     await newMessage.save();
 
-    // Emit WebSocket notification
     io.emit("newNotification", {
       _id: newMessage._id,
       message: `New message scheduled: ${newMessage.message}`,
+      status: "pending"
     });
 
     res.status(201).json({ success: true, message: "Message scheduled successfully!" });
@@ -35,7 +40,6 @@ export const shedMessage = async (req, res) => {
 
 export const getAllShedMessages = async (req, res) => {
   try {
-    // Fetch all shed messages and sort by shedDate and shedTime (newest first)
     const messages = await ShedMessage.find().sort({ shedDate: -1, shedTime: -1 });
     res.status(200).json({ success: true, data: messages });
   } catch (error) {
@@ -46,16 +50,18 @@ export const getAllShedMessages = async (req, res) => {
 export const updateShedMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedMessage = await ShedMessage.findByIdAndUpdate(id, req.body, { new: true });
+    const updatedMessage = await ShedMessage.findByIdAndUpdate(id, req.body, { 
+      new: true 
+    });
 
     if (!updatedMessage) {
       return res.status(404).json({ success: false, message: "Message not found!" });
     }
 
-    // Emit WebSocket notification
     io.emit("newNotification", {
       _id: updatedMessage._id,
       message: `Message updated: ${updatedMessage.message}`,
+      status: updatedMessage.status
     });
 
     res.status(200).json({ success: true, data: updatedMessage });
@@ -73,10 +79,9 @@ export const deleteShedMessage = async (req, res) => {
       return res.status(404).json({ success: false, message: "Message not found!" });
     }
 
-    // Emit WebSocket notification
     io.emit("newNotification", {
       _id: deletedMessage._id,
-      message: `Message deleted: ${deletedMessage.message}`,
+      action: "delete"
     });
 
     res.status(200).json({ success: true, message: "Message deleted successfully!" });
@@ -89,9 +94,10 @@ export const deleteShedMessage = async (req, res) => {
 cron.schedule("* * * * *", async () => {
   try {
     const now = new Date();
-    const today = now.toISOString().split("T")[0]; // YYYY-MM-DD
-    const currentTime = now.toTimeString().slice(0, 5); // HH:mm
+    const today = now.toISOString().split("T")[0];
+    const currentTime = now.toTimeString().slice(0, 5);
 
+    // Send scheduled messages
     const messagesToSend = await ShedMessage.find({
       shedDate: today,
       shedTime: currentTime,
@@ -99,20 +105,17 @@ cron.schedule("* * * * *", async () => {
     });
 
     for (let msg of messagesToSend) {
-      console.log(`Sending scheduled message: "${msg.message}"`);
       msg.status = "sent";
       await msg.save();
 
-      // Emit WebSocket notification for each sent message
-      if (io) {
-        io.emit("newNotification", {
-          _id: msg._id,
-          message: `Scheduled Message Sent: ${msg.message}`,
-        });
-      }
+      io.emit("newNotification", {
+        _id: msg._id,
+        message: `Scheduled Message Sent: ${msg.message}`,
+        status: "sent"
+      });
     }
 
-    // Check for expired messages and change status to "archived"
+    // Check for expired messages
     const expiredMessages = await ShedMessage.find({
       status: { $ne: "archived" },
       expiredAt: { $lte: now },
@@ -122,15 +125,12 @@ cron.schedule("* * * * *", async () => {
       expiredMessage.status = "archived";
       await expiredMessage.save();
 
-      // Emit WebSocket notification for archived message
-      if (io) {
-        io.emit("newNotification", {
-          _id: expiredMessage._id,
-          message: `Message Archived: ${expiredMessage.message}`,
-        });
-      }
+      io.emit("newNotification", {
+        _id: expiredMessage._id,
+        message: `Message Archived: ${expiredMessage.message}`,
+        status: "archived"
+      });
     }
-
   } catch (error) {
     console.error("Error in scheduled job:", error.message);
   }

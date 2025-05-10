@@ -47,6 +47,7 @@ import BookingManagement from "../pages/BookingManagement.jsx";
 import AddBooking from "../pages/AddBooking.jsx";
 import BookingAnalytics from "../pages/BookingAnalytics.jsx";
 import UpdateMessage from "../pages/UpdateMessage.jsx";
+import AnalyticsPage from "../pages/AnalyticsPage.jsx";
 
 const AppRoutes = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -81,6 +82,7 @@ const AppRoutes = () => {
               element={<UpdateNotification />}
              
             />
+             <Route path="/notification-analytics" element={<AnalyticsPage />} />
              <Route path="/update-message/:id" element={<UpdateMessage />} />
             <Route path="/current-routes" element={<CurrentRoutes />} />
             <Route path="/Schedule-notification" element={<ShedTable />} />

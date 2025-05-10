@@ -6,6 +6,13 @@ const shedSchema = new mongoose.Schema({
     enum: ['travel disruption', 'promotions', 'discounts', 'alert', 'reminders', 'info'],
     default: 'info',
   },
+  
+  subType: {
+    type: String,
+    enum: ['bus maintenance', 'bus delay', 'bus breakdown', 'route disruption'],
+    required: function() { return this.type === 'travel disruption'; }, // Only required if travel disruption
+  },
+  
   message: { type: String, required: true },
   shedDate: { type: String, required: true }, // YYYY-MM-DD
   shedTime: { type: String, required: true }, // HH:mm
@@ -13,6 +20,7 @@ const shedSchema = new mongoose.Schema({
     type: "String",
     required: true
   },
+  
   status: { type: String, enum: ["pending", "sent", "archived"], default: "pending" },
   expiredAt: {
     type: Date,

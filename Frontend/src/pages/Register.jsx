@@ -185,6 +185,7 @@ const Register = () => {
 
     strength.score = Object.values(newCriteria).filter(Boolean).length;
 
+    
     switch (strength.score) {
       case 1:
         strength.color = "bg-red-500";

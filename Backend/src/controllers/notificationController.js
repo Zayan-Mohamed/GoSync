@@ -9,13 +9,13 @@ import cron from 'node-cron'; // To run scheduled tasks
 export const getNotificationById = async (req, res) => {
   try {
     const { id } = req.params;
-    const notification = await Notification.findOne({ notificationId: id });
+    const notification = await Notification.findOne({ notificationId: id });// finding the id that meas earches for a notification with the specified notificationId.
 
     if (!notification) {
       return res.status(404).json({ message: "Notification not found" });
     }
 
-    res.status(200).json(notification);
+    res.status(200).json(notification);//If a notification is found, it is returned with a 200 status code in JSON
   } catch (error) {
     console.error(error);
     res.status(500).json({ errorMessage: error.message, message: 'Server Error' });
