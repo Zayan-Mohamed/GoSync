@@ -25,6 +25,7 @@ const SortableRouteStops = ({
   onEdit,
   onDelete,
   onReorderComplete = () => {},
+  viewMode = "list",
 }) => {
   const setRouteStops = useRouteStore((state) => state.setRouteStops);
 
@@ -32,8 +33,8 @@ const SortableRouteStops = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, // Reduced from 8 to make it more responsive
-        tolerance: 5, // Added tolerance for smoother initiation
+        distance: 3, // Reduced for more responsive drag initiation
+        tolerance: 3, // Lower tolerance for more precise control
         delay: 0, // No delay for immediate response
       },
     }),
@@ -42,8 +43,8 @@ const SortableRouteStops = ({
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 50, // Reduced from 250 for faster touch response
-        tolerance: 8, // Increased tolerance for better touch control
+        delay: 30, // Reduced delay for faster touch response
+        tolerance: 5, // Balanced tolerance for touch control
       },
     })
   );
@@ -59,13 +60,14 @@ const SortableRouteStops = ({
         (s) => (s.stop?._id || s._id) === over.id
       );
 
+      // Optimistic update for immediate UI feedback
       const reordered = arrayMove([...stops], oldIndex, newIndex);
       const updatedStops = reordered.map((stop, idx) => ({
         ...stop,
         order: idx + 1,
       }));
 
-      // Optimistically update UI
+      // Update UI immediately for smooth transition
       setRouteStops(updatedStops);
 
       // Prepare stops data for API
@@ -74,7 +76,6 @@ const SortableRouteStops = ({
         order: stop.order,
       }));
 
-      // Make API call
       const API_URI = import.meta.env.VITE_API_URL.replace(/\/$/, "");
       await axios.post(
         `${API_URI}/api/routes/${routeId}/reorder-stops`,
@@ -110,13 +111,20 @@ const SortableRouteStops = ({
         items={stops.map((s) => s.stop?._id || s._id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-3">
+        <div
+          className={`${
+            viewMode === "grid"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              : "space-y-3"
+          }`}
+        >
           {stops.map((stop) => (
             <SortableStopItem
               key={stop.stop?._id || stop._id}
               stop={stop}
               onEdit={onEdit}
               onDelete={onDelete}
+              viewMode={viewMode}
             />
           ))}
         </div>

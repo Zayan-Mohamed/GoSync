@@ -44,6 +44,15 @@ const ManageRouteStops = () => {
   });
   const [selectedRouteId, setSelectedRouteId] = useState("");
 
+  // Add new state for pending deletions
+  const [pendingDeletions, setPendingDeletions] = useState({});
+
+  // Add state for pending edits
+  const [pendingEdits, setPendingEdits] = useState({});
+
+  // Add view mode state
+  const [viewMode, setViewMode] = useState("list"); // 'list' or 'grid'
+
   const navigate = useNavigate();
   const location = useLocation();
   const API_URI = import.meta.env.VITE_API_URL.replace(/\/$/, "");
@@ -314,58 +323,100 @@ const ManageRouteStops = () => {
     }
 
     try {
-      setActionLoading(true);
-
-      const { updateRouteStop } = useRouteStore.getState();
-
-      await updateRouteStop(
-        currentRoute._id || currentRoute.routeId,
-        editStopData.stopId,
-        {
-          stopType: editStopData.stopType,
-          order: parseInt(editStopData.order),
-        }
+      const routeIdToUse = currentRoute._id || currentRoute.routeId;
+      const editKey = `edit-${routeIdToUse}-${editStopData.stopId}`;
+      
+      // Store the original data
+      const originalData = routeStops.find(
+        stop => stop.stop?._id === editStopData.stopId || stop._id === editStopData.stopId
       );
 
-      // Explicit toast call
-      toast.success("Stop updated successfully!", {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      const timeoutId = setTimeout(async () => {
+        try {
+          setActionLoading(true);
+          
+          await useRouteStore.getState().updateRouteStop(
+            routeIdToUse,
+            editStopData.stopId,
+            {
+              stopType: editStopData.stopType,
+              order: parseInt(editStopData.order),
+            }
+          );
 
-      // Refresh route data
-      await refreshRouteData(currentRoute._id || currentRoute.routeId);
+          await refreshRouteData(routeIdToUse);
+          
+          setPendingEdits(prev => {
+            const { [editKey]: _, ...rest } = prev;
+            return rest;
+          });
 
-      // Reset edit mode
-      setIsEditing(false);
-      setEditStopData({
-        stopId: "",
-        stopType: "boarding",
-        order: 1,
-        stop: { _id: "", stopName: "" },
-      });
-    } catch (err) {
-      console.error("Update stop error:", err);
-      // Explicit toast call
-      toast.error(
-        err.response?.data?.message || err.message || "Failed to update stop",
+          setIsEditing(false);
+          setEditStopData({
+            stopId: "",
+            stopType: "boarding",
+            order: 1,
+            stop: { _id: "", stopName: "" },
+          });
+          
+          toast.success("Stop updated successfully!", {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        } catch (err) {
+          console.error("Update stop error:", err);
+          toast.error(err.message || "Failed to update stop", {
+            position: "top-right",
+          });
+        } finally {
+          setActionLoading(false);
+        }
+      }, 3000); // Using 3 seconds timeout
+
+      setPendingEdits(prev => ({
+        ...prev,
+        [editKey]: { timeoutId, originalData }
+      }));
+
+      toast.info(
+        <div className="flex items-center justify-between w-full gap-4">
+          <span>Stop updating in 3 seconds...</span>
+          <button
+            onClick={() => {
+              clearTimeout(timeoutId);
+              setPendingEdits(prev => {
+                const { [editKey]: _, ...rest } = prev;
+                return rest;
+              });
+              toast.success("Update operation cancelled", {
+                position: "top-right",
+                autoClose: 2000,
+              });
+            }}
+            className="px-3 py-1 bg-white text-deepOrange rounded hover:bg-gray-100 whitespace-nowrap"
+          >
+            Undo
+          </button>
+        </div>,
         {
           position: "top-right",
+          autoClose: 3000,
+          closeOnClick: false,
         }
       );
-    } finally {
-      setActionLoading(false);
+    } catch (err) {
+      console.error("Update stop error:", err);
+      toast.error(err.message || "Failed to update stop", {
+        position: "top-right",
+      });
     }
   };
 
-  // Improved deleteStopHandler function
+  // Updated deleteStopHandler with 3 second timeout
   const deleteStopHandler = async (stopId) => {
     if (!window.confirm("Are you sure you want to delete this stop?")) return;
 
     try {
-      setActionLoading(true);
-
-      // Find the stop object
       const stopToDelete = routeStops.find(
         (s) => s.stop?._id === stopId || s._id === stopId
       );
@@ -374,40 +425,88 @@ const ManageRouteStops = () => {
         throw new Error("Stop not found in current route");
       }
 
-      // Use the most reliable ID available
       const mongoStopId = stopToDelete.stop?._id || stopToDelete._id;
       const routeIdToUse = currentRoute._id || currentRoute.routeId;
+      const deletionKey = `${routeIdToUse}-${mongoStopId}`;
 
-      // Add logging for debugging
-      console.log("Deleting stop with details:", {
-        routeId: routeIdToUse,
-        stopId: mongoStopId,
-        currentRouteStops: routeStops.length,
-      });
+      const timeoutId = setTimeout(async () => {
+        try {
+          setActionLoading(true);
+          await useRouteStore.getState().deleteStopFromRoute(routeIdToUse, mongoStopId);
+          await refreshRouteData(routeIdToUse);
+          
+          setPendingDeletions(prev => {
+            const { [deletionKey]: _, ...rest } = prev;
+            return rest;
+          });
+          
+          toast.success("Stop deleted successfully!", {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        } catch (err) {
+          console.error("Delete stop failed:", err);
+          toast.error(err.message || "Failed to delete stop", {
+            position: "top-right",
+          });
+        } finally {
+          setActionLoading(false);
+        }
+      }, 3000); // 3 second delay
 
-      // Use Zustand store action
-      await useRouteStore
-        .getState()
-        .deleteStopFromRoute(routeIdToUse, mongoStopId);
+      setPendingDeletions(prev => ({
+        ...prev,
+        [deletionKey]: { timeoutId, stopToDelete }
+      }));
 
-      // Explicit toast call
-      toast.success("Stop deleted successfully!", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-
-      // Refresh route data without delay (the delay might be causing issues)
-      await refreshRouteData(routeIdToUse);
+      toast.info(
+        <div className="flex items-center justify-between w-full gap-4">
+          <span>Stop deleting in 3 seconds...</span>
+          <button
+            onClick={() => {
+              clearTimeout(timeoutId);
+              setPendingDeletions(prev => {
+                const { [deletionKey]: _, ...rest } = prev;
+                return rest;
+              });
+              toast.success("Delete operation cancelled", {
+                position: "top-right",
+                autoClose: 2000,
+              });
+            }}
+            className="px-3 py-1 bg-white text-deepOrange rounded hover:bg-gray-100 whitespace-nowrap"
+          >
+            Undo
+          </button>
+        </div>,
+        {
+          position: "top-right",
+          autoClose: 3000,
+          closeOnClick: false,
+        }
+      );
     } catch (err) {
       console.error("Delete stop failed:", err);
-      // Explicit toast call
       toast.error(err.message || "Failed to delete stop", {
         position: "top-right",
       });
-    } finally {
-      setActionLoading(false);
     }
   };
+
+  // Updated cleanup useEffect to handle both pending deletions and edits
+  useEffect(() => {
+    return () => {
+      // Clear all pending deletion timeouts
+      Object.values(pendingDeletions).forEach(({ timeoutId }) => {
+        clearTimeout(timeoutId);
+      });
+      // Clear all pending edit timeouts
+      Object.values(pendingEdits).forEach(({ timeoutId }) => {
+        clearTimeout(timeoutId);
+      });
+    };
+  }, [pendingDeletions, pendingEdits]);
+
   // Add these states to your component's state declarations
   const [multipleStopsMode, setMultipleStopsMode] = useState(false);
   const [stopFields, setStopFields] = useState([
@@ -576,7 +675,7 @@ const ManageRouteStops = () => {
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 py-8">
         <div ref={topRef} className="max-w-5xl mx-auto">
-          {/* Header */}
+          {/* Header and route selection */}
           <div className="bg-white rounded-lg shadow-sm mb-6 p-6">
             <div className="flex items-center mb-6">
               <button
@@ -684,10 +783,7 @@ const ManageRouteStops = () => {
               </div>
 
               {/* Add/Edit form */}
-              <div
-                ref={formRef}
-                className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden"
-              >
+              <div ref={formRef} className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
                 <div className="p-6 border-b">
                   <div className="flex justify-between items-center">
                     <h3 className="text-xl font-bold text-gray-800">
@@ -732,12 +828,12 @@ const ManageRouteStops = () => {
                             <option value="">Select Stop</option>
                             {isEditing ? (
                               <option value={editStopData.stopId}>
-                                {editStopData.stop?.stopName ||
-                                  editStopData.stopName}
+
+                                {editStopData.stop?.stopName || editStopData.stopName}
                               </option>
                             ) : (
                               getAvailableStops().map((stop) => (
-                                <option key={stop._id} value={stop._id}>
+                                <option key={stop._id} value={stop.stopId || stop._id}>
                                   {stop.stopName} ({stop.status})
                                 </option>
                               ))
@@ -745,6 +841,7 @@ const ManageRouteStops = () => {
                           </select>
                         </div>
 
+                        {/* Type select */}
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1">
                             Type*
@@ -765,6 +862,7 @@ const ManageRouteStops = () => {
                           </select>
                         </div>
 
+                        {/* Order input */}
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1">
                             Order*
@@ -778,12 +876,12 @@ const ManageRouteStops = () => {
                             }
                             className="w-full p-2 border border-gray-300 rounded-md"
                             min="1"
-                            max={routeStops.length + 1}
                             required
                           />
                         </div>
                       </div>
 
+                      {/* Action buttons */}
                       <div className="flex justify-end space-x-3">
                         {isEditing && (
                           <button
@@ -1011,13 +1109,72 @@ const ManageRouteStops = () => {
                 </div>
               </div>
 
-              {/* Current stops */}
+              {/* Current stops section */}
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-bold text-gray-800">Current Stops</h3>
-                  <div className="text-sm text-gray-500">
-                    {routeStops.length}{" "}
-                    {routeStops.length === 1 ? "stop" : "stops"}
+                  <div className="flex items-center gap-4">
+                    {/* View toggle buttons */}
+                    <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                      <button
+                        onClick={() => setViewMode("list")}
+                        className={`p-2 rounded-md transition-all ${
+                          viewMode === "list"
+                            ? "bg-white text-deepOrange shadow"
+                            : "text-gray-600 hover:text-deepOrange"
+                        }`}
+                        title="List view"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="8" y1="6" x2="21" y2="6"></line>
+                          <line x1="8" y1="12" x2="21" y2="12"></line>
+                          <line x1="8" y1="18" x2="21" y2="18"></line>
+                          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setViewMode("grid")}
+                        className={`p-2 rounded-md transition-all ${
+                          viewMode === "grid"
+                            ? "bg-white text-deepOrange shadow"
+                            : "text-gray-600 hover:text-deepOrange"
+                        }`}
+                        title="Grid view"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect x="3" y="3" width="7" height="7"></rect>
+                          <rect x="14" y="3" width="7" height="7"></rect>
+                          <rect x="14" y="14" width="7" height="7"></rect>
+                          <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {routeStops.length}{" "}
+                      {routeStops.length === 1 ? "stop" : "stops"}
+                    </div>
                   </div>
                 </div>
 
@@ -1057,6 +1214,7 @@ const ManageRouteStops = () => {
                       routeId={selectedRouteId}
                       onEdit={startEditingStop}
                       onDelete={deleteStopHandler}
+                      viewMode={viewMode}
                     />
                   </div>
                 )}
@@ -1067,6 +1225,6 @@ const ManageRouteStops = () => {
       </div>
     </AdminLayout>
   );
-};
+}
 
 export default ManageRouteStops;

@@ -165,23 +165,47 @@ const BusSearchResults = () => {
       <Navbar1 />
 
       {/* Journey details header */}
-      <div className="bg-deepOrange text-white py-3">
-        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center px-4">
-          <div className="flex items-center space-x-3">
-            <h1 className="text-xl font-bold">{fromLocation}</h1>
-            <span className="text-xl">⟫</span>
-            <h1 className="text-xl font-bold">{toLocation}</h1>
-          </div>
-          <div className="flex items-center space-x-3 mt-2 sm:mt-0">
-            <span className="text-white">
-              {journeyDate ? formatDate(journeyDate) : ""}
-            </span>
-            <button
-              onClick={handleModify}
-              className="bg-brightYellow text-darkCharcoal px-3 py-1 rounded text-sm hover:bg-lightYellow"
-            >
-              {showBookingForm ? "Cancel" : "Modify"}
-            </button>
+      <div className="bg-gradient-to-r from-deepOrange to-sunsetOrange shadow-lg">
+        <div className="container mx-auto py-6 px-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+            {/* Journey Information */}
+            <div className="flex items-center space-x-6">
+              <div className="flex flex-col items-center sm:items-start">
+                <span className="text-gray-200 text-sm mb-1">From</span>
+                <h1 className="text-2xl font-bold text-white">{fromLocation}</h1>
+              </div>
+              
+              <div className="flex flex-col items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center sm:items-start">
+                <span className="text-gray-200 text-sm mb-1">To</span>
+                <h1 className="text-2xl font-bold text-white">{toLocation}</h1>
+              </div>
+            </div>
+
+            {/* Date and Modify Button */}
+            <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-6">
+              <div className="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-white font-medium">
+                  {journeyDate ? formatDate(journeyDate) : ""}
+                </span>
+              </div>
+              <button
+                onClick={handleModify}
+                className="bg-white text-deepOrange px-6 py-2 rounded-full font-medium text-sm hover:bg-gray-100 transition-colors duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                {showBookingForm ? "Cancel" : "Modify Search"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -193,32 +217,59 @@ const BusSearchResults = () => {
       />
 
       {/* Filter options */}
-      <div className="bg-softPeach py-2">
-        <div className="container mx-auto flex justify-between text-darkCharcoal text-sm">
-          <button
-            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === "price" ? "bg-lightYellow" : ""}`}
-            onClick={() => setSortBy("price")}
-          >
-            PRICE
-          </button>
-          <button
-            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === "departure" ? "bg-lightYellow" : ""}`}
-            onClick={() => setSortBy("departure")}
-          >
-            DEPARTURE
-          </button>
-          <button
-            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === "arrival" ? "bg-lightYellow" : ""}`}
-            onClick={() => setSortBy("arrival")}
-          >
-            ARRIVAL
-          </button>
-          <button
-            className={`py-1 px-2 hover:bg-lightYellow font-medium ${sortBy === "seats" ? "bg-lightYellow" : ""}`}
-            onClick={() => setSortBy("seats")}
-          >
-            SEATS
-          </button>
+      <div className="bg-white shadow-md">
+        <div className="container mx-auto flex flex-wrap sm:flex-nowrap justify-between items-center px-4 py-3">
+          <div className="text-sm font-medium text-gray-500 mr-4 hidden sm:block">Sort by:</div>
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-between sm:justify-start">
+            <button
+              className={`px-4 py-2 rounded-full transition-all duration-200 flex items-center space-x-2
+                ${sortBy === "price" 
+                  ? "bg-deepOrange text-white shadow-md" 
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              onClick={() => setSortBy("price")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Price</span>
+            </button>
+            <button
+              className={`px-4 py-2 rounded-full transition-all duration-200 flex items-center space-x-2
+                ${sortBy === "departure" 
+                  ? "bg-deepOrange text-white shadow-md" 
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              onClick={() => setSortBy("departure")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Departure</span>
+            </button>
+            <button
+              className={`px-4 py-2 rounded-full transition-all duration-200 flex items-center space-x-2
+                ${sortBy === "arrival" 
+                  ? "bg-deepOrange text-white shadow-md" 
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              onClick={() => setSortBy("arrival")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+              <span>Arrival</span>
+            </button>
+            <button
+              className={`px-4 py-2 rounded-full transition-all duration-200 flex items-center space-x-2
+                ${sortBy === "seats" 
+                  ? "bg-deepOrange text-white shadow-md" 
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              onClick={() => setSortBy("seats")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>Seats</span>
+            </button>
+          </div>
         </div>
       </div>
 

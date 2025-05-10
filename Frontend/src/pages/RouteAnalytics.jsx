@@ -265,44 +265,7 @@ const RouteAnalytics = () => {
       <div className="p-6 max-w-7xl mx-auto">
         <h2 className="text-3xl font-bold mb-6 text-gray-800">Route Analytics</h2>
 
-        {/* Filters */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:space-x-4 bg-white p-4 rounded-lg shadow">
-          <div className="mb-4 sm:mb-0">
-            <label className="block text-sm font-medium text-gray-700">Status</label>
-            <select
-              name="status"
-              value={filter.status}
-              onChange={handleFilterChange}
-              className="mt-1 p-2 border rounded-md w-full sm:w-auto focus:ring-deepOrange focus:border-deepOrange"
-            >
-              <option value="">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-          <div className="mb-4 sm:mb-0">
-            <label className="block text-sm font-medium text-gray-700">Start Date</label>
-            <input
-              type="date"
-              name="startDate"
-              value={filter.startDate}
-              onChange={handleFilterChange}
-              className="mt-1 p-2 border rounded-md w-full sm:w-auto focus:ring-deepOrange focus:border-deepOrange"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">End Date</label>
-            <input
-              type="date"
-              name="endDate"
-              value={filter.endDate}
-              onChange={handleFilterChange}
-              className="mt-1 p-2 border rounded-md w-full sm:w-auto focus:ring-deepOrange focus:border-deepOrange"
-            />
-          </div>
-        </div>
-
-        {/* Report Generation Section */}
+               {/* Report Generation Section */}
         <div className="mb-8 bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-medium mb-4 text-gray-800">Generate Report</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -409,6 +372,43 @@ const RouteAnalytics = () => {
                 {analytics?.avgStopsPerRoute ? analytics.avgStopsPerRoute.toFixed(1) : "0.0"}
               </p>
             </div>
+          </div>
+        </div>
+
+         {/* Filters */}
+         <div className="mb-6 flex flex-col sm:flex-row sm:space-x-4 bg-white p-4 rounded-lg shadow">
+          <div className="mb-4 sm:mb-0">
+            <label className="block text-sm font-medium text-gray-700">Status</label>
+            <select
+              name="status"
+              value={filter.status}
+              onChange={handleFilterChange}
+              className="mt-1 p-2 border rounded-md w-full sm:w-auto focus:ring-deepOrange focus:border-deepOrange"
+            >
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div className="mb-4 sm:mb-0">
+            <label className="block text-sm font-medium text-gray-700">Start Date</label>
+            <input
+              type="date"
+              name="startDate"
+              value={filter.startDate}
+              onChange={handleFilterChange}
+              className="mt-1 p-2 border rounded-md w-full sm:w-auto focus:ring-deepOrange focus:border-deepOrange"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">End Date</label>
+            <input
+              type="date"
+              name="endDate"
+              value={filter.endDate}
+              onChange={handleFilterChange}
+              className="mt-1 p-2 border rounded-md w-full sm:w-auto focus:ring-deepOrange focus:border-deepOrange"
+            />
           </div>
         </div>
 

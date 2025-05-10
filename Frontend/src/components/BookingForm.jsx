@@ -5,10 +5,19 @@ import useStopStore from "../store/stopStore";
 import { useNavigate } from "react-router-dom";
 import "../styles/BookingForm.css";
 
-const BookingForm = ({ isVisible }) => {
-  const [fromLocation, setFromLocation] = useState("");
-  const [toLocation, setToLocation] = useState("");
-  const [journeyDate, setJourneyDate] = useState("");
+const BookingForm = ({ isVisible, initialValues, onSubmit }) => {
+  const [fromLocation, setFromLocation] = useState(initialValues?.fromLocation || "");
+  const [toLocation, setToLocation] = useState(initialValues?.toLocation || "");
+  const [journeyDate, setJourneyDate] = useState(initialValues?.journeyDate || "");
+
+  // Update form when initialValues changes
+  React.useEffect(() => {
+    if (initialValues) {
+      setFromLocation(initialValues.fromLocation || "");
+      setToLocation(initialValues.toLocation || "");
+      setJourneyDate(initialValues.journeyDate || "");
+    }
+  }, [initialValues]);
 
   const navigate = useNavigate();
   const { stops, loading, error, fetchStops } = useStopStore();
@@ -23,9 +32,13 @@ const BookingForm = ({ isVisible }) => {
       return;
     }
 
-    navigate("/bus-search-results", {
-      state: { fromLocation, toLocation, journeyDate },
-    });
+    if (onSubmit) {
+      onSubmit({ fromLocation, toLocation, journeyDate });
+    } else {
+      navigate("/bus-search-results", {
+        state: { fromLocation, toLocation, journeyDate },
+      });
+    }
   };
 
   const swapLocations = () => {

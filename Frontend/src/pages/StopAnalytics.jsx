@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { ToastContainer,toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import AdminLayout from "../layouts/AdminLayout";
 import { Pie, Bar } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from "chart.js";
 import GoSyncLoader from "../components/Loader";
 import { FiMapPin, FiActivity, FiList } from "react-icons/fi";
 import * as XLSX from "xlsx";
-import ImportExportCard from "../components/ImportExportCard"; // Adjust the import path as needed
+import ImportExportCard from "../components/ImportExportCard";
+import { motion, AnimatePresence } from "framer-motion";
 
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
@@ -19,10 +20,22 @@ const StopAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [importLoading, setImportLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [currentStopIndex, setCurrentStopIndex] = useState(0);
 
   useEffect(() => {
     fetchData();
   }, [filter, API_URL]);
+
+  useEffect(() => {
+    if (analytics?.inactiveStopsList?.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentStopIndex(current => 
+          current === analytics.inactiveStopsList.length - 1 ? 0 : current + 1
+        );
+      }, 2000);
+      return () => clearInterval(timer);
+    }
+  }, [analytics?.inactiveStopsList]);
 
   const fetchData = async () => {
     try {
@@ -288,9 +301,7 @@ const StopAnalytics = () => {
   return (
     <AdminLayout>
       <div className="p-6 max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Stop Analytics</h2>
-        </div>
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">Stop Analytics</h2>
         
         {/* Import/Export Card */}
         <div className="mb-6">
@@ -326,11 +337,22 @@ const StopAnalytics = () => {
             <div className="p-3 rounded-full bg-purple-100 text-purple-500">
               <FiList className="w-6 h-6" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Most Used Stop</p>
-              <p className="text-lg font-bold text-gray-800 truncate">
-                {analytics.mostUsedStop?.stopName || "No data"}
-              </p>
+            <div className="ml-4 flex-1">
+              <p className="text-sm font-medium text-gray-500">Inactive Stops</p>
+              <div className="h-6 relative w-full">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={currentStopIndex}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -20, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-lg font-bold text-gray-800 absolute w-full whitespace-normal"
+                  >
+                    {analytics?.inactiveStopsList?.[currentStopIndex]?.stopName || "No inactive stops"}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>
@@ -420,9 +442,9 @@ const StopAnalytics = () => {
           </div>
         </div>
 
-        {/* Top Stops Table */}
+        {/* Stops Overview Table */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium mb-4 text-gray-800">Top Stops by Usage</h3>
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Top 10 Most Connected Stops</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -434,35 +456,33 @@ const StopAnalytics = () => {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Routes Using
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Booking Count
+                    Routes Connected
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {analytics.topStops.slice(0, 5).map((stop, index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                {analytics.stopsData?.map((stop, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {stop.stopName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          stop.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {stop.status}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        stop.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {stop.status.charAt(0).toUpperCase() + stop.status.slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {stop.routeCount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {stop.bookingCount}
+                      {stop.routeCount > 0 && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          {stop.routes.slice(0, 3).map(route => route.routeName).join(', ')}
+                          {stop.routes.length > 3 && ' ...'}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

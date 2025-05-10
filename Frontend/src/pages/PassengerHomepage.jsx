@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "../styles/PassengerHomepage.css";
 import Navbar1 from "../components/Navbar1";
@@ -13,6 +13,8 @@ const PassengerHomepage = () => {
   const [scheduledMessages, setScheduledMessages] = useState([]);
   const [topRoutes, setTopRoutes] = useState([]);
   const { fetchStops } = useStopStore();
+  const [bookingFormData, setBookingFormData] = useState(null);
+  const bookingFormRef = useRef(null);
 
   const API_URI = import.meta.env.VITE_API_URL;
 
@@ -129,6 +131,25 @@ const PassengerHomepage = () => {
     { id: 5, name: "Tourism Board", logo: "/logos/tourism-board.png" },
   ];
 
+  const handleViewSchedule = (routeName) => {
+    // Split the route name by "to" or "-" and trim any whitespace
+    const parts = routeName.split(/\s*(?:to|-)\s*/i);
+    if (parts.length === 2) {
+      const [fromLocation, toLocation] = parts;
+      setBookingFormData({
+        fromLocation: fromLocation.trim(),
+        toLocation: toLocation.trim(),
+        journeyDate: new Date().toISOString().split('T')[0] // Set to current date by default
+      });
+      
+      // Scroll to booking form
+      bookingFormRef.current?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+  };
+
   return (
     <div className="passenger-homepage bg-[#F5F5F5]">
       <Navbar1 />
@@ -167,7 +188,9 @@ const PassengerHomepage = () => {
             </p>
           </div>
           
-          <BookingForm isVisible={true} />
+          <div ref={bookingFormRef}>
+            <BookingForm isVisible={true} initialValues={bookingFormData} />
+          </div>
         </div>
       </div>
 
@@ -242,6 +265,7 @@ const PassengerHomepage = () => {
                     </div>
 
                     <button 
+                      onClick={() => handleViewSchedule(route.routeName)}
                       className="w-full py-3 px-4 bg-gradient-to-r from-[#E65100] to-[#FF8F00] text-white rounded-lg
                         hover:from-[#FF8F00] hover:to-[#FFC107] transition-all duration-300
                         flex items-center justify-center group-hover:shadow-lg"

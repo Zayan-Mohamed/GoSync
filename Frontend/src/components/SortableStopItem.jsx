@@ -3,9 +3,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Pencil, Trash2, GripVertical } from "lucide-react";
 
-const SortableStopItem = ({ stop, onEdit, onDelete }) => {
-  const stopId = stop.stop?._id || stop._id;
-
+const SortableStopItem = ({ stop, onEdit, onDelete, viewMode = 'list' }) => {
   const {
     attributes,
     listeners,
@@ -14,9 +12,9 @@ const SortableStopItem = ({ stop, onEdit, onDelete }) => {
     transition,
     isDragging,
   } = useSortable({ 
-    id: stopId,
+    id: stop.stop?._id || stop._id,
     transition: {
-      duration: 200,
+      duration: 400, // Increased for smoother animation
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)'
     }
   });
@@ -26,66 +24,130 @@ const SortableStopItem = ({ stop, onEdit, onDelete }) => {
     transition,
     willChange: 'transform, opacity, box-shadow',
     touchAction: 'none',
-    userSelect: 'none'
+    userSelect: 'none',
+    zIndex: isDragging ? 1000 : 1
   };
 
   const stopName = stop.stopName || stop.stop?.stopName;
-  const stopType = stop.stopType || "boarding";
-  const isBoarding = stopType.toLowerCase() === "boarding";
+  const isBoarding = stop.stopType === 'boarding';
+  const stopType = isBoarding ? 'Boarding' : 'Dropping';
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      className={`relative group p-4 border rounded-lg flex items-center transition-[background,border-color,box-shadow] duration-200 ease-out transform ${
-        isDragging
-          ? "border-deepOrange ring-4 ring-orange-400/50 bg-gradient-to-r from-orange-50 to-orange-100 shadow-[0_0_30px_rgba(251,146,60,0.7),0_0_15px_rgba(251,146,60,0.5),inset_0_0_10px_rgba(251,146,60,0.2)] scale-[1.02] z-50 cursor-grabbing"
-          : "border-gray-200 bg-white hover:shadow-md hover:border-orange-200 hover:bg-orange-50/10 cursor-grab"
-      }`}
-    >
-      {/* Drag handle with improved visibility */}
+  if (viewMode === 'grid') {
+    return (
       <div
-        {...listeners}
-        className={`absolute left-2 inset-y-0 flex items-center transition-colors duration-200 ${
-          isDragging ? "text-deepOrange" : "text-gray-400 hover:text-gray-600"
-        }`}
+        ref={setNodeRef}
+        style={style}
+        className={`bg-white rounded-lg shadow-sm border transform transition-all duration-300 ease-out
+          ${isDragging 
+            ? 'border-deepOrange shadow-lg scale-105 rotate-1 shadow-orange-200/50' 
+            : 'border-gray-200 hover:shadow-md hover:border-orange-200 hover:scale-102'
+          } ${isBoarding ? 'hover:shadow-blue-200/50' : 'hover:shadow-purple-200/50'}`}
       >
-        <GripVertical size={20} />
-      </div>
-
-      {/* Content */}
-      <div className="flex-grow ml-10 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <p className={`font-medium ${isDragging ? 'text-deepOrange' : 'text-gray-800'}`}>{stopName}</p>
-          <span className={`text-sm ${isDragging ? 'text-orange-600' : 'text-gray-500'}`}>Order: {stop.order}</span>
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium transition-colors duration-200 ${
-              isBoarding
-                ? "bg-blue-100 text-blue-800"
-                : "bg-purple-100 text-purple-800"
+        <div className="flex items-center justify-between p-3 bg-gray-50 border-b rounded-t-lg">
+          <div
+            {...attributes}
+            {...listeners}
+            className={`cursor-grab active:cursor-grabbing transition-colors duration-200 ${
+              isDragging ? 'text-deepOrange' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
+            <GripVertical size={20} />
+          </div>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200
+            ${isBoarding
+              ? 'bg-blue-100 text-blue-800 shadow-sm hover:shadow-blue-200/50'
+              : 'bg-purple-100 text-purple-800 shadow-sm hover:shadow-purple-200/50'
+            }`}>
             {stopType}
           </span>
         </div>
 
-        {/* Actions - Always visible */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onEdit(stop)}
-            className="p-2 rounded-full text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors duration-200"
-            title="Edit stop"
-          >
-            <Pencil size={16} />
-          </button>
-          <button
-            onClick={() => onDelete(stopId)}
-            className="p-2 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors duration-200"
-            title="Delete stop"
-          >
-            <Trash2 size={16} />
-          </button>
+        <div className="p-4">
+          <div className="flex flex-col gap-2">
+            <h3 className={`font-medium transition-colors duration-200 ${isDragging ? 'text-deepOrange' : 'text-gray-800'}`}>
+              {stopName}
+            </h3>
+            <p className={`text-sm transition-colors duration-200 ${isDragging ? 'text-orange-600' : 'text-gray-500'}`}>
+              Order: {stop.order}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t">
+            <button
+              onClick={() => onEdit(stop)}
+              className="p-2 rounded-full text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200 hover:shadow-md hover:shadow-blue-100"
+              title="Edit stop"
+            >
+              <Pencil size={16} />
+            </button>
+            <button
+              onClick={() => onDelete(stop.stop?._id || stop._id)}
+              className="p-2 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 transition-all duration-200 hover:shadow-md hover:shadow-red-100"
+              title="Delete stop"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // List view with enhanced animations
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-white rounded-lg shadow-sm border transform transition-all duration-300 ease-out
+        ${isDragging 
+          ? 'border-deepOrange shadow-lg scale-102 rotate-0.5 shadow-orange-200/50' 
+          : 'border-gray-200 hover:shadow-md hover:border-orange-200'
+        } ${isBoarding ? 'hover:shadow-blue-200/50' : 'hover:shadow-purple-200/50'}`}
+    >
+      <div className="flex items-center p-4 relative">
+        <div
+          {...attributes}
+          {...listeners}
+          className={`absolute left-2 inset-y-0 flex items-center cursor-grab active:cursor-grabbing transition-colors duration-200 ${
+            isDragging ? 'text-deepOrange' : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          <GripVertical size={20} />
+        </div>
+
+        <div className="flex-grow ml-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <p className={`font-medium transition-colors duration-200 ${isDragging ? 'text-deepOrange' : 'text-gray-800'}`}>
+              {stopName}
+            </p>
+            <span className={`text-sm transition-colors duration-200 ${isDragging ? 'text-orange-600' : 'text-gray-500'}`}>
+              Order: {stop.order}
+            </span>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium transition-all duration-200
+              ${isBoarding
+                ? 'bg-blue-100 text-blue-800 shadow-sm hover:shadow-blue-200/50'
+                : 'bg-purple-100 text-purple-800 shadow-sm hover:shadow-purple-200/50'
+              }`}>
+              {stopType}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onEdit(stop)}
+              className="p-2 rounded-full text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200 hover:shadow-md hover:shadow-blue-100"
+              title="Edit stop"
+            >
+              <Pencil size={16} />
+            </button>
+            <button
+              onClick={() => onDelete(stop.stop?._id || stop._id)}
+              className="p-2 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 transition-all duration-200 hover:shadow-md hover:shadow-red-100"
+              title="Delete stop"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
