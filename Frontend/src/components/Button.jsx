@@ -5,31 +5,24 @@ const Button = ({ variant = "primary", className = "", children, ...props }) => 
   const getVariantStyles = () => {
     const baseStyles = {
       textTransform: "none",
-      fontSize: "0.875rem",
+      fontSize: "0.813rem",
       fontWeight: 500,
-      borderRadius: "10px",
-      transition: "all 0.2s ease",
-      padding: "8px 16px",
+      borderRadius: "6px",
+      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+      padding: "6px 12px",
       boxShadow: "none",
-      minWidth: props.minWidth || "120px",
-      height: props.height || "40px",
+      minWidth: props.minWidth || "auto",
+      height: props.height || "32px",
       position: "relative",
-      overflow: "hidden",
-      "&::after": {
-        content: '""',
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "transparent",
-        transition: "background 0.2s ease",
-      },
-      "&:hover::after": {
-        background: "rgba(255, 255, 255, 0.1)",
-      },
-      "&:active::after": {
-        background: "rgba(0, 0, 0, 0.1)",
+      lineHeight: 1.5,
+      letterSpacing: "0.01em",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "6px",
+
+      "& .MuiSvgIcon-root": {
+        fontSize: "1.15rem",
       },
     };
 
@@ -39,19 +32,20 @@ const Button = ({ variant = "primary", className = "", children, ...props }) => 
           ...baseStyles,
           backgroundColor: "#E65100",
           color: "#fff",
-          border: "2px solid #E65100",
+          border: "1px solid #E65100",
           "&:hover": {
-            backgroundColor: "#FF8F00",
-            borderColor: "#FF8F00",
+            backgroundColor: "#F57C00",
+            borderColor: "#F57C00",
             transform: "translateY(-1px)",
-            boxShadow: "0 4px 12px rgba(230, 81, 0, 0.2)",
+            boxShadow: "0 2px 6px rgba(230, 81, 0, 0.2)",
           },
           "&:active": {
             transform: "translateY(0)",
+            boxShadow: "0 1px 2px rgba(230, 81, 0, 0.2)",
           },
           "&.Mui-disabled": {
             backgroundColor: "#F1F5F9",
-            borderColor: "#CBD5E1",
+            borderColor: "#E2E8F0",
             color: "#94A3B8",
           },
         };
@@ -60,16 +54,17 @@ const Button = ({ variant = "primary", className = "", children, ...props }) => 
           ...baseStyles,
           backgroundColor: "#FFF",
           color: "#E65100",
-          border: "2px solid #E65100",
+          border: "1px solid #E65100",
           "&:hover": {
             backgroundColor: "#FFF3E0",
-            borderColor: "#FF8F00",
-            color: "#FF8F00",
+            borderColor: "#F57C00",
+            color: "#F57C00",
             transform: "translateY(-1px)",
-            boxShadow: "0 4px 12px rgba(230, 81, 0, 0.1)",
+            boxShadow: "0 2px 6px rgba(230, 81, 0, 0.1)",
           },
           "&:active": {
             transform: "translateY(0)",
+            boxShadow: "0 1px 2px rgba(230, 81, 0, 0.1)",
           },
           "&.Mui-disabled": {
             backgroundColor: "#F8FAFC",
@@ -82,14 +77,15 @@ const Button = ({ variant = "primary", className = "", children, ...props }) => 
           ...baseStyles,
           backgroundColor: "#FFF",
           color: "#DC2626",
-          border: "2px solid #DC2626",
+          border: "1px solid #DC2626",
           "&:hover": {
             backgroundColor: "#FEE2E2",
             transform: "translateY(-1px)",
-            boxShadow: "0 4px 12px rgba(220, 38, 38, 0.1)",
+            boxShadow: "0 2px 6px rgba(220, 38, 38, 0.1)",
           },
           "&:active": {
             transform: "translateY(0)",
+            boxShadow: "0 1px 2px rgba(220, 38, 38, 0.1)",
           },
           "&.Mui-disabled": {
             backgroundColor: "#F8FAFC",
@@ -102,11 +98,15 @@ const Button = ({ variant = "primary", className = "", children, ...props }) => 
           ...baseStyles,
           backgroundColor: "#F8FAFC",
           color: "#64748B",
-          border: "2px solid #E2E8F0",
+          border: "1px solid #E2E8F0",
           "&:hover": {
             backgroundColor: "#F1F5F9",
             borderColor: "#CBD5E1",
             color: "#475569",
+            transform: "translateY(-1px)",
+          },
+          "&:active": {
+            transform: "translateY(0)",
           },
           "&.Mui-disabled": {
             backgroundColor: "#F8FAFC",
