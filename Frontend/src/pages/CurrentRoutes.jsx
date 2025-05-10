@@ -1,7 +1,19 @@
 import React, { useEffect, useState } from "react";
 import useRouteStore from "../store/routeStore";
 import AdminLayout from "../layouts/AdminLayout";
-import { TextField, CircularProgress, MenuItem, Select } from "@mui/material";
+import {
+  TextField,
+  CircularProgress,
+  MenuItem,
+  Select,
+  Paper,
+  Typography,
+  Box,
+  IconButton,
+  Tooltip,
+  Fade,
+  alpha
+} from "@mui/material";
 import {
   Edit,
   Delete,
@@ -9,14 +21,107 @@ import {
   Cancel,
   PictureAsPdf,
   Map as MapIcon,
+  Search,
+  ErrorOutline
 } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Table from "../components/Table";
-import CustomButton from "../components/Button";
+import Button from "../components/Button";
 import RouteMapModal from "../components/RouteMapModal";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import Loader from "../components/Loader";
+import { motion } from "framer-motion";
+
+// Add custom styles
+const styles = {
+  pageContainer: {
+    p: 3,
+    backgroundColor: '#F8FAFC',
+    minHeight: 'calc(100vh - 64px)',
+    transition: 'all 0.3s ease'
+  },
+  mainPaper: {
+    p: 4,
+    borderRadius: '16px',
+    backgroundColor: '#fff',
+    boxShadow: '0 4px 24px rgba(0,0,0,0.05)',
+    transition: 'all 0.3s ease',
+    overflow: 'hidden'
+  },
+  searchContainer: {
+    display: 'flex',
+    gap: 2,
+    mb: 4,
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    transition: 'all 0.3s ease'
+  },
+  searchBox: {
+    display: 'flex',
+    alignItems: 'center',
+    flex: 1,
+    p: '8px 16px',
+    border: '2px solid #E2E8F0',
+    borderRadius: '12px',
+    backgroundColor: '#F8FAFC',
+    transition: 'all 0.2s ease',
+    minWidth: '280px',
+    '&:hover': {
+      borderColor: '#E65100',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.05)'
+    },
+    '&:focus-within': {
+      borderColor: '#E65100',
+      boxShadow: '0 2px 12px rgba(230, 81, 0, 0.1)'
+    }
+  },
+  tableContainer: {
+    borderRadius: '12px',
+    overflow: 'hidden',
+    boxShadow: '0 2px 16px rgba(0,0,0,0.04)',
+    transition: 'all 0.3s ease',
+    backgroundColor: '#FFF',
+    border: '1px solid #E2E8F0',
+    '& .MuiTableCell-root': {
+      borderColor: '#E2E8F0',
+      padding: '16px',
+    },
+    '& .MuiTableHead-root': {
+      backgroundColor: '#F8FAFC',
+      '& .MuiTableCell-root': {
+        fontWeight: 600,
+        color: '#475569',
+        borderBottom: '2px solid #E2E8F0'
+      }
+    },
+    '& .MuiTableBody-root .MuiTableRow-root:hover': {
+      backgroundColor: '#F8FAFC'
+    }
+  },
+  statusChip: (status) => ({
+    px: 2,
+    py: 1,
+    borderRadius: '8px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    textTransform: 'capitalize',
+    backgroundColor: status === 'active' 
+      ? '#DCFCE7'
+      : '#FEE2E2',
+    color: status === 'active' ? '#166534' : '#991B1B',
+    border: `1px solid ${status === 'active' ? '#BBF7D0' : '#FECACA'}`,
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      backgroundColor: status === 'active' 
+        ? '#BBF7D0'
+        : '#FECACA'
+    }
+  })
+};
 
 const CurrentRoutes = () => {
   const { routes, fetchRoutes, deleteRoute, updateRoute } = useRouteStore();
@@ -359,13 +464,13 @@ const CurrentRoutes = () => {
       accessor: "map",
       width: "5%",
       render: (route) => (
-        <CustomButton
+        <Button
           onClick={() => handleShowMap(route)}
           className="bg-green-500 hover:bg-green-600 text-white p-1"
           title="View Map"
         >
           <MapIcon fontSize="small" />
-        </CustomButton>
+        </Button>
       ),
     },
     {
@@ -376,7 +481,7 @@ const CurrentRoutes = () => {
         <div className="flex space-x-1">
           {editingRoute.id === route._id ? (
             <>
-              <CustomButton
+              <Button
                 onClick={handleUpdateRoute}
                 disabled={
                   editingRoute.totalDistance === "" ||
@@ -386,32 +491,32 @@ const CurrentRoutes = () => {
                 title="Save"
               >
                 <Save fontSize="small" />
-              </CustomButton>
+              </Button>
 
-              <CustomButton
+              <Button
                 onClick={handleCancelEdit}
                 className="bg-gray-500 hover:bg-gray-600 text-white p-1"
                 title="Cancel"
               >
                 <Cancel fontSize="small" />
-              </CustomButton>
+              </Button>
             </>
           ) : (
             <>
-              <CustomButton
+              <Button
                 onClick={() => handleEditRoute(route)}
                 className="bg-blue-500 hover:bg-blue-600 text-white p-1"
                 title="Edit"
               >
                 <Edit fontSize="small" />
-              </CustomButton>
-              <CustomButton
+              </Button>
+              <Button
                 onClick={() => handleDeleteRoute(route._id)}
                 className="bg-red-500 hover:bg-red-600 text-white p-1"
                 title="Delete"
               >
                 <Delete fontSize="small" />
-              </CustomButton>
+              </Button>
             </>
           )}
         </div>
@@ -421,61 +526,112 @@ const CurrentRoutes = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6">
-        <h2 className="text-xl font-bold mb-4">Current Routes</h2>
+      <Box sx={styles.pageContainer}>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Page Header */}
+          <div className="bg-gradient-to-r from-[#FFE082] to-[#FFC107] rounded-lg shadow-lg p-6 mb-8">
+            <h2 className="text-3xl font-bold text-[#E65100] mb-2">Current Routes</h2>
+            <p className="text-gray-700">View and manage all bus routes in the system</p>
+          </div>
 
-        <div className="flex mb-4 gap-2">
-          <TextField
-            label="Search routes by name or ID"
-            variant="outlined"
-            size="small"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1"
-          />
-          <CustomButton
-            variant="contained"
-            color="primary"
-            starticon={<PictureAsPdf />}
-            onClick={generatePDF}
-            disabled={filteredRoutes.length === 0}
-          >
-            Generate PDF
-          </CustomButton>
-        </div>
+          <Paper sx={styles.mainPaper}>
+            <Box sx={{ mb: 4 }}>
+              <Box sx={styles.searchContainer}>
+                <Paper
+                  elevation={0}
+                  sx={styles.searchBox}
+                >
+                  <IconButton sx={{ p: '10px' }}>
+                    <Search />
+                  </IconButton>
+                  <TextField
+                    sx={{
+                      flex: 1,
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        border: 'none'
+                      }
+                    }}
+                    placeholder="Search routes by name or ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    variant="standard"
+                    InputProps={{
+                      disableUnderline: true
+                    }}
+                  />
+                </Paper>
 
-        {loading ? (
-          <div className="flex justify-center p-8">
-            <CircularProgress />
-          </div>
-        ) : error ? (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-            {error}
-            <CustomButton
-              onClick={fetchRoutes}
-              className="ml-2 bg-red-500 hover:bg-red-600 text-white"
-            >
-              Retry
-            </CustomButton>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            {filteredRoutes.length === 0 ? (
-              <div className="p-4 text-center">
-                {searchTerm
-                  ? "No matching routes found"
-                  : "No routes available"}
-              </div>
-            ) : (
-              <Table
-                columns={columns}
-                data={filteredRoutes}
-                className="w-full border border-gray-200"
-              />
-            )}
-          </div>
-        )}
-      </div>
+                <Tooltip title="Export to PDF" arrow>
+                  <Button
+                    variant="secondary"
+                    onClick={generatePDF}
+                    disabled={filteredRoutes.length === 0}
+                    className="flex items-center gap-2"
+                  >
+                    <PictureAsPdf /> Export PDF
+                  </Button>
+                </Tooltip>
+              </Box>
+
+              {error && (
+                <Fade in={true}>
+                  <Box sx={{
+                    p: 2,
+                    mb: 3,
+                    borderRadius: 2,
+                    backgroundColor: alpha('#F44336', 0.1),
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2
+                  }}>
+                    <ErrorOutline sx={{ color: '#D32F2F' }} />
+                    <Typography sx={{ color: '#D32F2F', flex: 1 }}>{error}</Typography>
+                    <Button
+                      variant="primary"
+                      onClick={() => fetchRoutes()}
+                      className="min-w-[40px] p-2"
+                    >
+                      Retry
+                    </Button>
+                  </Box>
+                </Fade>
+              )}
+
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                  <Loader />
+                </Box>
+              ) : (
+                <Box sx={styles.tableContainer}>
+                  {filteredRoutes.length === 0 ? (
+                    <Fade in={true}>
+                      <Box sx={{
+                        p: 4,
+                        textAlign: 'center',
+                        backgroundColor: '#fff'
+                      }}>
+                        <Typography color="textSecondary">
+                          {searchTerm ? "No matching routes found" : "No routes available"}
+                        </Typography>
+                      </Box>
+                    </Fade>
+                  ) : (
+                    <Table
+                      columns={columns}
+                      data={filteredRoutes}
+                      highlightOnHover
+                    />
+                  )}
+                </Box>
+              )}
+            </Box>
+          </Paper>
+        </motion.div>
+      </Box>
 
       {showMapModal && selectedRoute && (
         <RouteMapModal route={selectedRoute} onClose={handleCloseMap} />

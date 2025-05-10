@@ -27,6 +27,7 @@ import Button from '../components/Button';
 import { jsPDF } from "jspdf";
 import autoTable from  "jspdf-autotable";
 import Loader from "../components/Loader";
+import { motion } from "framer-motion";
 
 // Add custom styles
 const styles = {
@@ -409,31 +410,20 @@ function StopList() {
     return (
       <AdminLayout>
         <Box sx={styles.pageContainer}>
-          <Fade in={true}>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Page Header */}
+            <div className="bg-gradient-to-r from-[#FFE082] to-[#FFC107] rounded-lg shadow-lg p-6 mb-8">
+              <h2 className="text-3xl font-bold text-[#E65100] mb-2">Current Stops</h2>
+              <p className="text-gray-700">View and manage all bus stops in the system</p>
+            </div>
+
             <Paper sx={styles.mainPaper}>
               <Box sx={{ mb: 4 }}>
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    color: '#212121',
-                    fontWeight: 600,
-                    mb: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1
-                  }}
-                >
-                  Bus Stops Management
-                </Typography>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    color: '#666',
-                    mb: 3
-                  }}
-                >
-                  View and manage all bus stops in the system
-                </Typography>
+                             
 
                 <Box sx={styles.searchContainer}>
                   <Paper
@@ -694,7 +684,7 @@ function StopList() {
                 </Box>
               </Box>
             </Paper>
-          </Fade>
+          </motion.div>
         </Box>
       </AdminLayout>
     );

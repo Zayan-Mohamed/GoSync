@@ -3,6 +3,7 @@ import useRouteStore from "../store/routeStore";
 import AdminLayout from "../layouts/AdminLayout";
 import { MapPin, Plus, X } from "lucide-react";
 import axios from "axios";
+import { motion } from "framer-motion";
 
 const AddRoute = () => {
   // State for single route form
@@ -328,516 +329,608 @@ const AddRoute = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Add Route</h2>
-
-        {/* Tab Navigation */}
-        <div className="flex mb-6 border-b">
-          <button
-            className={`py-2 px-4 font-medium ${activeTab === "single" ? "text-deepOrange border-b-2 border-deepOrange" : "text-gray-500"}`}
-            onClick={() => handleTabChange("single")}
-          >
-            Single Route
-          </button>
-          <button
-            className={`py-2 px-4 font-medium ${activeTab === "multiple" ? "text-deepOrange border-b-2 border-deepOrange" : "text-gray-500"}`}
-            onClick={() => handleTabChange("multiple")}
-          >
-            Multiple Routes
-          </button>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="p-6"
+      >
+        {/* Page Header */}
+        <div className="bg-gradient-to-r from-[#FFE082] to-[#FFC107] rounded-lg shadow-lg p-6 mb-8">
+          <h2 className="text-3xl font-bold text-[#E65100] mb-2">
+            Add Route
+          </h2>
+          <p className="text-gray-700">
+            Create and configure new bus routes in the system
+          </p>
         </div>
 
-        {/* Success and Error Messages */}
-        {success && (
-          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
-            {success}
-          </div>
-        )}
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-
-        {/* Single Route Form */}
-        {activeTab === "single" && (
-          <form onSubmit={handleSingleRouteSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Route Name*
-                </label>
-                <input
-                  type="text"
-                  name="routeName"
-                  value={singleRouteForm.routeName}
-                  onChange={handleSingleRouteChange}
-                  className={`w-full p-3 border ${existingRoute ? "border-red-500" : "border-gray-300"} rounded-md`}
-                  required
-                />
-                {existingRoute && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Route "{existingRoute.routeName}" already exists
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={singleRouteForm.status}
-                  onChange={handleSingleRouteChange}
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Start Location*
-                </label>
-                <input
-                  type="text"
-                  name="startLocation"
-                  value={singleRouteForm.startLocation}
-                  onChange={handleSingleRouteChange}
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  End Location*
-                </label>
-                <input
-                  type="text"
-                  name="endLocation"
-                  value={singleRouteForm.endLocation}
-                  onChange={handleSingleRouteChange}
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Start Coordinates*
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    placeholder="Latitude"
-                    value={singleRouteForm.startLocationCoordinates.latitude}
-                    onChange={(e) => handleSingleCoordinateChange("start", "latitude", e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md"
-                    step="0.000001"
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Longitude"
-                    value={singleRouteForm.startLocationCoordinates.longitude}
-                    onChange={(e) => handleSingleCoordinateChange("start", "longitude", e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md"
-                    step="0.000001"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  End Coordinates*
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    placeholder="Latitude"
-                    value={singleRouteForm.endLocationCoordinates.latitude}
-                    onChange={(e) => handleSingleCoordinateChange("end", "latitude", e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md"
-                    step="0.000001"
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Longitude"
-                    value={singleRouteForm.endLocationCoordinates.longitude}
-                    onChange={(e) => handleSingleCoordinateChange("end", "longitude", e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md"
-                    step="0.000001"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Total Distance (km)*
-              </label>
-              <input
-                type="number"
-                name="totalDistance"
-                value={singleRouteForm.totalDistance}
-                onChange={handleSingleRouteChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-                step="0.01"
-                min="0"
-                required
-              />
-            </div>
-
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Stops
-                </label>
-                <button
-                  type="button"
-                  onClick={addStopToSingleRoute}
-                  className="flex items-center text-deepOrange hover:text-sunsetOrange"
-                >
-                  <Plus size={16} className="mr-1" />
-                  Add Stop
-                </button>
-              </div>
-
-              {singleRouteForm.stops.map((stop, index) => (
-                <div key={index} className="mb-3 p-3 border rounded-lg relative">
-                  <button
-                    type="button"
-                    onClick={() => removeStopFromSingleRoute(index)}
-                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                  >
-                    <X size={16} />
-                  </button>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">
-                        Stop
-                      </label>
-                      <select
-                        value={stop.stopId}
-                        onChange={(e) => handleSingleRouteStopChange(index, "stopId", e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                      >
-                        <option value="">Select Stop</option>
-                        {allStops.map(stop => (
-                          <option key={stop._id} value={stop.stopId}>
-                            {stop.stopName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">
-                        Type
-                      </label>
-                      <select
-                        value={stop.stopType}
-                        onChange={(e) => handleSingleRouteStopChange(index, "stopType", e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                      >
-                        <option value="boarding">Boarding</option>
-                        <option value="dropping">Dropping</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">
-                        Order
-                      </label>
-                      <input
-                        type="number"
-                        value={stop.order}
-                        onChange={(e) => handleSingleRouteStopChange(index, "order", parseInt(e.target.value))}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        min="1"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-center">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+            {/* Tab Navigation */}
+            <div className="flex mb-0 bg-gray-50 rounded-t-lg p-2 border-b border-gray-200">
               <button
-                type="submit"
-                className={`bg-deepOrange text-white px-6 py-2 rounded-md hover:bg-sunsetOrange focus:outline-none ${existingRoute ? "opacity-50 cursor-not-allowed" : ""}`}
-                disabled={loading || existingRoute}
+                className={`flex-1 py-3 px-6 rounded-lg transition-all duration-200 font-medium ${
+                  activeTab === "single"
+                    ? "bg-white text-deepOrange shadow-md border border-gray-100"
+                    : "text-gray-600 hover:bg-gray-200"
+                }`}
+                onClick={() => handleTabChange("single")}
               >
-                {loading ? "Creating..." : "Create Route"}
+                Single Route
+              </button>
+              <button
+                className={`flex-1 py-3 px-6 rounded-lg transition-all duration-200 font-medium ${
+                  activeTab === "multiple"
+                    ? "bg-white text-deepOrange shadow-md border border-gray-100"
+                    : "text-gray-600 hover:bg-gray-200"
+                }`}
+                onClick={() => handleTabChange("multiple")}
+              >
+                Multiple Routes
               </button>
             </div>
-          </form>
-        )}
 
-        {/* Multiple Routes Form */}
-        {activeTab === "multiple" && (
-          <form onSubmit={handleMultipleRoutesSubmit}>
-            {multipleRoutesForm.routes.map((route, routeIndex) => (
-              <div key={routeIndex} className="mb-6 p-4 border rounded-lg relative">
-                {multipleRoutesForm.routes.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeRouteField(routeIndex)}
-                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
+            <div className="p-8">
+              {/* Success and Error Messages */}
+              {success && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg shadow-sm"
+                >
+                  {success}
+                </motion.div>
+              )}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg shadow-sm"
+                >
+                  {error}
+                </motion.div>
+              )}
 
-                <h3 className="text-lg font-semibold mb-3">Route {routeIndex + 1}</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Route Name*
-                    </label>
-                    <input
-                      type="text"
-                      name="routeName"
-                      value={route.routeName}
-                      onChange={(e) => handleMultipleRouteChange(routeIndex, e)}
-                      className="w-full p-3 border border-gray-300 rounded-md"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      value={route.status}
-                      onChange={(e) => handleMultipleRouteChange(routeIndex, e)}
-                      className="w-full p-3 border border-gray-300 rounded-md"
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Start Location*
-                    </label>
-                    <input
-                      type="text"
-                      name="startLocation"
-                      value={route.startLocation}
-                      onChange={(e) => handleMultipleRouteChange(routeIndex, e)}
-                      className="w-full p-3 border border-gray-300 rounded-md"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      End Location*
-                    </label>
-                    <input
-                      type="text"
-                      name="endLocation"
-                      value={route.endLocation}
-                      onChange={(e) => handleMultipleRouteChange(routeIndex, e)}
-                      className="w-full p-3 border border-gray-300 rounded-md"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Start Coordinates*
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
+              {/* Single Route Form */}
+              {activeTab === "single" && (
+                <motion.form
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  onSubmit={handleSingleRouteSubmit}
+                  className="space-y-6"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Route Name*
+                      </label>
                       <input
-                        type="number"
-                        placeholder="Latitude"
-                        value={route.startLocationCoordinates.latitude}
-                        onChange={(e) => handleMultipleCoordinateChange(routeIndex, "start", "latitude", e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        step="0.000001"
+                        type="text"
+                        name="routeName"
+                        value={singleRouteForm.routeName}
+                        onChange={handleSingleRouteChange}
+                        className={`w-full p-4 border ${
+                          existingRoute ? "border-red-500" : "border-gray-300"
+                        } rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm`}
                         required
                       />
+                      {existingRoute && (
+                        <p className="text-red-500 text-sm mt-1">
+                          Route "{existingRoute.routeName}" already exists
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Status
+                      </label>
+                      <select
+                        name="status"
+                        value={singleRouteForm.status}
+                        onChange={handleSingleRouteChange}
+                        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm bg-white"
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Location Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Start Location*
+                      </label>
                       <input
-                        type="number"
-                        placeholder="Longitude"
-                        value={route.startLocationCoordinates.longitude}
-                        onChange={(e) => handleMultipleCoordinateChange(routeIndex, "start", "longitude", e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        step="0.000001"
+                        type="text"
+                        name="startLocation"
+                        value={singleRouteForm.startLocation}
+                        onChange={handleSingleRouteChange}
+                        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        End Location*
+                      </label>
+                      <input
+                        type="text"
+                        name="endLocation"
+                        value={singleRouteForm.endLocation}
+                        onChange={handleSingleRouteChange}
+                        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
                         required
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      End Coordinates*
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="number"
-                        placeholder="Latitude"
-                        value={route.endLocationCoordinates.latitude}
-                        onChange={(e) => handleMultipleCoordinateChange(routeIndex, "end", "latitude", e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        step="0.000001"
-                        required
-                      />
-                      <input
-                        type="number"
-                        placeholder="Longitude"
-                        value={route.endLocationCoordinates.longitude}
-                        onChange={(e) => handleMultipleCoordinateChange(routeIndex, "end", "longitude", e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        step="0.000001"
-                        required
-                      />
+                  {/* Coordinates */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Start Coordinates*
+                      </label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <input
+                          type="number"
+                          placeholder="Latitude"
+                          value={singleRouteForm.startLocationCoordinates.latitude}
+                          onChange={(e) => handleSingleCoordinateChange("start", "latitude", e.target.value)}
+                          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                          step="0.000001"
+                          required
+                        />
+                        <input
+                          type="number"
+                          placeholder="Longitude"
+                          value={singleRouteForm.startLocationCoordinates.longitude}
+                          onChange={(e) => handleSingleCoordinateChange("start", "longitude", e.target.value)}
+                          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                          step="0.000001"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        End Coordinates*
+                      </label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <input
+                          type="number"
+                          placeholder="Latitude"
+                          value={singleRouteForm.endLocationCoordinates.latitude}
+                          onChange={(e) => handleSingleCoordinateChange("end", "latitude", e.target.value)}
+                          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                          step="0.000001"
+                          required
+                        />
+                        <input
+                          type="number"
+                          placeholder="Longitude"
+                          value={singleRouteForm.endLocationCoordinates.longitude}
+                          onChange={(e) => handleSingleCoordinateChange("end", "longitude", e.target.value)}
+                          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                          step="0.000001"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Total Distance (km)*
-                  </label>
-                  <input
-                    type="number"
-                    name="totalDistance"
-                    value={route.totalDistance}
-                    onChange={(e) => handleMultipleRouteChange(routeIndex, e)}
-                    className="w-full p-3 border border-gray-300 rounded-md"
-                    step="0.01"
-                    min="0"
-                    required
-                  />
-                </div>
-
-                {/* Stops section for multiple routes */}
-                <div className="mb-4">
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">
-                      Stops
+                      Total Distance (km)*
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => addStopToMultipleRoutes(routeIndex)}
-                      className="flex items-center text-deepOrange hover:text-sunsetOrange"
-                    >
-                      <Plus size={16} className="mr-1" />
-                      Add Stop
-                    </button>
+                    <input
+                      type="number"
+                      name="totalDistance"
+                      value={singleRouteForm.totalDistance}
+                      onChange={handleSingleRouteChange}
+                      className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                      step="0.01"
+                      min="0"
+                      required
+                    />
                   </div>
 
-                  {route.stops.map((stop, stopIndex) => (
-                    <div key={stopIndex} className="mb-3 p-3 border rounded-lg relative">
+                  {/* Stops Section */}
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Stops
+                      </label>
                       <button
                         type="button"
-                        onClick={() => removeStopFromMultipleRoutes(routeIndex, stopIndex)}
-                        className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                        onClick={addStopToSingleRoute}
+                        className="flex items-center space-x-2 text-deepOrange hover:text-sunsetOrange transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-orange-50"
                       >
-                        <X size={16} />
+                        <Plus size={16} />
+                        <span>Add Stop</span>
                       </button>
+                    </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Stop
-                          </label>
-                          <select
-                            value={stop.stopId}
-                            onChange={(e) => handleMultipleRouteStopChange(routeIndex, stopIndex, "stopId", e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            required
-                          >
-                            <option value="">Select Stop</option>
-                            {allStops.map(stop => (
-                              <option key={stop._id} value={stop.stopId}>
-                                {stop.stopName}
-                              </option>
-                            ))}
-                          </select>
+                    {singleRouteForm.stops.map((stop, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="p-6 bg-gray-50 rounded-lg relative border border-gray-200 hover:shadow-md transition-shadow duration-200"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => removeStopFromSingleRoute(index)}
+                          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition-colors duration-200 shadow-sm"
+                        >
+                          ×
+                        </button>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-2">
+                              Stop
+                            </label>
+                            <select
+                              value={stop.stopId}
+                              onChange={(e) => handleSingleRouteStopChange(index, "stopId", e.target.value)}
+                              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm bg-white"
+                              required
+                            >
+                              <option value="">Select Stop</option>
+                              {allStops.map(stop => (
+                                <option key={stop._id} value={stop.stopId}>
+                                  {stop.stopName}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-2">
+                              Type
+                            </label>
+                            <select
+                              value={stop.stopType}
+                              onChange={(e) => handleSingleRouteStopChange(index, "stopType", e.target.value)}
+                              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm bg-white"
+                            >
+                              <option value="boarding">Boarding</option>
+                              <option value="dropping">Dropping</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-2">
+                              Order
+                            </label>
+                            <input
+                              type="number"
+                              value={stop.order}
+                              onChange={(e) => handleSingleRouteStopChange(index, "order", parseInt(e.target.value))}
+                              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                              min="1"
+                              required
+                            />
+                          </div>
                         </div>
+                      </motion.div>
+                    ))}
+                  </div>
 
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Type
-                          </label>
-                          <select
-                            value={stop.stopType}
-                            onChange={(e) => handleMultipleRouteStopChange(routeIndex, stopIndex, "stopType", e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                          >
-                            <option value="boarding">Boarding</option>
-                            <option value="dropping">Dropping</option>
-                          </select>
-                        </div>
+                  <div className="flex justify-center pt-6">
+                    <button
+                      type="submit"
+                      className={`w-full md:w-auto px-8 py-4 bg-deepOrange text-white rounded-lg hover:bg-sunsetOrange transform hover:scale-105 transition-all duration-200 shadow-md ${
+                        existingRoute ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      disabled={loading || existingRoute}
+                    >
+                      {loading ? (
+                        <span className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Creating...
+                        </span>
+                      ) : (
+                        "Create Route"
+                      )}
+                    </button>
+                  </div>
+                </motion.form>
+              )}
 
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Order
+              {/* Multiple Routes Form */}
+              {activeTab === "multiple" && (
+                <motion.form
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  onSubmit={handleMultipleRoutesSubmit}
+                  className="space-y-6"
+                >
+                  {multipleRoutesForm.routes.map((route, routeIndex) => (
+                    <motion.div
+                      key={routeIndex}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: routeIndex * 0.1 }}
+                      className="p-6 bg-gray-50 rounded-lg relative border border-gray-200 hover:shadow-md transition-shadow duration-200"
+                    >
+                      {multipleRoutesForm.routes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeRouteField(routeIndex)}
+                          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition-colors duration-200 shadow-sm"
+                        >
+                          ×
+                        </button>
+                      )}
+
+                      <h3 className="text-lg font-semibold mb-4 text-gray-700">Route {routeIndex + 1}</h3>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">
+                            Route Name*
                           </label>
                           <input
-                            type="number"
-                            value={stop.order}
-                            onChange={(e) => handleMultipleRouteStopChange(routeIndex, stopIndex, "order", parseInt(e.target.value))}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            min="1"
+                            type="text"
+                            name="routeName"
+                            value={route.routeName}
+                            onChange={(e) => handleMultipleRouteChange(routeIndex, e)}
+                            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">
+                            Status
+                          </label>
+                          <select
+                            name="status"
+                            value={route.status}
+                            onChange={(e) => handleMultipleRouteChange(routeIndex, e)}
+                            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">
+                            Start Location*
+                          </label>
+                          <input
+                            type="text"
+                            name="startLocation"
+                            value={route.startLocation}
+                            onChange={(e) => handleMultipleRouteChange(routeIndex, e)}
+                            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">
+                            End Location*
+                          </label>
+                          <input
+                            type="text"
+                            name="endLocation"
+                            value={route.endLocation}
+                            onChange={(e) => handleMultipleRouteChange(routeIndex, e)}
+                            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
                             required
                           />
                         </div>
                       </div>
-                    </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">
+                            Start Coordinates*
+                          </label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <input
+                              type="number"
+                              placeholder="Latitude"
+                              value={route.startLocationCoordinates.latitude}
+                              onChange={(e) => handleMultipleCoordinateChange(routeIndex, "start", "latitude", e.target.value)}
+                              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                              step="0.000001"
+                              required
+                            />
+                            <input
+                              type="number"
+                              placeholder="Longitude"
+                              value={route.startLocationCoordinates.longitude}
+                              onChange={(e) => handleMultipleCoordinateChange(routeIndex, "start", "longitude", e.target.value)}
+                              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                              step="0.000001"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">
+                            End Coordinates*
+                          </label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <input
+                              type="number"
+                              placeholder="Latitude"
+                              value={route.endLocationCoordinates.latitude}
+                              onChange={(e) => handleMultipleCoordinateChange(routeIndex, "end", "latitude", e.target.value)}
+                              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                              step="0.000001"
+                              required
+                            />
+                            <input
+                              type="number"
+                              placeholder="Longitude"
+                              value={route.endLocationCoordinates.longitude}
+                              onChange={(e) => handleMultipleCoordinateChange(routeIndex, "end", "longitude", e.target.value)}
+                              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                              step="0.000001"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">
+                          Total Distance (km)*
+                        </label>
+                        <input
+                          type="number"
+                          name="totalDistance"
+                          value={route.totalDistance}
+                          onChange={(e) => handleMultipleRouteChange(routeIndex, e)}
+                          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                          step="0.01"
+                          min="0"
+                          required
+                        />
+                      </div>
+
+                      {/* Stops section for multiple routes */}
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <label className="block text-sm font-semibold text-gray-700">
+                            Stops
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => addStopToMultipleRoutes(routeIndex)}
+                            className="flex items-center space-x-2 text-deepOrange hover:text-sunsetOrange transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-orange-50"
+                          >
+                            <Plus size={16} />
+                            <span>Add Stop</span>
+                          </button>
+                        </div>
+
+                        {route.stops.map((stop, stopIndex) => (
+                          <motion.div
+                            key={stopIndex}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: stopIndex * 0.1 }}
+                            className="p-6 bg-gray-50 rounded-lg relative border border-gray-200 hover:shadow-md transition-shadow duration-200"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => removeStopFromMultipleRoutes(routeIndex, stopIndex)}
+                              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition-colors duration-200 shadow-sm"
+                            >
+                              ×
+                            </button>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-2">
+                                  Stop
+                                </label>
+                                <select
+                                  value={stop.stopId}
+                                  onChange={(e) => handleMultipleRouteStopChange(routeIndex, stopIndex, "stopId", e.target.value)}
+                                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm bg-white"
+                                  required
+                                >
+                                  <option value="">Select Stop</option>
+                                  {allStops.map(stop => (
+                                    <option key={stop._id} value={stop.stopId}>
+                                      {stop.stopName}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-2">
+                                  Type
+                                </label>
+                                <select
+                                  value={stop.stopType}
+                                  onChange={(e) => handleMultipleRouteStopChange(routeIndex, stopIndex, "stopType", e.target.value)}
+                                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm bg-white"
+                                >
+                                  <option value="boarding">Boarding</option>
+                                  <option value="dropping">Dropping</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-2">
+                                  Order
+                                </label>
+                                <input
+                                  type="number"
+                                  value={stop.order}
+                                  onChange={(e) => handleMultipleRouteStopChange(routeIndex, stopIndex, "order", parseInt(e.target.value))}
+                                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200 shadow-sm"
+                                  min="1"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
                   ))}
-                </div>
-              </div>
-            ))}
 
-            <div className="flex justify-between mb-6">
-              <button
-                type="button"
-                onClick={addRouteField}
-                className="flex items-center text-deepOrange hover:text-sunsetOrange"
-              >
-                <Plus size={16} className="mr-1" />
-                Add Another Route
-              </button>
-            </div>
+                  <div className="flex justify-between items-center pt-4">
+                    <button
+                      type="button"
+                      onClick={addRouteField}
+                      className="text-deepOrange hover:text-sunsetOrange flex items-center space-x-2 transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-orange-50"
+                    >
+                      <Plus size={16} />
+                      <span>Add Another Route</span>
+                    </button>
+                  </div>
 
-            <div className="flex justify-center">
-              <button
-                type="submit"
-                className="bg-deepOrange text-white px-6 py-2 rounded-md hover:bg-sunsetOrange focus:outline-none"
-                disabled={loading}
-              >
-                {loading ? "Creating..." : "Create Routes"}
-              </button>
+                  <div className="flex justify-center pt-6">
+                    <button
+                      type="submit"
+                      className="w-full md:w-auto px-8 py-4 bg-deepOrange text-white rounded-lg hover:bg-sunsetOrange transform hover:scale-105 transition-all duration-200 shadow-md"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <span className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Creating...
+                        </span>
+                      ) : (
+                        "Create Routes"
+                      )}
+                    </button>
+                  </div>
+                </motion.form>
+              )}
             </div>
-          </form>
-        )}
-      </div>
+          </div>
+        </div>
+      </motion.div>
     </AdminLayout>
   );
 };

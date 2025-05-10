@@ -8,6 +8,7 @@ import GoSyncLoader from "../components/Loader";
 import { FiMapPin, FiTrendingUp, FiGlobe, FiDownload } from "react-icons/fi";
 import EmbeddedRouteMap from "../components/EmbeddedRouteMap";
 import { Marker, Polyline, Popup } from "react-leaflet";
+import { motion, AnimatePresence } from "framer-motion";
 
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
@@ -262,12 +263,26 @@ const RouteAnalytics = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 max-w-7xl mx-auto">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800">Route Analytics</h2>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="p-6 max-w-7xl mx-auto"
+      >
+        {/* Page Header */}
+        <div className="bg-gradient-to-r from-[#FFE082] to-[#FFC107] rounded-lg shadow-lg p-6 mb-8">
+          <h2 className="text-3xl font-bold text-[#E65100] mb-2">Route Analytics</h2>
+          <p className="text-gray-700">Monitor and analyze route performance and statistics</p>
+        </div>
 
-               {/* Report Generation Section */}
-        <div className="mb-8 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium mb-4 text-gray-800">Generate Report</h3>
+        {/* Report Generation Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="mb-8 bg-white rounded-lg shadow-lg p-6"
+        >
+          <h3 className="text-lg font-medium mb-4 text-gray-800 border-b pb-2">Generate Report</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Report Type</label>
@@ -338,84 +353,119 @@ const RouteAnalytics = () => {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6 flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 text-blue-500">
-              <FiGlobe className="w-6 h-6" />
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-all duration-300"
+          >
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                <FiGlobe className="w-6 h-6" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Routes</p>
+                <p className="text-2xl font-bold text-gray-800">{analytics?.totalRoutes || 0}</p>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Routes</p>
-              <p className="text-2xl font-bold text-gray-800">{analytics?.totalRoutes || 0}</p>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-all duration-300"
+          >
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-green-100 text-green-600">
+                <FiMapPin className="w-6 h-6" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Most Popular Route</p>
+                <p className="text-lg font-bold text-gray-800 truncate">
+                  {analytics?.mostPopularRoute?.routeName || "No data"}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6 flex items-center">
-            <div className="p-3 rounded-full bg-green-100 text-green-500">
-              <FiMapPin className="w-6 h-6" />
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-all duration-300"
+          >
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-purple-100 text-purple-600">
+                <FiTrendingUp className="w-6 h-6" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Average Stops per Route</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {analytics?.avgStopsPerRoute ? analytics.avgStopsPerRoute.toFixed(1) : "0.0"}
+                </p>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Most Popular Route</p>
-              <p className="text-lg font-bold text-gray-800 truncate">
-                {analytics?.mostPopularRoute?.routeName || "No data"}
-              </p>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6 flex items-center">
-            <div className="p-3 rounded-full bg-purple-100 text-purple-500">
-              <FiTrendingUp className="w-6 h-6" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Average Stops per Route</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {analytics?.avgStopsPerRoute ? analytics.avgStopsPerRoute.toFixed(1) : "0.0"}
-              </p>
-            </div>
-          </div>
+          </motion.div>
         </div>
 
-         {/* Filters */}
-         <div className="mb-6 flex flex-col sm:flex-row sm:space-x-4 bg-white p-4 rounded-lg shadow">
-          <div className="mb-4 sm:mb-0">
-            <label className="block text-sm font-medium text-gray-700">Status</label>
-            <select
-              name="status"
-              value={filter.status}
-              onChange={handleFilterChange}
-              className="mt-1 p-2 border rounded-md w-full sm:w-auto focus:ring-deepOrange focus:border-deepOrange"
-            >
-              <option value="">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+        {/* Filters */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="mb-8 bg-white rounded-lg shadow-lg p-6"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <select
+                name="status"
+                value={filter.status}
+                onChange={handleFilterChange}
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-deepOrange transition-all duration-200"
+              >
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+              <input
+                type="date"
+                name="startDate"
+                value={filter.startDate}
+                onChange={handleFilterChange}
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-deepOrange transition-all duration-200"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+              <input
+                type="date"
+                name="endDate"
+                value={filter.endDate}
+                onChange={handleFilterChange}
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-deepOrange transition-all duration-200"
+              />
+            </div>
           </div>
-          <div className="mb-4 sm:mb-0">
-            <label className="block text-sm font-medium text-gray-700">Start Date</label>
-            <input
-              type="date"
-              name="startDate"
-              value={filter.startDate}
-              onChange={handleFilterChange}
-              className="mt-1 p-2 border rounded-md w-full sm:w-auto focus:ring-deepOrange focus:border-deepOrange"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">End Date</label>
-            <input
-              type="date"
-              name="endDate"
-              value={filter.endDate}
-              onChange={handleFilterChange}
-              className="mt-1 p-2 border rounded-md w-full sm:w-auto focus:ring-deepOrange focus:border-deepOrange"
-            />
-          </div>
-        </div>
+        </motion.div>
 
         {/* Charts - First Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium mb-4 text-gray-800">Route Status Distribution</h3>
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+            className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-102 transition-all duration-300"
+          >
+            <h3 className="text-lg font-medium mb-4 text-gray-800 border-b pb-2">Route Status Distribution</h3>
             <div className="h-64">
               <Pie
                 data={statusPieData}
@@ -428,9 +478,15 @@ const RouteAnalytics = () => {
                 }}
               />
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium mb-4 text-gray-800">Bookings by Route</h3>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+            className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-102 transition-all duration-300"
+          >
+            <h3 className="text-lg font-medium mb-4 text-gray-800 border-b pb-2">Bookings by Route</h3>
             <div className="h-64">
               <Bar
                 data={bookingsByRouteBarData}
@@ -441,13 +497,18 @@ const RouteAnalytics = () => {
                 }}
               />
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Charts - Second Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium mb-4 text-gray-800">Route Distance Distribution</h3>
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+            className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-102 transition-all duration-300"
+          >
+            <h3 className="text-lg font-medium mb-4 text-gray-800 border-b pb-2">Route Distance Distribution</h3>
             <div className="h-64">
               <Bar
                 data={distanceDistributionData}
@@ -461,15 +522,21 @@ const RouteAnalytics = () => {
                 }}
               />
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium mb-4 text-gray-800">Route Map</h3>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+            className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-102 transition-all duration-300"
+          >
+            <h3 className="text-lg font-medium mb-4 text-gray-800 border-b pb-2">Route Map</h3>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Select Route</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Route</label>
               <select
                 value={selectedRoute?._id || ""}
                 onChange={handleRouteChange}
-                className="mt-1 p-2 border rounded-md w-full focus:ring-deepOrange focus:border-deepOrange"
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-deepOrange transition-all duration-200"
               >
                 <option value="">Select a route</option>
                 {analytics.routes.map((route) => (
@@ -482,33 +549,44 @@ const RouteAnalytics = () => {
             <div className="relative h-64">
               <EmbeddedRouteMap route={selectedRoute} />
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Top Routes Table */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium mb-4 text-gray-800">Top Routes by Bookings</h3>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9, duration: 0.5 }}
+          className="bg-white rounded-lg shadow-lg p-6"
+        >
+          <h3 className="text-lg font-medium mb-6 text-gray-800">Top Routes by Bookings</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <thead>
+                <tr className="bg-gradient-to-r from-[#FFE082] to-[#FFC107]">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Route Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Stops
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Booking Count
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {(analytics?.topRoutes || []).slice(0, 5).map((route, index) => (
-                  <tr key={index}>
+                  <motion.tr 
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="hover:bg-gray-50 transition-colors duration-200"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {route.routeName}
                     </td>
@@ -529,13 +607,13 @@ const RouteAnalytics = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {route.bookingCount}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </AdminLayout>
   );
 };
