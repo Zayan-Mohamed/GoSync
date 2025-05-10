@@ -4,29 +4,49 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export const protect = (req, res, next) => {
-  const token = req.cookies.jwt; // Match the cookie name 'jwt' from authUser
+export const protect = async (req, res, next) => {
+  const token = req.cookies.jwt; // Match the cookie name 'jwt'
 
   if (!token) {
+    console.error("No token provided in cookies");
     return res.status(401).json({ message: "Not authorized, no token" });
   }
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "76f0a6e8ca67cdbea757096541f87b4a82c0a8adba6dd3f32552a5a65dbafa356d693530cf6f6950e32f6b950b38d40dec538ca95b5125c9c1ada472d52dd836");
-    req.user = decoded; // Attach decoded user to request object
-    console.log("Decoded token:", decoded); // Debug
-    console.log("Decoded user:", req.user); // Debug
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Decoded token:", decoded); // Debug JWT payload
+
+    // Fetch user from database to include phone, name, and email
+    const user = await User.findById(decoded.id).select("name email phone role");
+    if (!user) {
+      console.error("User not found for ID:", decoded.id);
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    req.user = {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+    };
+    console.log("req.user set:", req.user); // Debug req.user
+
     next();
   } catch (error) {
-    console.error("Token verification failed:", error);
+    console.error("Token verification failed:", {
+      message: error.message,
+      stack: error.stack,
+    });
     res.status(401).json({ message: "Not authorized, token invalid" });
   }
 };
 
-// ✅ Middleware to allow only admins
 export const adminOnly = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
     next();
   } else {
+    console.error("Admin access denied for user:", req.user);
     return res.status(403).json({ message: "Access denied. Admins only." });
   }
 };

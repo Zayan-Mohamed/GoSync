@@ -13,15 +13,13 @@ const Reserved = () => {
   const { user, isAuthenticated } = useAuthStore();
   const [reservedSeats, setReservedSeats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const fetchReservedSeats = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/seats/reserved/user",
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.get(`${API_URL}/api/seats/reserved/user`, {
+        withCredentials: true,
+      });
       console.log("Fetched reserved seats:", response.data);
       const filteredSeats = response.data.filter(
         (r) => new Date(r.reservedUntil) > new Date()
@@ -51,26 +49,47 @@ const Reserved = () => {
 
   const handleConfirmBooking = async (busId, scheduleId, seatNumbers) => {
     try {
+      // First, get bus details to ensure we have the bus number
+      const busResponse = await axios.get(
+        `${API_URL}/api/buses/buses/${busId}`,
+        { withCredentials: true }
+      );
+
+      const busDetails = busResponse.data;
+      console.log("Bus details for confirmation:", busDetails);
+
+      // Now confirm the booking
       const response = await axios.post(
-        "http://localhost:5000/api/bookings/confirm",
+        `${API_URL}/api/bookings/confirm`,
         { busId, scheduleId, seatNumbers },
         { withCredentials: true }
       );
+
       console.log("Booking response:", response.data);
       toast.success("Booking confirmed! Proceeding to payment.");
+
+      // Create an enhanced booking summary with guaranteed bus number
+      const bookingSummary = {
+        ...response.data.summary,
+        busNumber:
+          response.data.summary.busNumber || busDetails.busNumber || "Unknown",
+      };
+
+      // Log the summary to verify
+      console.log("Booking summary with bus number:", bookingSummary);
 
       navigate("/payment", {
         state: {
           busId,
           scheduleId,
           selectedSeats: seatNumbers,
-          bookingSummary: response.data.summary,
+          bookingSummary: bookingSummary,
         },
       });
     } catch (err) {
       console.error("Confirm error:", err.response?.data);
       toast.error(err.response?.data?.message || "Failed to confirm booking");
-      fetchReservedSeats(); 
+      fetchReservedSeats();
     }
   };
 

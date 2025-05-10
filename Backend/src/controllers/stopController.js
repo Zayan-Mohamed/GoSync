@@ -185,7 +185,6 @@ export const getStop = async (req, res) => {
 export const getAllStops = async (req, res) => {
   try {
     const stops = await Stop.find();
-    console.log("Stops retrieved:", stops); // Debugging
 
     if (stops.length === 0) {
       console.log("No stops found"); // Debugging

@@ -39,15 +39,20 @@ import AddSchedule from "../pages/AddSchedule.jsx";
 import EditSchedule from "../pages/EditSchedule.jsx";
 import ScheduleAnalytics from "../pages/ScheduleAnalytics.jsx";
 
-
 import SeatManagement from "../pages/SeatManagement.jsx";
 import AddSeat from "../pages/AddSeat.jsx";
+import EditSeat from "../pages/EditSeat.jsx";
+import BulkEditSeats from "../pages/BulkEditSeats.jsx";
 import SeatAnalytics from "../pages/SeatAnalytics.jsx";
 import BookingManagement from "../pages/BookingManagement.jsx";
 import AddBooking from "../pages/AddBooking.jsx";
 import BookingAnalytics from "../pages/BookingAnalytics.jsx";
 import UpdateMessage from "../pages/UpdateMessage.jsx";
 import AnalyticsPage from "../pages/AnalyticsPage.jsx";
+import Notices from "../pages/Notices.jsx";
+import AddNotice from "../pages/AddNotice.jsx";
+import EditNotice from "../pages/EditNotice.jsx";
+import Analytics from "../pages/Analytics.jsx";
 
 const AppRoutes = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -66,21 +71,20 @@ const AppRoutes = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-        {/* ✅ Protected Routes */}
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/bus-management" element={<BusList />} />
-          <Route path="/add-bus" element={<InsertBus />} />
-          <Route path="/bus-analytics" element={<BusList />} />
-          <Route path="/bus-assign" element={<BusAssignmentPage />} />
-          <Route path="/busop-man" element={<BusOperatorsList />} />
+          {/* ✅ Protected Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/bus-management" element={<BusList />} />
+            <Route path="/add-bus" element={<InsertBus />} />
+            <Route path="/bus-analytics" element={<BusList />} />
+            <Route path="/bus-assign" element={<BusAssignmentPage />} />
+            <Route path="/busop-man" element={<BusOperatorsList />} />
 
             <Route path="/notification-management" element={<Notification />} />
             <Route path="/add-notification" element={<AddNotification />} />
             <Route
               path="/update-notification/:id"
               element={<UpdateNotification />}
-             
             />
              <Route path="/notification-analytics" element={<AnalyticsPage />} />
              <Route path="/update-message/:id" element={<UpdateMessage />} />
@@ -89,23 +93,35 @@ const AppRoutes = () => {
             <Route path="/add-message" element={<AddMessage />} />
             <Route path="/add-stop" element={<AddStop />} />
             <Route path="/stop-management" element={<StopList />} />
-            <Route path="/schedule-management" element={<ScheduleManagement />} />
+            <Route
+              path="/schedule-management"
+              element={<ScheduleManagement />}
+            />
             <Route path="/add-schedule" element={<AddSchedule />} />
-            <Route path="/edit-schedule/:scheduleID" element={<EditSchedule />} />
+            <Route
+              path="/edit-schedule/:scheduleID"
+              element={<EditSchedule />}
+            />
             <Route path="/schedule-analytics" element={<ScheduleAnalytics />} />
             <Route path="/add-route" element={<AddRoute />} />
-            
-            
+
             <Route path="/seat-management" element={<SeatManagement />} />
             <Route path="/add-seat" element={<AddSeat />} />
+            <Route path="/edit-seat/:seatId" element={<EditSeat />} />
+            <Route path="/bulk-edit-seats" element={<BulkEditSeats />} />
             <Route path="/seat-analytics" element={<SeatAnalytics />} />
             <Route path="/booking-management" element={<BookingManagement />} />
             <Route path="/add-booking" element={<AddBooking />} />
             <Route path="/booking-analytics" element={<BookingAnalytics />} />
-           
+
             <Route path="/add-routes" element={<AddRoute />} />
             <Route path="/route-stops" element={<ManageRouteStops />} />
             <Route path="/add-operorator" element={<AddBusOperators />} />
+            <Route path="/notices" element={<Notices />} />
+            <Route path="/add-notice" element={<AddNotice />} />
+            <Route path="/edit-notice/:id" element={<EditNotice />} />
+            <Route path="/view-notice/:id" element={<EditNotice />} />
+            <Route path="/analytics" element={<Analytics />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["passenger"]} />}>
