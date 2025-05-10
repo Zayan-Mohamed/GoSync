@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  # Backend Service
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: gosync-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      # Use the MongoDB Atlas connection string from .env file
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - CLIENT_URL=http://localhost:80
+    volumes:
+      - ./Backend/uploads:/app/uploads
+      - ./Backend/logs:/app/logs
+    networks:
+      - gosync-network
+
+  # Frontend Service (Vite + Nginx)
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: gosync-frontend
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - gosync-network
+
+networks:
+  gosync-network:
+    driver: bridge

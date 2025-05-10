@@ -8,6 +8,47 @@ import Footer1 from "../components/Footer1";
 import Loader from "../components/Loader";
 import BookingCard from "../components/BookingCard";
 import { FiXCircle } from "react-icons/fi";
+import { Clock, AlertCircle } from "lucide-react";
+
+// Payment timer component to show countdown for pending payments
+const PaymentTimer = ({ createdAt }) => {
+  const [timeRemaining, setTimeRemaining] = useState("");
+  const [expired, setExpired] = useState(false);
+
+  useEffect(() => {
+    // Calculate time remaining for the 6-hour payment window
+    const calculateTimeRemaining = () => {
+      const bookingTime = new Date(createdAt).getTime();
+      const deadline = bookingTime + (6 * 60 * 60 * 1000); // 6 hours in milliseconds
+      const now = new Date().getTime();
+      const remaining = deadline - now;
+      
+      if (remaining <= 0) {
+        setTimeRemaining("Expired");
+        setExpired(true);
+        return;
+      }
+
+      // Convert to hours and minutes
+      const hours = Math.floor(remaining / (1000 * 60 * 60));
+      const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+      
+      setTimeRemaining(`${hours}h ${minutes}m remaining`);
+    };
+
+    calculateTimeRemaining();
+    const timerId = setInterval(calculateTimeRemaining, 60000); // Update every minute
+    
+    return () => clearInterval(timerId);
+  }, [createdAt]);
+
+  return (
+    <div className={`flex items-center ${expired ? "text-red-600" : "text-yellow-600"}`}>
+      <Clock size={14} className="mr-1" />
+      <span className="text-xs font-medium">{timeRemaining}</span>
+    </div>
+  );
+};
 
 const CancelTicket = () => {
   const navigate = useNavigate();
@@ -93,6 +134,11 @@ const CancelTicket = () => {
     }
   };
 
+  // Check if there are any pending payments
+  const hasPendingPayments = bookings.some(
+    (booking) => booking.paymentStatus === "pending"
+  );
+
   if (loading) {
     return <Loader />;
   }
@@ -104,6 +150,24 @@ const CancelTicket = () => {
         <h2 className="text-3xl font-bold text-gray-800 mb-8 flex items-center">
           <FiXCircle className="w-8 h-8 mr-3 text-red-600" /> Cancel Tickets
         </h2>
+
+        {hasPendingPayments && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start">
+            <AlertCircle
+              className="text-yellow-600 mr-2 flex-shrink-0 mt-0.5"
+              size={20}
+            />
+            <div>
+              <p className="text-yellow-700">
+                Bookings with pending payments will be automatically cancelled after 6 hours from booking time.
+              </p>
+              <p className="text-yellow-700 text-sm mt-1">
+                You can either complete payment or cancel the booking manually.
+              </p>
+            </div>
+          </div>
+        )}
+        
         {bookings.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-lg text-gray-600">
@@ -124,6 +188,11 @@ const CancelTicket = () => {
                 booking={booking}
                 onCancel={handleCancelBooking}
                 showCancelButton={true}
+                extraComponent={
+                  booking.paymentStatus === "pending" ? (
+                    <PaymentTimer createdAt={booking.createdAt} />
+                  ) : null
+                }
               />
             ))}
           </div>

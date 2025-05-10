@@ -15,6 +15,7 @@ import L from "leaflet";
 import Loader from "./Loader";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
+import { AlertTriangle, Clock } from "lucide-react";
 
 const Payment = () => {
   // Make sure API_URL is properly formatted with http:// prefix
@@ -34,6 +35,51 @@ const Payment = () => {
   const [mapLoading, setMapLoading] = useState(true);
   const [routeData, setRouteData] = useState(null);
   const [error, setError] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState(6 * 60 * 60); // 6 hours in seconds
+
+  // Calculate the payment deadline time based on booking time
+  useEffect(() => {
+    if (bookingSummary?.bookedAt) {
+      const bookedTime = new Date(bookingSummary.bookedAt).getTime();
+      const deadlineTime = bookedTime + 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+      const currentTime = new Date().getTime();
+      const remainingTime = Math.max(
+        0,
+        Math.floor((deadlineTime - currentTime) / 1000)
+      ); // remaining seconds
+
+      setTimeRemaining(remainingTime);
+
+      // Update the countdown every minute
+      const timerId = setInterval(() => {
+        const currentTime = new Date().getTime();
+        const remainingTime = Math.max(
+          0,
+          Math.floor((deadlineTime - currentTime) / 1000)
+        );
+        setTimeRemaining(remainingTime);
+
+        // If time is up, show a warning
+        if (remainingTime <= 0) {
+          toast.warning(
+            "Payment time limit exceeded. Your seats may be released."
+          );
+          clearInterval(timerId);
+        }
+      }, 60000); // update every minute
+
+      return () => clearInterval(timerId);
+    }
+  }, [bookingSummary?.bookedAt]);
+
+  // Format the remaining time as hours and minutes
+  const formatTimeRemaining = (seconds) => {
+    if (seconds <= 0) return "0h 0m (expired)";
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
 
   useEffect(() => {
     const fetchRouteData = async () => {
@@ -94,7 +140,9 @@ const Payment = () => {
       const validStatuses = ["pending", "paid", "failed"];
       if (!validStatuses.includes(paymentStatus)) {
         throw new Error(
-          `Invalid payment status: ${paymentStatus}. Must be one of: ${validStatuses.join(", ")}`
+          `Invalid payment status: ${paymentStatus}. Must be one of: ${validStatuses.join(
+            ", "
+          )}`
         );
       }
 
@@ -217,6 +265,36 @@ const Payment = () => {
       <Navbar1 />
       <div className="container mx-auto py-6 px-4">
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">Payment</h2>
+
+        {/* Payment Time Warning */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex items-start">
+          <AlertTriangle
+            size={24}
+            className="text-amber-500 mr-3 mt-1 flex-shrink-0"
+          />
+          <div>
+            <h3 className="font-medium text-amber-800 mb-1">
+              Important Payment Information
+            </h3>
+            <p className="text-amber-700">
+              Your seat reservation will be automatically cancelled if payment
+              is not completed within 6 hours of booking.
+              {timeRemaining > 0 ? (
+                <span className="font-medium">
+                  {" "}
+                  Time remaining: <Clock size={16} className="inline mx-1" />
+                  {formatTimeRemaining(timeRemaining)}
+                </span>
+              ) : (
+                <span className="font-medium text-red-600">
+                  {" "}
+                  Your time limit has expired!
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <motion.div
             className="bg-white p-6 rounded-lg shadow-md"
@@ -261,7 +339,13 @@ const Payment = () => {
                   Payment Status:
                 </span>
                 <span
-                  className={`text-${bookingSummary.paymentStatus === "pending" ? "yellow" : bookingSummary.paymentStatus === "paid" ? "green" : "red"}-600 font-semibold`}
+                  className={`${
+                    bookingSummary.paymentStatus === "pending"
+                      ? "text-yellow-600"
+                      : bookingSummary.paymentStatus === "paid"
+                        ? "text-green-600"
+                        : "text-red-600"
+                  } font-semibold`}
                 >
                   {bookingSummary.paymentStatus}
                 </span>
