@@ -68,9 +68,12 @@ const BusSchedules = () => {
     };
   }, [filteredSchedules, API_URL]);
 
-  // Format date for API request (YYYY-MM-DD)
+  // Format date for API request (YYYY-MM-DD) - FIXED to avoid timezone issues
   const formatDateForApi = (date) => {
-    return date.toISOString().split('T')[0];
+    // Create a new date object to avoid modifying the original
+    const d = new Date(date);
+    // Format using local date components to avoid timezone shifts
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
   // Format date for display in tabs
@@ -165,19 +168,17 @@ const BusSchedules = () => {
         console.log("API Response:", response.data);
         
         // Filter out past schedules - only keep present and future schedules
+        // FIXED: Using direct date comparison to avoid timezone issues
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
         const currentAndFutureSchedules = response.data.filter(schedule => {
-          // Create date object without time component for proper comparison
-          const scheduleDateStr = new Date(schedule.departureDate).toISOString().split('T')[0];
-          const scheduleDate = new Date(scheduleDateStr);
+          // Create a local date object from the schedule date string
+          const scheduleDate = new Date(schedule.departureDate);
+          // Reset the time component for accurate date comparison
           scheduleDate.setHours(0, 0, 0, 0);
           
-          const todayStr = today.toISOString().split('T')[0];
-          const todayDate = new Date(todayStr);
-          
-          return scheduleDate >= todayDate;
+          return scheduleDate >= today;
         });
         
         // Sort schedules by date (ascending)
@@ -251,7 +252,7 @@ const BusSchedules = () => {
     fetchSchedules();
   }, [showAllSchedules, API_URL]);
 
-  // Filter schedules based on selected date
+  // Filter schedules based on selected date - FIXED to handle dates correctly
   const filterSchedulesForDate = (allSchedules, targetDate) => {
     if (!targetDate) {
       // If no target date (for "All" option), return all schedules
@@ -259,12 +260,19 @@ const BusSchedules = () => {
       return;
     }
     
-    const targetDateStr = formatDateForApi(targetDate);
+    // Get target date components for comparison
+    const targetYear = targetDate.getFullYear();
+    const targetMonth = targetDate.getMonth();
+    const targetDay = targetDate.getDate();
     
     const filtered = allSchedules.filter(schedule => {
-      // Normalize both dates to YYYY-MM-DD format for correct comparison
-      const scheduleDate = new Date(schedule.departureDate).toISOString().split('T')[0];
-      return scheduleDate === targetDateStr;
+      // Create a local date object from the schedule date string
+      const scheduleDate = new Date(schedule.departureDate);
+      
+      // Compare year, month, and day directly instead of string comparison
+      return scheduleDate.getFullYear() === targetYear && 
+             scheduleDate.getMonth() === targetMonth && 
+             scheduleDate.getDate() === targetDay;
     });
     
     setFilteredSchedules(filtered);
@@ -282,22 +290,22 @@ const BusSchedules = () => {
   }, [activeDate, schedules, showAllSchedules]);
 
   // Handle view schedule action
-const handleViewSchedule = (bus) => {
-  console.log(`Viewing schedule for route ${bus.route.routeName}`);
-  
-  const fromLocation = bus.route.departureLocation;
-  const toLocation = bus.route.arrivalLocation;
-  const journeyDate = bus.schedule.departureDate;
-  
-  // Navigate to bus search results page
-  navigate("/bus-search-results", {
-    state: {
-      fromLocation,
-      toLocation,
-      journeyDate,
-    },
-  });
-};
+  const handleViewSchedule = (bus) => {
+    console.log(`Viewing schedule for route ${bus.route.routeName}`);
+    
+    const fromLocation = bus.route.departureLocation;
+    const toLocation = bus.route.arrivalLocation;
+    const journeyDate = bus.schedule.departureDate;
+    
+    // Navigate to bus search results page
+    navigate("/bus-search-results", {
+      state: {
+        fromLocation,
+        toLocation,
+        journeyDate,
+      },
+    });
+  };
 
   // Navigate between dates
   const navigateDate = (direction) => {

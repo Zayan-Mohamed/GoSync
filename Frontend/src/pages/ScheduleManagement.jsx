@@ -130,92 +130,141 @@ const ScheduleManagement = () => {
   try {
     const doc = new jsPDF();
     
-    // Add title
-    doc.setFontSize(18);
-    doc.text("Schedule Report", 14, 22);
-    doc.setFontSize(11);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+    // Add GoSync logo as header
+    const logoImg = new Image();
+    logoImg.src = "/assets/GoSync-Logo_Length2.png";
     
-    // Define the columns for the table
-    const tableColumn = [
-      "Route", 
-      "Bus Details", 
-      "Departure Date", 
-      "Departure Time", 
-      "Arrival Date", 
-      "Arrival Time", 
-      "Duration"
-    ];
-    
-    // Map the data to match the columns with safer data handling
-    const tableRows = filteredSchedules.map(schedule => {
-      // Safely format route information
-      let routeInfo = "Unknown Route";
-      if (schedule.routeId && schedule.routeId.startLocation && schedule.routeId.endLocation) {
-        routeInfo = `${schedule.routeId.startLocation} → ${schedule.routeId.endLocation}`;
-      }
+    // Wait for image to load before adding to PDF
+    logoImg.onload = function() {
+      const imgWidth = 80; // Width in mm
+      const imgHeight = (logoImg.height * imgWidth) / logoImg.width; // Maintain aspect ratio
       
-      // Safely format bus information
-      let busInfo = "Unknown Bus";
-      if (schedule.busId && schedule.busId.busNumber) {
-        busInfo = schedule.busId.busType 
-          ? `${schedule.busId.busNumber} (${schedule.busId.busType})` 
-          : schedule.busId.busNumber;
-      }
+      doc.addImage(logoImg, 'PNG', 14, 10, imgWidth, imgHeight);
       
-      // Safe date formatting
-      const safeDateFormat = (dateStr) => {
-        try {
-          if (!dateStr) return "N/A";
-          const date = new Date(dateStr);
-          if (isNaN(date.getTime())) return "Invalid Date";
-          return date.toLocaleDateString();
-        } catch (error) {
-          console.error("Date formatting error:", error);
-          return "Invalid Date";
-        }
-      };
+      // Add title - positioned below the logo
+      doc.setFontSize(18);
+      doc.text("Schedule Report", 14, imgHeight + 20);
+      doc.setFontSize(11);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, imgHeight + 28);
       
-      return [
-        routeInfo,
-        busInfo,
-        safeDateFormat(schedule.departureDate),
-        schedule.departureTime || "N/A",
-        safeDateFormat(schedule.arrivalDate),
-        schedule.arrivalTime || "N/A",
-        schedule.duration || "N/A"
+      // Define the columns for the table
+      const tableColumn = [
+        "Route", 
+        "Bus Details", 
+        "Departure Date", 
+        "Departure Time", 
+        "Arrival Date", 
+        "Arrival Time", 
+        "Duration"
       ];
-    });
-    
-    // Generate the table
-    autoTable(doc, {  // <-- Note the different syntax
-        head: [tableColumn],
-        body: tableRows,
-        startY: 40,
-        styles: {
-          fontSize: 9,
-          cellPadding: 3,
-          overflow: "linebreak",
-          halign: "left"
-        },
-        headStyles: {
-          fillColor: [255, 140, 0],
-          textColor: [255, 255, 255],
-          fontStyle: "bold"
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245]
-        },
-
-        columnStyles: {
-            1: { cellWidth: 40 } // Auto-size based on content
-           }
-
+      
+      // Map the data to match the columns with safer data handling
+      const tableRows = filteredSchedules.map(schedule => {
+        // Safely format route information
+        let routeInfo = "Unknown Route";
+        if (schedule.routeId && schedule.routeId.startLocation && schedule.routeId.endLocation) {
+          routeInfo = `${schedule.routeId.startLocation} → ${schedule.routeId.endLocation}`;
+        }
+        
+        // Safely format bus information
+        let busInfo = "Unknown Bus";
+        if (schedule.busId && schedule.busId.busNumber) {
+          busInfo = schedule.busId.busType 
+            ? `${schedule.busId.busNumber} (${schedule.busId.busType})` 
+            : schedule.busId.busNumber;
+        }
+        
+        // Safe date formatting
+        const safeDateFormat = (dateStr) => {
+          try {
+            if (!dateStr) return "N/A";
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return "Invalid Date";
+            return date.toLocaleDateString();
+          } catch (error) {
+            console.error("Date formatting error:", error);
+            return "Invalid Date";
+          }
+        };
+        
+        return [
+          routeInfo,
+          busInfo,
+          safeDateFormat(schedule.departureDate),
+          schedule.departureTime || "N/A",
+          safeDateFormat(schedule.arrivalDate),
+          schedule.arrivalTime || "N/A",
+          schedule.duration || "N/A"
+        ];
       });
+      
+      // Generate the table
+      autoTable(doc, {
+          head: [tableColumn],
+          body: tableRows,
+          startY: imgHeight + 38, // Position the table below the logo and title
+          styles: {
+            fontSize: 9,
+            cellPadding: 3,
+            overflow: "linebreak",
+            halign: "left"
+          },
+          headStyles: {
+            fillColor: [255, 140, 0],
+            textColor: [255, 255, 255],
+            fontStyle: "bold"
+          },
+          alternateRowStyles: {
+            fillColor: [245, 245, 245]
+          },
+          columnStyles: {
+              1: { cellWidth: 40 } // Auto-size based on content
+          }
+      });
+      
+      // Save the PDF
+      doc.save(`GoSync_Schedules_${new Date().toISOString().split('T')[0]}.pdf`);
+      console.log("PDF generated successfully");
+    };
     
-    // Save the PDF
-    doc.save(`GoSync_Schedules_${new Date().toISOString().split('T')[0]}.pdf`);
-    console.log("PDF generated successfully");
+    // Handle error if image fails to load
+    logoImg.onerror = function() {
+      console.error("Error loading logo image");
+      alert("Failed to load logo image. Generating PDF without logo.");
+      
+      // Generate PDF without logo as fallback
+      doc.setFontSize(18);
+      doc.text("Schedule Report", 14, 22);
+      doc.setFontSize(11);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+      
+      // Generate the table without the logo
+      autoTable(doc, {
+          head: [tableColumn],
+          body: tableRows,
+          startY: 40,
+          styles: {
+            fontSize: 9,
+            cellPadding: 3,
+            overflow: "linebreak",
+            halign: "left"
+          },
+          headStyles: {
+            fillColor: [255, 140, 0],
+            textColor: [255, 255, 255],
+            fontStyle: "bold"
+          },
+          alternateRowStyles: {
+            fillColor: [245, 245, 245]
+          },
+          columnStyles: {
+              1: { cellWidth: 40 }
+          }
+      });
+      
+      // Save the PDF
+      doc.save(`GoSync_Schedules_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
   } catch (error) {
     console.error("PDF generation failed:", error);
     alert("Failed to generate PDF report. Please check the console for details.");
