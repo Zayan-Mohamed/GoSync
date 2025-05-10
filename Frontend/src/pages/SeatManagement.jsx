@@ -857,7 +857,7 @@ const SeatManagement = () => {
               <div className="bg-white rounded-lg shadow overflow-hidden transition-all duration-200">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <thead className="bg-gradient-to-r from-[#FFE082] to-[#FFC107]">
                       <tr>
                         <th className="px-4 py-3 text-left">
                           <div className="flex items-center">

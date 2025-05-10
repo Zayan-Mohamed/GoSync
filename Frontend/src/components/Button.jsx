@@ -1,28 +1,135 @@
 import React from "react";
+import { Button as MuiButton } from "@mui/material";
 
-const Button = ({ children, className, variant = "primary", ...props }) => {
-  const baseClasses =
-    "px-4 py-2 rounded transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2";
+const Button = ({ variant = "primary", className = "", children, ...props }) => {
+  const getVariantStyles = () => {
+    const baseStyles = {
+      textTransform: "none",
+      fontSize: "0.813rem",
+      fontWeight: 500,
+      borderRadius: "6px",
+      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+      padding: "6px 12px",
+      boxShadow: "none",
+      minWidth: props.minWidth || "auto",
+      height: props.height || "32px",
+      position: "relative",
+      lineHeight: 1.5,
+      letterSpacing: "0.01em",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "6px",
 
-  const variants = {
-    primary:
-      "bg-[#E65100] hover:bg-[#FF8F00] text-white focus:ring-[#E65100]",
-    secondary:
-      "bg-[#FFD600] hover:bg-[#FFC107] text-[#212121] focus:ring-[#FFD600]",
-    danger: "bg-[#D32F2F] hover:bg-[#B71C1C] text-white focus:ring-[#D32F2F]",
-    light:
-      "bg-[#F5F5F5] hover:bg-[#FFE082] text-[#212121] focus:ring-[#FFE082]",
+      "& .MuiSvgIcon-root": {
+        fontSize: "1.15rem",
+      },
+    };
+
+    switch (variant) {
+      case "primary":
+        return {
+          ...baseStyles,
+          backgroundColor: "#E65100",
+          color: "#fff",
+          border: "1px solid #E65100",
+          "&:hover": {
+            backgroundColor: "#F57C00",
+            borderColor: "#F57C00",
+            transform: "translateY(-1px)",
+            boxShadow: "0 2px 6px rgba(230, 81, 0, 0.2)",
+          },
+          "&:active": {
+            transform: "translateY(0)",
+            boxShadow: "0 1px 2px rgba(230, 81, 0, 0.2)",
+          },
+          "&.Mui-disabled": {
+            backgroundColor: "#F1F5F9",
+            borderColor: "#E2E8F0",
+            color: "#94A3B8",
+          },
+        };
+      case "secondary":
+        return {
+          ...baseStyles,
+          backgroundColor: "#FFF",
+          color: "#E65100",
+          border: "1px solid #E65100",
+          "&:hover": {
+            backgroundColor: "#FFF3E0",
+            borderColor: "#F57C00",
+            color: "#F57C00",
+            transform: "translateY(-1px)",
+            boxShadow: "0 2px 6px rgba(230, 81, 0, 0.1)",
+          },
+          "&:active": {
+            transform: "translateY(0)",
+            boxShadow: "0 1px 2px rgba(230, 81, 0, 0.1)",
+          },
+          "&.Mui-disabled": {
+            backgroundColor: "#F8FAFC",
+            borderColor: "#E2E8F0",
+            color: "#94A3B8",
+          },
+        };
+      case "danger":
+        return {
+          ...baseStyles,
+          backgroundColor: "#FFF",
+          color: "#DC2626",
+          border: "1px solid #DC2626",
+          "&:hover": {
+            backgroundColor: "#FEE2E2",
+            transform: "translateY(-1px)",
+            boxShadow: "0 2px 6px rgba(220, 38, 38, 0.1)",
+          },
+          "&:active": {
+            transform: "translateY(0)",
+            boxShadow: "0 1px 2px rgba(220, 38, 38, 0.1)",
+          },
+          "&.Mui-disabled": {
+            backgroundColor: "#F8FAFC",
+            borderColor: "#E2E8F0",
+            color: "#94A3B8",
+          },
+        };
+      case "light":
+        return {
+          ...baseStyles,
+          backgroundColor: "#F8FAFC",
+          color: "#64748B",
+          border: "1px solid #E2E8F0",
+          "&:hover": {
+            backgroundColor: "#F1F5F9",
+            borderColor: "#CBD5E1",
+            color: "#475569",
+            transform: "translateY(-1px)",
+          },
+          "&:active": {
+            transform: "translateY(0)",
+          },
+          "&.Mui-disabled": {
+            backgroundColor: "#F8FAFC",
+            borderColor: "#E2E8F0",
+            color: "#94A3B8",
+          },
+        };
+      default:
+        return baseStyles;
+    }
   };
 
-  const variantClasses = variants[variant] || variants.primary;
-
   return (
-    <button
-      className={`${baseClasses} ${variantClasses} ${className}`}
+    <MuiButton
       {...props}
+      className={className}
+      sx={{
+        ...getVariantStyles(),
+        ...(props.sx || {}),
+      }}
     >
       {children}
-    </button>
+    </MuiButton>
   );
 };
 

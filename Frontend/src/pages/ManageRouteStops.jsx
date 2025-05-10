@@ -676,20 +676,21 @@ const ManageRouteStops = () => {
       <div className="min-h-screen bg-gray-50 py-8">
         <div ref={topRef} className="max-w-5xl mx-auto">
           {/* Header and route selection */}
-          <div className="bg-white rounded-lg shadow-sm mb-6 p-6">
-            <div className="flex items-center mb-6">
-              <button
+          <div className="bg-gradient-to-r from-[#FFE082] to-[#FFC107] rounded-lg shadow-lg p-6 mb-8">
+            <div className="flex items-center mb-2">
+              {/* <button
                 onClick={() => navigate(-1)}
                 className="mr-4 text-gray-600 hover:text-deepOrange transition-colors duration-200"
               >
                 <ArrowLeft size={24} />
-              </button>
-              <h2 className="text-3xl font-bold text-gray-800">
-                Manage Route Stops
-              </h2>
+              </button> */}
+              <h2 className="text-3xl font-bold text-[#E65100]">Manage Route Stops</h2>
             </div>
+            <p className="text-gray-700">Add and configure stops for each bus route</p>
+          </div>
 
-            {/* Route selection */}
+          {/* Route selection */}
+          <div className="bg-white rounded-lg shadow-sm mb-6 p-6">
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Route
@@ -828,7 +829,6 @@ const ManageRouteStops = () => {
                             <option value="">Select Stop</option>
                             {isEditing ? (
                               <option value={editStopData.stopId}>
-
                                 {editStopData.stop?.stopName || editStopData.stopName}
                               </option>
                             ) : (

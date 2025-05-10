@@ -67,17 +67,13 @@ const PassengerHomepage = () => {
     const fetchTopRoutes = async () => {
       try {
         const response = await axios.get(`${API_URI}/api/routes/route-analytics`);
-        // Make sure we have valid data before setting state
+        // Only process and set the top routes if we have valid data
         if (response.data && Array.isArray(response.data.topRoutes)) {
-          const formattedRoutes = response.data.topRoutes
-            .slice(0, 4)
-            .map(route => ({
-              ...route,
-              stopCount: route.stops?.length || 0,
-              estimatedDuration: route.estimatedDuration || '2-3',
-              bookingCount: route.bookingCount || 0
-            }));
-          setTopRoutes(formattedRoutes);
+          // Use data directly from the response since stopCount is already calculated in backend
+          setTopRoutes(response.data.topRoutes.slice(0, 4).map(route => ({
+            ...route,
+            estimatedDuration: route.estimatedDuration || '2-3'
+          })));
         } else {
           setTopRoutes([]); // Set empty array if no valid data
         }

@@ -19,8 +19,6 @@ const ImportExportCard = ({
     if (!file) return;
     
     const fileExtension = file.name.split('.').pop().toLowerCase();
-    
-    // Call the parent component's handler
     onImport(file, fileExtension);
     
     // Reset the file input

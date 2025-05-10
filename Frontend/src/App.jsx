@@ -18,14 +18,13 @@ function App() {
         draggable={true}
         pauseOnHover={true}
         theme="light"
-        style={{
-          zIndex: 9999
-        }}
+        style={{ zIndex: 999999 }}
         toastStyle={{
           background: '#fff',
           color: '#000',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-          borderRadius: '8px'
+          borderRadius: '8px',
+          fontSize: '14px'
         }}
       />
       <AppRoute />
