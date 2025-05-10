@@ -18,6 +18,7 @@ import busRoutes from "./routes/busRoutes.js";
 import scheduleRoutes from "./routes/scheduleRoutes.js";
 import shedRoutes from "./routes/shedRoutes.js";
 import busOperatorRoutes from "./routes/busOperatorRoutes.js";
+import busMaintenanceRoutes from "./routes/busMaintenanceRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -58,39 +59,34 @@ app.use(express.json());
 
 // IMPORTANT: Configure the static file server BEFORE the routes
 // This allows images to be served without auth requirements
-app.use(
-  "/uploads",
-  (req, res, next) => {
-    // Add CORS headers specifically for image files
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET");
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept"
-    );
-
-    // Log all requests to help with debugging
-    console.log(`[Static File] Requested: ${req.path}`);
-
-    // Set proper caching headers for images
-    if (req.path.match(/\.(jpg|jpeg|png|gif)$/i)) {
-      // Set appropriate content type based on extension
-      const ext = req.path.toLowerCase().split(".").pop();
-      const contentType =
-        ext === "png"
-          ? "image/png"
-          : ext === "gif"
-          ? "image/gif"
-          : "image/jpeg";
-
-      res.setHeader("Content-Type", contentType);
-      res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 1 day
-    }
-
-    next();
-  },
-  express.static(path.join(__dirname, "..", "..", "uploads"))
-);
+// Configure static file serving with enhanced security and debugging
+app.use("/uploads", (req, res, next) => {
+  // Add CORS headers for image files
+  res.setHeader("Access-Control-Allow-Origin", corsOptions.origin);
+  res.setHeader("Access-Control-Allow-Methods", "GET");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.setHeader("X-Content-Type-Options", "nosniff"); // Prevent MIME type sniffing
+  
+  // Log requests for debugging
+  console.log(`[Static File] Requested: ${req.path}`);
+  
+  // Set appropriate headers for images
+  if (req.path.match(/\.(jpg|jpeg|png|gif)$/i)) {
+    const ext = req.path.toLowerCase().split(".").pop();
+    const contentType = {
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg'
+    }[ext] || 'application/octet-stream';
+    
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 1 day
+    res.setHeader("Content-Security-Policy", "default-src 'self'");
+  }
+  
+  next();
+}, express.static(path.join(__dirname, "..", "uploads")));
 
 // Test Route
 app.get("/", (req, res) => {
@@ -110,6 +106,8 @@ app.use("/api/schedules", scheduleRoutes);
 app.use("/api/buses", busRoutes);
 app.use("/api/shed", shedRoutes);
 app.use("/api/operator", busOperatorRoutes);
+app.use("/api/maintenance", busMaintenanceRoutes);
+
 
 // Start Server
 const PORT = process.env.PORT || 5000;

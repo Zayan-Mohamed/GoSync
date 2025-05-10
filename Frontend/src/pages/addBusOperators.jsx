@@ -32,6 +32,34 @@ function AddBusOperators() {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    // Validation logic
+    if (formData.operatorName.trim().length < 3) {
+      setError("Name must be at least 3 characters.");
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(formData.operatorPhone)) {
+      setError("Phone must be a valid 10-digit number.");
+      return;
+    }
+
+    if (formData.operatorLicenseNumber.trim().length < 6) {
+      setError("License number must be at least 6 characters.");
+      return;
+    }
+
+    if (!formData.licenseEndDate) {
+      setError("License end date is required.");
+      return;
+    }
+
+    if (new Date(formData.licenseEndDate) <= new Date()) {
+      setError("License end date must be a future date.");
+      return;
+    }
+
+    // Submit if validations pass
     try {
       await addBusOperator(formData);
       setSuccess("Operator added successfully!");

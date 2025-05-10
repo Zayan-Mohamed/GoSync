@@ -7,6 +7,8 @@ import Stop from "../models/stopModel.js";
 
 export const createBus = async (req, res) => {
   try {
+    console.log('Received bus creation request:', req.body);
+
     const {
       busNumber,
       busType,
@@ -18,34 +20,73 @@ export const createBus = async (req, res) => {
       travelName,
     } = req.body;
 
+    // Create an object to store missing fields
+    const missingFields = [];
+    if (!busNumber) missingFields.push('busNumber');
+    if (!busType) missingFields.push('busType');
+    if (!capacity) missingFields.push('capacity');
+    if (!routeId) missingFields.push('routeId');
+    if (!busRouteNumber) missingFields.push('busRouteNumber');
+    if (!fareAmount) missingFields.push('fareAmount');
+    if (!travelName) missingFields.push('travelName');
+
+    // If any required fields are missing, return detailed error
+    if (missingFields.length > 0) {
+      console.log('Missing fields:', missingFields);
+      return res.status(400).json({
+        message: "Missing required fields",
+        missingFields,
+        receivedData: req.body
+      });
+    }
+
+    // Check if bus number already exists
     const existingBus = await Bus.findOne({ busNumber });
     if (existingBus) {
       return res.status(400).json({ message: "Bus number already exists" });
     }
 
+    // Validate if route exists
+    const routeExists = await Route.findById(routeId);
+    if (!routeExists) {
+      return res.status(400).json({ message: "Invalid route ID" });
+    }
+
+    // Set bus image path if file was uploaded
+    const busImage = req.file ? `/uploads/busImages/${req.file.filename}` : "";
+
+    // Create new bus with validated data
     const newBus = new Bus({
       busNumber,
       busType,
-      capacity,
+      capacity: Number(capacity),
       status: status || "Active",
       routeId,
       busRouteNumber,
-      fareAmount,
+      fareAmount: Number(fareAmount),
       travelName,
+      busImage,
     });
 
     const savedBus = await newBus.save();
     res.status(201).json(savedBus);
   } catch (error) {
     console.error("Error creating bus:", error);
+    
+    // Handle specific validation errors
     if (error.name === "ValidationError") {
-      return res.status(400).json({ message: "Validation Error", error: error.message });
+      return res.status(400).json({
+        message: "Validation Error",
+        details: Object.values(error.errors).map(err => err.message)
+      });
     }
+    
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 
 export const getAllBuses = async (req, res) => {
+  console.log("Fetching all buses...");
   try {
     const buses = await Bus.find({})
       .populate("routeId")
@@ -54,6 +95,8 @@ export const getAllBuses = async (req, res) => {
   } catch (error) {
     console.log("Error fetching buses:", error);
     res.status(400).json({ message: "Error fetching buses", error });
+  }finally{
+    console.log("Finished fetching all buses.");
   }
 };
 

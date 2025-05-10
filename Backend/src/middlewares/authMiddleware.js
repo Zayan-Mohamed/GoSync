@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 import dotenv from "dotenv";
+import multer from "multer";
+import path from "path";
+
 
 dotenv.config();
 
@@ -29,4 +32,39 @@ export const adminOnly = (req, res, next) => {
   } else {
     return res.status(403).json({ message: "Access denied. Admins only." });
   }
+
+  
 };
+// ✅ Set up multer storage for image upload
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, "uploads/busImages"); // Make sure this folder exists
+  },
+  filename(req, file, cb) {
+    cb(
+      null,
+      `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
+    );
+  },
+});
+
+// ✅ Filter to accept only image files
+function checkFileType(file, cb) {
+  const filetypes = /jpg|jpeg|png|webp/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = filetypes.test(file.mimetype);
+
+  if (extname && mimetype) {
+    return cb(null, true);
+  } else {
+    cb("Images only! (jpg, jpeg, png, webp)");
+  }
+}
+
+export const uploadBusImage = multer({
+  storage,
+  fileFilter: function (req, file, cb) {
+    checkFileType(file, cb);
+  },
+});
+
