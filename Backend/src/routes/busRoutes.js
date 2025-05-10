@@ -11,7 +11,7 @@ import {
   getUnassignedBuses,
 } from "../controllers/busController.js";
 
-import { uploadBusImage, protect, adminOnly } from "../middlewares/authMiddleware.js";
+import { protect, adminOnly } from "../middlewares/authMiddleware.js";
 import multer from "multer";
 import path from "path";
 

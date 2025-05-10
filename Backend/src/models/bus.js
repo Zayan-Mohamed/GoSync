@@ -1,9 +1,6 @@
 import mongoose from "mongoose";
 import mongooseSequence from "mongoose-sequence";
 
-// Initialize AutoIncrement using your mongoose connection
-const AutoIncrement = mongooseSequence(mongoose);
-
 // Define the bus schema
 const busSchema = new mongoose.Schema(
   {
@@ -14,7 +11,7 @@ const busSchema = new mongoose.Schema(
       trim: true,
     },
     busId: {
-      type: Number, // Auto-incremented field
+      type: Number, // Auto-increment field for internal use
       unique: true,
     },
     busType: {
@@ -32,13 +29,12 @@ const busSchema = new mongoose.Schema(
       default: "Active",
       enum: ["Active", "Inactive", "Maintenance"],
     },
-    routeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Route",
-      required: true,
+    routeId: { 
+      type: String,
+      required: true
     },
     busRouteNumber: {
-      type: String,
+      type: String, // New field for bus route number
       required: true,
       trim: true,
     },
@@ -48,27 +44,25 @@ const busSchema = new mongoose.Schema(
       min: 1,
     },
     travelName: {
-      type: String,
+      type: String, // New field for travel company name
       required: true,
       trim: true,
     },
-    busImage: {
-      type: String, // e.g., "/uploads/bus123.jpg"
-      default: "",
-    },
     operator: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "BusOperator",
-      default: null,
-    },
+      ref: 'BusOperator',
+      default: null
+    }
+    
+  
   },
   {
     timestamps: true,
   }
 );
 
-// Apply the auto-increment plugin to busId
-busSchema.plugin(AutoIncrement, { inc_field: "busId" });
+// Apply the mongoose-sequence plugin to the busId field
+busSchema.plugin(mongooseSequence(mongoose), { inc_field: "busId" });
 
-const Bus = mongoose.model("Bus", busSchema);
-export default Bus;
+// Create and export the Bus model
+export default mongoose.model("Bus", busSchema);

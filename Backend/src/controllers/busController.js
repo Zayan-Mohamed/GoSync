@@ -173,8 +173,6 @@ export const getUnassignedBuses = async (req, res) => {
   }
 };
 
-
-
 export const searchBuses = async (req, res) => {
   try {
       const { fromLocation, toLocation, selectedDate } = req.body;
@@ -301,6 +299,6 @@ export const searchBuses = async (req, res) => {
 
   } catch (error) {
       console.error("Search buses error:", error);
-      res.status(500).json({ error: "Error searching buses", details: error.message });
-  }
+      res.status(500).json({ error: "Error searching buses", details: error.message });
+}
 };
