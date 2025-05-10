@@ -32,6 +32,7 @@ function BookingCard({
   showCancelButton = false,
   showPayButton = false,
   onPay,
+  extraComponent = null,
 }) {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
@@ -40,6 +41,8 @@ function BookingCard({
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [isSeatCancelModalOpen, setIsSeatCancelModalOpen] = useState(false);
   const [processedSeats, setProcessedSeats] = useState([]);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [isPaymentExpired, setIsPaymentExpired] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -86,9 +89,69 @@ function BookingCard({
     }
   }, [booking]);
 
+  useEffect(() => {
+    if (
+      booking.status === "confirmed" &&
+      booking.paymentStatus === "pending" &&
+      booking.createdAt
+    ) {
+      const bookedTime = new Date(booking.createdAt).getTime();
+      const deadlineTime = bookedTime + 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+
+      const updateRemainingTime = () => {
+        const currentTime = new Date().getTime();
+        const remainingTime = Math.max(
+          0,
+          Math.floor((deadlineTime - currentTime) / 1000)
+        );
+        setTimeRemaining(remainingTime);
+      };
+
+      updateRemainingTime();
+
+      const timerId = setInterval(updateRemainingTime, 60000);
+
+      return () => clearInterval(timerId);
+    }
+  }, [booking]);
+
+  useEffect(() => {
+    if (
+      booking.status === "confirmed" &&
+      booking.paymentStatus === "pending" &&
+      booking.createdAt
+    ) {
+      const bookingTime = new Date(booking.createdAt).getTime();
+      const deadline = bookingTime + 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+      const now = new Date().getTime();
+
+      // Check if the booking payment window has expired
+      if (now > deadline) {
+        setIsPaymentExpired(true);
+      } else {
+        // Set a timeout to check again when the deadline is reached
+        const timeRemaining = deadline - now;
+        const timeoutId = setTimeout(() => {
+          setIsPaymentExpired(true);
+        }, timeRemaining);
+
+        // Cleanup timeout on unmount
+        return () => clearTimeout(timeoutId);
+      }
+    }
+  }, [booking]);
+
   function isLikelyObjectId(id) {
     return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
   }
+
+  const formatTimeRemaining = (seconds) => {
+    if (seconds <= 0) return "0h 0m (expired)";
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
 
   const qrCode = booking.qrCode || mockQRCode;
   const isMockQR = qrCode === mockQRCode;
@@ -350,9 +413,10 @@ function BookingCard({
           booking.status === "confirmed" && booking.paymentStatus === "paid"
             ? "bg-green-100 text-green-800"
             : booking.status === "confirmed" &&
-                booking.paymentStatus === "pending"
+                booking.paymentStatus === "pending" &&
+                !isPaymentExpired
               ? "bg-yellow-100 text-yellow-800"
-              : booking.status === "cancelled"
+              : booking.status === "cancelled" || isPaymentExpired
                 ? "bg-red-100 text-red-800"
                 : "bg-gray-100 text-gray-800"
         } flex items-center justify-between`}
@@ -362,9 +426,10 @@ function BookingCard({
           booking.paymentStatus === "paid" ? (
             <CheckCircle className="w-4 h-4 mr-2" />
           ) : booking.status === "confirmed" &&
-            booking.paymentStatus === "pending" ? (
+            booking.paymentStatus === "pending" &&
+            !isPaymentExpired ? (
             <AlertTriangle className="w-4 h-4 mr-2" />
-          ) : booking.status === "cancelled" ? (
+          ) : booking.status === "cancelled" || isPaymentExpired ? (
             <XCircle className="w-4 h-4 mr-2" />
           ) : (
             <Info className="w-4 h-4 mr-2" />
@@ -373,23 +438,29 @@ function BookingCard({
             {booking.status === "confirmed" && booking.paymentStatus === "paid"
               ? "Confirmed & Paid"
               : booking.status === "confirmed" &&
-                  booking.paymentStatus === "pending"
+                  booking.paymentStatus === "pending" &&
+                  !isPaymentExpired
                 ? "Pending Payment"
                 : booking.status === "cancelled"
                   ? "Cancelled"
-                  : booking.status}
+                  : isPaymentExpired
+                    ? "Payment Expired"
+                    : booking.status}
           </span>
         </div>
-        {isRecentBooking && (
-          <span className="px-2 py-0.5 bg-green-200 text-green-800 rounded-full text-xs">
-            New
-          </span>
-        )}
-        {approachingDeparture && (
-          <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 rounded-full text-xs">
-            Departing Soon
-          </span>
-        )}
+        <div className="flex items-center">
+          {extraComponent && <div className="mr-2">{extraComponent}</div>}
+          {isRecentBooking && (
+            <span className="px-2 py-0.5 bg-green-200 text-green-800 rounded-full text-xs">
+              New
+            </span>
+          )}
+          {approachingDeparture && (
+            <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 rounded-full text-xs">
+              Departing Soon
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between">
@@ -449,6 +520,23 @@ function BookingCard({
             </div>
           </div>
 
+          {booking.status === "confirmed" &&
+            booking.paymentStatus === "pending" &&
+            timeRemaining > 0 && (
+              <div className="my-3 p-2 bg-yellow-50 border border-yellow-200 rounded flex items-center text-yellow-700 text-sm">
+                <Clock size={16} className="mr-2 flex-shrink-0" />
+                <span>
+                  Payment due:{" "}
+                  <strong>{formatTimeRemaining(timeRemaining)}</strong>{" "}
+                  remaining
+                  <br />
+                  <span className="text-xs">
+                    Seats will be released after 6 hours
+                  </span>
+                </span>
+              </div>
+            )}
+
           <p className="text-xs text-gray-500 mt-2">
             Booked on: {formatDate(booking.createdAt)}
             {daysSinceBooking !== null &&
@@ -485,14 +573,28 @@ function BookingCard({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
-        {showPayButton && (
-          <button
-            onClick={onPay}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center"
-          >
-            <CreditCard className="w-4 h-4 mr-2" /> Pay Now
-          </button>
-        )}
+        {showPayButton &&
+          booking.status === "confirmed" &&
+          booking.paymentStatus === "pending" &&
+          !isPaymentExpired && (
+            <button
+              onClick={() => onPay(booking)}
+              className="flex items-center px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+            >
+              <CreditCard className="w-4 h-4 mr-1" />
+              Pay Now
+            </button>
+          )}
+
+        {isPaymentExpired &&
+          booking.status === "confirmed" &&
+          booking.paymentStatus === "pending" && (
+            <div className="w-full p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+              <AlertTriangle className="inline-block w-3 h-3 mr-1" />
+              Payment window expired. This booking is no longer valid.
+            </div>
+          )}
+
         <button
           onClick={handleOpenModal}
           className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition flex items-center justify-center"

@@ -475,7 +475,11 @@ export const getBookingAnalytics = async (req, res) => {
     // Revenue by bus
     const revenueByBus = await Booking.aggregate([
       { $match: match },
-      { $group: { _id: "$busId", totalRevenue: { $sum: "$fareTotal" } } },
+      { $group: { 
+          _id: "$busId", 
+          totalRevenue: { $sum: "$fareTotal" },
+          bookingCount: { $sum: 1 }  // Add booking count here
+      }},
       {
         $lookup: {
           from: "buses",
@@ -485,7 +489,11 @@ export const getBookingAnalytics = async (req, res) => {
         },
       },
       { $unwind: "$bus" },
-      { $project: { busNumber: "$bus.busNumber", totalRevenue: 1 } },
+      { $project: { 
+          busNumber: "$bus.busNumber", 
+          totalRevenue: 1,
+          bookingCount: 1  // Include bookingCount in projection
+      }},
     ]);
 
     // Bookings by day
@@ -499,6 +507,79 @@ export const getBookingAnalytics = async (req, res) => {
       },
       { $sort: { _id: 1 } },
     ]);
+
+    // Bookings by hour
+    const bookingsByHour = await Booking.aggregate([
+      { $match: match },
+      {
+        $project: {
+          hour: { $hour: "$createdAt" }
+        }
+      },
+      {
+        $group: {
+          _id: "$hour",
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Calculate average booking time before departure
+    // Get all bookings with schedule information
+    const bookingsWithSchedules = await Booking.aggregate([
+      { $match: match },
+      {
+        $lookup: {
+          from: "schedules",
+          localField: "scheduleId",
+          foreignField: "_id",
+          as: "schedule"
+        }
+      },
+      { $unwind: "$schedule" },
+      {
+        $project: {
+          createdAt: 1,
+          departureDate: "$schedule.departureDate",
+          departureTime: "$schedule.departureTime"
+        }
+      }
+    ]);
+
+    // Calculate average time between booking and departure in hours
+    let avgBookingTime = "N/A";
+    if (bookingsWithSchedules.length > 0) {
+      let totalHours = 0;
+      let validBookingCount = 0;
+
+      bookingsWithSchedules.forEach(booking => {
+        try {
+          const bookingTime = new Date(booking.createdAt);
+          
+          // Parse departure datetime
+          const depDate = new Date(booking.departureDate);
+          const [hours, minutes] = booking.departureTime.split(':').map(Number);
+          depDate.setHours(hours, minutes, 0, 0);
+          
+          // Calculate difference in hours
+          const diffMs = depDate - bookingTime;
+          const diffHours = diffMs / (1000 * 60 * 60);
+          
+          // Only count positive time differences (bookings made before departure)
+          if (diffHours > 0) {
+            totalHours += diffHours;
+            validBookingCount++;
+          }
+        } catch (e) {
+          console.error("Error calculating booking time difference:", e);
+        }
+      });
+
+      if (validBookingCount > 0) {
+        avgBookingTime = (totalHours / validBookingCount).toFixed(1) + " hrs";
+      }
+    }
 
     // Top routes (using bus.routeId as String)
     const topRoutes = await Booking.aggregate([
@@ -526,23 +607,33 @@ export const getBookingAnalytics = async (req, res) => {
       { $limit: 5 },
     ]);
 
+    // Calculate total revenue
+    const totalRevenue = (
+      await Booking.aggregate([
+        { $match: match },
+        { $group: { _id: null, total: { $sum: "$fareTotal" } } },
+      ])
+    )[0]?.total || 0;
+
+    // Calculate avg booking value
+    const avgBookingValue = confirmedBookings > 0 
+      ? (totalRevenue / confirmedBookings).toFixed(2)
+      : 0;
+
     res.status(200).json({
       totalBookings,
       confirmedBookings,
       cancelledBookings,
-      totalRevenue:
-        (
-          await Booking.aggregate([
-            { $match: match },
-            { $group: { _id: null, total: { $sum: "$fareTotal" } } },
-          ])
-        )[0]?.total || 0,
+      totalRevenue,
+      avgBookingValue,
       cancellationRate: totalBookings
         ? ((cancelledBookings / totalBookings) * 100).toFixed(2) + "%"
         : "0%",
       revenueByBus: revenueByBus.length ? revenueByBus : [],
       bookingsByDay: bookingsByDay.length ? bookingsByDay : [],
+      bookingsByHour: bookingsByHour.length ? bookingsByHour : [],
       topRoutes: topRoutes.length ? topRoutes : [],
+      avgBookingTime // Add the average booking time to the response
     });
   } catch (error) {
     console.error("Error fetching booking analytics:", error.stack);

@@ -19,12 +19,14 @@ import busRoutes from "./routes/busRoutes.js";
 import scheduleRoutes from "./routes/scheduleRoutes.js";
 import shedRoutes from "./routes/shedRoutes.js";
 import busOperatorRoutes from "./routes/busOperatorRoutes.js";
-import busRouteRoutes from"./routes/busRouteRoutes.js";
+import busRouteRoutes from "./routes/busRouteRoutes.js";
 import notRoutes from "./routes/notRoutes.js";
+import { setupCronJobs } from "./utils/cronScheduler.js"; 
+import logger from "./utils/logger.js";
 
 import reportRoutes from "./routes/reportRoutes.js";
 import heatmapRoutes from "./routes/heatmapRoutes.js";
- // Import the new routes
+// Import the new routes
 import busMaintenanceRoutes from "./routes/busMaintenanceRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -32,8 +34,12 @@ import { fileURLToPath } from "url";
 dotenv.config();
 connectDB();
 
-console.log("Loaded EMAIL_USER:", process.env.EMAIL_USER);
-console.log("Loaded EMAIL_PASS:", process.env.EMAIL_PASS);
+logger.info("Server starting up...");
+logger.info("Loaded EMAIL_USER:", process.env.EMAIL_USER);
+logger.info(
+  "Loaded EMAIL_PASS length:",
+  process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0
+);
 
 const app = express();
 const server = createServer(app);
@@ -45,6 +51,10 @@ const __dirname = path.dirname(__filename);
 // Setup WebSocket
 const io = setupWebSocket(server);
 app.set("io", io);
+
+// Set up cron jobs for automated tasks
+setupCronJobs();
+logger.info("Cron jobs initialized");
 
 // CORS Configuration
 const corsOptions = {
@@ -64,36 +74,41 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 
-// IMPORTANT: Configure the static file server BEFORE the routes
-// This allows images to be served without auth requirements
-// Configure static file serving with enhanced security and debugging
-app.use("/uploads", (req, res, next) => {
-  // Add CORS headers for image files
-  res.setHeader("Access-Control-Allow-Origin", corsOptions.origin);
-  res.setHeader("Access-Control-Allow-Methods", "GET");
-  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  res.setHeader("X-Content-Type-Options", "nosniff"); // Prevent MIME type sniffing
-  
-  // Log requests for debugging
-  console.log(`[Static File] Requested: ${req.path}`);
-  
-  // Set appropriate headers for images
-  if (req.path.match(/\.(jpg|jpeg|png|gif)$/i)) {
-    const ext = req.path.toLowerCase().split(".").pop();
-    const contentType = {
-      'png': 'image/png',
-      'gif': 'image/gif',
-      'jpg': 'image/jpeg',
-      'jpeg': 'image/jpeg'
-    }[ext] || 'application/octet-stream';
-    
-    res.setHeader("Content-Type", contentType);
-    res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 1 day
-    res.setHeader("Content-Security-Policy", "default-src 'self'");
-  }
-  
-  next();
-}, express.static(path.join(__dirname, "..", "uploads")));
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    // Add CORS headers for image files
+    res.setHeader("Access-Control-Allow-Origin", corsOptions.origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept"
+    );
+    res.setHeader("X-Content-Type-Options", "nosniff"); // Prevent MIME type sniffing
+
+    // Log requests for debugging
+    console.log(`[Static File] Requested: ${req.path}`);
+
+    // Set appropriate headers for images
+    if (req.path.match(/\.(jpg|jpeg|png|gif)$/i)) {
+      const ext = req.path.toLowerCase().split(".").pop();
+      const contentType =
+        {
+          png: "image/png",
+          gif: "image/gif",
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+        }[ext] || "application/octet-stream";
+
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 1 day
+      res.setHeader("Content-Security-Policy", "default-src 'self'");
+    }
+
+    next();
+  },
+  express.static(path.join(__dirname, "..", "uploads"))
+);
 
 // Test Route
 app.get("/", (req, res) => {
@@ -113,18 +128,15 @@ app.use("/api/stops", stopRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/buses", busRoutes);
 app.use("/api/shed", shedRoutes);
-app.use('/api/reports', reportRoutes);
+app.use("/api/reports", reportRoutes);
 app.use("/api/operator", busOperatorRoutes);
-app.use("/api/busRoute",busRouteRoutes);
+app.use("/api/busRoute", busRouteRoutes);
 app.use("/api", notRoutes);
 app.use("/api/user", heatmapRoutes);
 app.use("/api/maintenance", busMaintenanceRoutes);
-
 
 // Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 export default io;
-
-
