@@ -17,10 +17,8 @@ export const createRoute = async (req, res) => {
       stops,
     } = req.body;
 
-    // Normalize route name by converting to lowercase for case-insensitive comparison
     const normalizedRouteName = routeName.toLowerCase().trim();
 
-    // Check for existing route with the same name (case-insensitive)
     const existingRoute = await Route.findOne({
       routeName: { $regex: new RegExp(`^${normalizedRouteName}$`, "i") },
     });
@@ -38,7 +36,7 @@ export const createRoute = async (req, res) => {
     if (stops && stops.length > 0) {
       for (let i = 0; i < stops.length; i++) {
         const stopData = stops[i];
-        // Handle if stop is passed as object or just ID
+        
         const stopId =
           typeof stopData === "object" ? stopData.stopId : stopData;
         const order = typeof stopData === "object" ? stopData.order : i + 1;
@@ -117,7 +115,7 @@ export const createRoute = async (req, res) => {
 };
 
 export const createMultipleRoutes = async (req, res) => {
-  // Set timeout for the entire operation (30 seconds)
+  
   req.setTimeout(30000);
 
   const session = await mongoose.startSession();
@@ -126,7 +124,7 @@ export const createMultipleRoutes = async (req, res) => {
     await session.withTransaction(async () => {
       const { routes } = req.body;
 
-      // 1. Basic validation
+     
       if (!Array.isArray(routes)) {
         throw { status: 400, message: "Input should be an array of routes" };
       }
@@ -135,7 +133,7 @@ export const createMultipleRoutes = async (req, res) => {
         throw { status: 400, message: "No routes provided" };
       }
 
-      // 2. Check for duplicate names in request
+      
       const nameMap = new Map();
       for (const route of routes) {
         const normalized = route.routeName?.trim().toLowerCase();
@@ -148,7 +146,7 @@ export const createMultipleRoutes = async (req, res) => {
         nameMap.set(normalized, true);
       }
 
-      // 3. Check against existing routes
+  
       const existing = await Route.find({
         routeName: {
           $in: routes.map((r) => new RegExp(`^${r.routeName.trim()}$`, "i")),
@@ -165,7 +163,7 @@ export const createMultipleRoutes = async (req, res) => {
         };
       }
 
-      // 4. Process routes with stops
+      
       const routesToCreate = [];
 
       for (const [index, route] of routes.entries()) {
@@ -178,7 +176,7 @@ export const createMultipleRoutes = async (req, res) => {
 
             const stop = await Stop.findOne({ stopId })
               .session(session)
-              .maxTimeMS(5000) // 5 second timeout per stop lookup
+              .maxTimeMS(5000) 
               .lean();
 
             if (!stop) {
@@ -211,11 +209,11 @@ export const createMultipleRoutes = async (req, res) => {
         });
       }
 
-      // 5. Bulk insert with timeout
+      
 
       const result = await Route.insertMany(routesToCreate, {
         session,
-        maxTimeMS: 15000, // 15 second timeout for insert
+        maxTimeMS: 15000, 
       });
 
       console.log(`[Route] Successfully created ${result.length} routes`);
@@ -250,7 +248,6 @@ export const addStopToRoute = async (req, res) => {
       return res.status(400).json({ error: "routeId and stopId are required" });
     }
 
-    // Find the route (support both _id and routeId)
     const route = await Route.findOne({
       $or: [{ _id: routeId }, { routeId: routeId }],
     });
@@ -258,7 +255,6 @@ export const addStopToRoute = async (req, res) => {
       return res.status(404).json({ error: "Route not found" });
     }
 
-    // Find the stop (support both _id and stopId)
     const stop = await Stop.findOne({
       $or: [{ _id: stopId }, { stopId: stopId }],
     });
@@ -266,7 +262,6 @@ export const addStopToRoute = async (req, res) => {
       return res.status(404).json({ error: "Stop not found" });
     }
 
-    // Check if stop already exists in route
     const stopExists = route.stops.some((existingStop) => {
       const existingStopId =
         existingStop.stop?._id?.toString() || existingStop.stop?.toString();
@@ -944,7 +939,7 @@ export const updateStopInRoute = async (req, res) => {
             existingStop: {
               name: conflictingStop.stop?.stopName,
               order: conflictingStop.order,
-              type: conflictingStop.stopType,
+              stopType: conflictingStop.stopType,
             },
             attemptedUpdate: {
               stopId: stopId,
@@ -1020,13 +1015,48 @@ export const getRouteAnalytics = async (req, res) => {
       };
     }
 
+    // First get all routes with their stops count
+    const topRoutes = await Booking.aggregate([
+      { $match: bookingQuery },
+      {
+        $lookup: {
+          from: "buses",
+          localField: "busId",
+          foreignField: "_id",
+          as: "bus"
+        }
+      },
+      { $unwind: "$bus" },
+      {
+        $lookup: {
+          from: "routes",
+          localField: "bus.routeId",
+          foreignField: "routeId",
+          as: "route"
+        }
+      },
+      { $unwind: "$route" },
+      {
+        $group: {
+          _id: "$route._id",
+          routeName: { $first: "$route.routeName" },
+          status: { $first: "$route.status" },
+          stopCount: { $first: { $size: "$route.stops" } },
+          bookingCount: { $sum: 1 }
+        }
+      },
+      { $match: routeQuery.status ? { status: routeQuery.status } : {} },
+      { $sort: { bookingCount: -1 } },
+      { $limit: 5 }
+    ]);
+
+    // Get other analytics data
     const [
       totalRoutesResult,
       activeRoutesResult,
       inactiveRoutesResult,
       bookingsByRoute,
       bookingsOverTime,
-      topRoutes,
       mostPopularRouteResult,
       avgStopsPerRouteResult,
       allRoutes,
@@ -1034,6 +1064,7 @@ export const getRouteAnalytics = async (req, res) => {
       Route.countDocuments(routeQuery),
       Route.countDocuments({ ...routeQuery, status: 'active' }),
       Route.countDocuments({ ...routeQuery, status: 'inactive' }),
+      // Bookings by route aggregation
       Booking.aggregate([
         { $match: bookingQuery },
         {
@@ -1041,8 +1072,8 @@ export const getRouteAnalytics = async (req, res) => {
             from: 'schedules',
             localField: 'scheduleId',
             foreignField: '_id',
-            as: 'schedule',
-          },
+            as: 'schedule'
+          }
         },
         { $unwind: '$schedule' },
         {
@@ -1050,147 +1081,106 @@ export const getRouteAnalytics = async (req, res) => {
             from: 'routes',
             localField: 'schedule.routeId',
             foreignField: '_id',
-            as: 'route',
-          },
+            as: 'route'
+          }
         },
         { $unwind: '$route' },
         {
-          $match: routeQuery.status ? { 'route.status': routeQuery.status } : {},
+          $match: routeQuery.status ? { 'route.status': routeQuery.status } : {}
         },
         {
           $group: {
             _id: '$schedule.routeId',
-            bookingCount: { $sum: 1 },
             routeName: { $first: '$route.routeName' },
-          },
+            bookingCount: { $sum: 1 }
+          }
         },
         {
           $project: {
             routeName: 1,
             bookingCount: 1,
-            _id: 0,
-          },
+            _id: 0
+          }
         },
-        { $sort: { bookingCount: -1 } },
+        { $sort: { bookingCount: -1 } }
       ]),
+      // Bookings over time
       Booking.aggregate([
         { $match: bookingQuery },
         {
           $group: {
             _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-            count: { $sum: 1 },
-          },
+            count: { $sum: 1 }
+          }
         },
-        { $sort: { _id: 1 } },
+        { $sort: { _id: 1 } }
       ]),
-      Booking.aggregate([
-        { $match: bookingQuery },
+      // Most popular route
+      Route.aggregate([
+        { $match: routeQuery },
         {
           $lookup: {
             from: 'schedules',
-            localField: 'scheduleId',
-            foreignField: '_id',
-            as: 'schedule',
-          },
+            localField: '_id',
+            foreignField: 'routeId',
+            as: 'schedules'
+          }
         },
-        { $unwind: '$schedule' },
         {
           $lookup: {
-            from: 'routes',
-            localField: 'schedule.routeId',
-            foreignField: '_id',
-            as: 'route',
-          },
-        },
-        { $unwind: '$route' },
-        {
-          $match: routeQuery.status ? { 'route.status': routeQuery.status } : {},
-        },
-        {
-          $group: {
-            _id: '$schedule.routeId',
-            routeName: { $first: '$route.routeName' },
-            status: { $first: '$route.status' },
-            stopCount: { $first: { $size: '$route.stops' } },
-            bookingCount: { $sum: 1 },
-          },
+            from: 'bookings',
+            let: { scheduleIds: '$schedules._id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $in: ['$scheduleId', '$$scheduleIds'] },
+                      { $eq: ['$status', 'confirmed'] }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: 'bookings'
+          }
         },
         {
           $project: {
             routeName: 1,
-            status: 1,
-            stopCount: 1,
-            bookingCount: 1,
-            _id: 0,
-          },
+            bookingCount: { $size: '$bookings' }
+          }
         },
         { $sort: { bookingCount: -1 } },
-        { $limit: 5 },
+        { $limit: 1 }
       ]),
-      Booking.aggregate([
-        { $match: bookingQuery },
-        {
-          $lookup: {
-            from: 'schedules',
-            localField: 'scheduleId',
-            foreignField: '_id',
-            as: 'schedule',
-          },
-        },
-        { $unwind: '$schedule' },
-        {
-          $lookup: {
-            from: 'routes',
-            localField: 'schedule.routeId',
-            foreignField: '_id',
-            as: 'route',
-          },
-        },
-        { $unwind: '$route' },
-        {
-          $match: routeQuery.status ? { 'route.status': routeQuery.status } : {},
-        },
-        {
-          $group: {
-            _id: '$schedule.routeId',
-            routeName: { $first: '$route.routeName' },
-            bookingCount: { $sum: 1 },
-          },
-        },
-        {
-          $project: {
-            routeName: 1,
-            bookingCount: 1,
-            _id: 0,
-          },
-        },
-        { $sort: { bookingCount: -1 } },
-        { $limit: 1 },
-      ]),
+      // Average stops per route
       Route.aggregate([
         { $match: routeQuery },
         {
           $group: {
             _id: null,
-            avgStops: { $avg: { $size: '$stops' } },
-          },
+            avgStops: { $avg: { $size: '$stops' } }
+          }
         },
         {
           $project: {
             avgStopsPerRoute: '$avgStops',
-            _id: 0,
-          },
-        },
+            _id: 0
+          }
+        }
       ]),
+      // Get all routes with details
       Route.find(routeQuery)
         .select('_id routeName startLocationCoordinates endLocationCoordinates startLocation endLocation status stops totalDistance')
         .populate('stops.stop')
-        .lean(),
+        .lean()
     ]);
 
     const mostPopularRoute = mostPopularRouteResult[0] || { routeName: 'No data', bookingCount: 0 };
     const avgStopsPerRoute = avgStopsPerRouteResult[0]?.avgStopsPerRoute || 0;
 
+    // Format routes for response
     const formattedRoutes = allRoutes.map(route => ({
       _id: route._id,
       routeId: route.routeId,
@@ -1218,8 +1208,10 @@ export const getRouteAnalytics = async (req, res) => {
       bookingsByRoute,
       bookingsOverTime,
       topRoutes: topRoutes.map(route => ({
-        ...route,
-        routeId: route._id // Ensure routeId is included
+        routeName: route.routeName,
+        status: route.status || 'active',
+        stopCount: route.stopCount || 0,
+        bookingCount: route.bookingCount || 0
       })),
       routes: formattedRoutes,
     });

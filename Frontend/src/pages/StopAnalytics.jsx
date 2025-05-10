@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { ToastContainer, toast } from "react-toastify";
 import AdminLayout from "../layouts/AdminLayout";
 import { Pie, Bar } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from "chart.js";
@@ -12,6 +11,18 @@ import * as XLSX from "xlsx";
 
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
+const Message = ({ type, children }) => {
+  const bgColor = type === 'success' ? 'bg-green-50' : type === 'warning' ? 'bg-yellow-50' : 'bg-red-50';
+  const textColor = type === 'success' ? 'text-green-800' : type === 'warning' ? 'text-yellow-800' : 'text-red-800';
+  const borderColor = type === 'success' ? 'border-green-200' : type === 'warning' ? 'border-yellow-200' : 'border-red-200';
+
+  return (
+    <div className={`${bgColor} ${textColor} border ${borderColor} rounded-lg p-4 mb-4`}>
+      {children}
+    </div>
+  );
+};
+
 const StopAnalytics = () => {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const [analytics, setAnalytics] = useState(null);
@@ -22,7 +33,18 @@ const StopAnalytics = () => {
   const [exportLoading, setExportLoading] = useState(false);
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5); // Changed from 10 to 5
+  const [itemsPerPage] = useState(5);
+  const [message, setMessage] = useState(null); // { type: 'success' | 'warning' | 'error', text: string }
+
+  // Clear message after 5 seconds
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   useEffect(() => {
     fetchData();
@@ -50,7 +72,10 @@ const StopAnalytics = () => {
       setRoutes(routesRes.data.routes || []);
       setLoading(false);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to fetch stop analytics");
+      setMessage({
+        type: 'error',
+        text: err.response?.data?.message || "Failed to fetch stop analytics"
+      });
       setLoading(false);
     }
   };
@@ -60,126 +85,131 @@ const StopAnalytics = () => {
     setFilter((prev) => ({ ...prev, [name]: value }));
   };
 
- // Function to handle file import
- const handleImport = async (file, fileExtension) => {
-  if (!file) {
-    toast.error('Please select a file first', {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    });
-    return;
-  }
+  // Function to handle file import
+  const handleImport = async (file, fileExtension) => {
+    if (!file) {
+      setMessage({
+        type: 'warning',
+        text: 'Please select a file first'
+      });
+      return;
+    }
 
-  const allowedTypes = {
-    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    xls: 'application/vnd.ms-excel',
-    csv: 'text/csv',
-    json: 'application/json'
-  };
-  
-  // Check if file type is allowed
-  const isValidType = Object.values(allowedTypes).includes(file.type) || 
-                    (fileExtension === 'json' && file.type === 'application/json') ||
-                    (fileExtension === 'csv' && file.type === 'text/csv');
-  
-  if (!isValidType) {
-    toast.error('Please upload a valid Excel, CSV, or JSON file', {
-      position: "top-right",
-      autoClose: 5000,
-    });
-    return;
-  }
-
-  setImportLoading(true);
-  try {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        let formattedData = [];
-        
-        // Process based on file type
-        if (fileExtension === 'json') {
-          const jsonData = JSON.parse(e.target.result);
-          formattedData = Array.isArray(jsonData) ? jsonData : [jsonData];
-        } else {
-          // For Excel and CSV
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet);
-          
-          // Keep the original column names intact
-          formattedData = jsonData;
-        }
-
-        if (formattedData.length === 0) {
-          toast.error('No valid stop data found in file', {
-            position: "top-right",
-            autoClose: 5000,
-          });
-          throw new Error('No valid stop data found in file');
-        }
-
-        // Send to backend
-        const response = await axios.post(`${API_URL}/api/stops/bulk`, formattedData);
-        
-        // Use direct DOM call for toast as a fallback
-        console.log('Import successful:', response.data);
-        
-        toast.success(`Successfully imported ${response.data.createdCount} stops`, {
-          position: "top-right",
-          autoClose: 5000,
-        });
-        
-        // Show duplicates message if any
-        if (response.data.duplicates && response.data.duplicates.length > 0) {
-          setTimeout(() => {
-            toast.warning(`${response.data.duplicates.length} stops already exist and were skipped`, {
-              position: "top-right",
-              autoClose: 5000,
-            });
-          }, 300);
-        }
-        
-        // Refresh data
-        fetchData();
-      } catch (error) {
-        console.error('Import error:', error);
-        
-        if (error.response?.data?.duplicates) {
-          toast.warning(`Some stops already exist: ${error.response.data.duplicates.join(', ')}`, {
-            position: "top-right",
-            autoClose: 5000,
-          });
-        } else {
-          toast.error(error.response?.data?.error || error.message || 'Failed to import stops', {
-            position: "top-right",
-            autoClose: 5000,
-          });
-        }
-      }
+    const allowedTypes = {
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      xls: 'application/vnd.ms-excel',
+      csv: 'text/csv',
+      json: 'application/json'
     };
     
-    if (fileExtension === 'json') {
-      reader.readAsText(file);
-    } else {
-      reader.readAsArrayBuffer(file);
+    // Check if file type is allowed
+    const isValidType = Object.values(allowedTypes).includes(file.type) || 
+                      (fileExtension === 'json' && file.type === 'application/json') ||
+                      (fileExtension === 'csv' && file.type === 'text/csv');
+    
+    if (!isValidType) {
+      setMessage({
+        type: 'error',
+        text: 'Please upload a valid Excel, CSV, or JSON file'
+      });
+      return;
     }
-  } catch (error) {
-    console.error('File processing error:', error);
-    toast.error('Failed to process file', {
-      position: "top-right",
-      autoClose: 5000,
-    });
-  } finally {
-    setImportLoading(false);
-  }
-};
+
+    setImportLoading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          let formattedData = [];
+          
+          // Process based on file type
+          if (fileExtension === 'json') {
+            const jsonData = JSON.parse(e.target.result);
+            formattedData = Array.isArray(jsonData) ? jsonData : [jsonData];
+          } else {
+            // For Excel and CSV
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            
+            // Keep the original column names intact
+            formattedData = jsonData;
+          }
+
+          if (formattedData.length === 0) {
+            setMessage({
+              type: 'warning',
+              text: 'No valid stop data found in file'
+            });
+            return;
+          }
+
+          // Format the data to match the expected structure
+          const processedData = formattedData.map(item => ({
+            stopName: item.stopName || item["Stop Name"] || item.name || item.Name || "",
+            status: (item.status || item.Status || 'active').toLowerCase()
+          })).filter(item => item.stopName && item.stopName.trim() !== "");
+
+          if (processedData.length === 0) {
+            setMessage({
+              type: 'warning',
+              text: 'No valid stop data found after processing'
+            });
+            return;
+          }
+
+          const response = await axios.post(`${API_URL}/api/stops/bulk`, processedData);
+          
+          let messageText = '';
+          if (response.data.createdCount > 0) {
+            messageText = `Successfully imported ${response.data.createdCount} stops. `;
+          }
+          
+          if (response.data.duplicates?.length > 0) {
+            messageText += `${response.data.duplicates.length} stops were skipped (already exist): ${response.data.duplicates.join(', ')}`;
+          }
+
+          setMessage({
+            type: response.data.createdCount > 0 ? 'success' : 'warning',
+            text: messageText
+          });
+          
+          // Refresh data
+          fetchData();
+        } catch (error) {
+          console.error('Import error:', error);
+          
+          if (error.response?.status === 409) {
+            setMessage({
+              type: 'warning',
+              text: `${error.response.data.error}${error.response.data.duplicates ? `: ${error.response.data.duplicates.join(', ')}` : ''}`
+            });
+          } else {
+            setMessage({
+              type: 'error',
+              text: error.response?.data?.message || error.message || 'Failed to import stops'
+            });
+          }
+        }
+      };
+      
+      if (fileExtension === 'json') {
+        reader.readAsText(file);
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
+    } catch (error) {
+      console.error('File processing error:', error);
+      setMessage({
+        type: 'error',
+        text: 'Failed to process file'
+      });
+    } finally {
+      setImportLoading(false);
+    }
+  };
 
   // Function to handle data export
   const handleExport = async (format) => {
@@ -190,9 +220,9 @@ const StopAnalytics = () => {
       const stops = response.data.stops || [];
       
       if (stops.length === 0) {
-        toast.warning('No stops data to export', {
-          position: "top-right",
-          autoClose: 5000,
+        setMessage({
+          type: 'warning',
+          text: 'No stops data to export'
         });
         setExportLoading(false);
         return;
@@ -237,23 +267,22 @@ const StopAnalytics = () => {
           break;
           
         default:
-          toast.error('Unsupported export format', {
-            position: "top-right",
-            autoClose: 5000,
+          setMessage({
+            type: 'error',
+            text: 'Unsupported export format'
           });
           setExportLoading(false);
           return;
       }
       
-      toast.success(`Successfully exported stops data as ${format.toUpperCase()}`, {
-        position: "top-right",
-        autoClose: 5000,
+      setMessage({
+        type: 'success',
+        text: `Successfully exported stops data as ${format.toUpperCase()}`
       });
     } catch (error) {
-      console.error('Export error:', error);
-      toast.error(error.response?.data?.message || 'Failed to export stops data', {
-        position: "top-right",
-        autoClose: 5000,
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to export stops data'
       });
     } finally {
       setExportLoading(false);
@@ -318,6 +347,16 @@ const StopAnalytics = () => {
         transition={{ duration: 0.5 }}
         className="p-6 max-w-7xl mx-auto"
       >
+        {message && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <Message type={message.type}>{message.text}</Message>
+          </motion.div>
+        )}
+
         {/* Page Header */}
         <div className="bg-gradient-to-r from-[#FFE082] to-[#FFC107] rounded-lg shadow-lg p-6 mb-8">
           <h2 className="text-3xl font-bold text-[#E65100] mb-2">Stop Analytics</h2>

@@ -21,7 +21,7 @@ import {
   alpha
 } from "@mui/material";
 import { Edit, Delete, Save, Sync, PictureAsPdf, Search, ErrorOutline } from "@mui/icons-material";
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import Table from "../components/Table";
 import Button from '../components/Button';
 import { jsPDF } from "jspdf";
@@ -686,6 +686,27 @@ function StopList() {
             </Paper>
           </motion.div>
         </Box>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+          style={{
+            zIndex: 9999
+          }}
+          toastStyle={{
+            background: '#fff',
+            color: '#000',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            borderRadius: '8px'
+          }}
+        />
       </AdminLayout>
     );
 }

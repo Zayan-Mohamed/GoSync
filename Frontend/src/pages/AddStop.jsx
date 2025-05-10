@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import AdminLayout from "../layouts/AdminLayout";
 import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import GoSyncLoader from "../components/Loader";
 import { motion } from "framer-motion";
 
@@ -142,31 +143,41 @@ const AddStop = () => {
     }
 
     setLoading(true);
+    setError(null);
 
     try {
       const response = await axios.post(
         `${API_URI}/api/stops/create`,
         singleStopForm,
         {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
+          headers: { 
+            "Content-Type": "application/json"
+          },
+          withCredentials: true
         }
       );
 
-      toast.success("Stop created successfully!");
-      setSingleStopForm({
-        stopName: "",
-        status: "active",
-      });
-      setExistingSingleStop(null);
+      if (response.data) {
+        toast.success("Stop created successfully!");
+        setSingleStopForm({
+          stopName: "",
+          status: "active",
+        });
+        setExistingSingleStop(null);
+      }
 
+      // Refresh stops list
       const stopsResponse = await axios.get(`${API_URI}/api/stops/get`, {
         withCredentials: true,
       });
-      setAllStops(stopsResponse.data.stops);
+      if (stopsResponse.data?.stops) {
+        setAllStops(stopsResponse.data.stops);
+      }
     } catch (err) {
-      toast.error(err.response?.data?.error || "Failed to create stop");
-      console.error(err);
+      console.error("Error creating stop:", err);
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || "Failed to create stop";
+      toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -177,11 +188,15 @@ const AddStop = () => {
     e.preventDefault();
 
     if (!areMultipleStopsValid()) {
-      toast.error("Please fill all stop names and ensure no duplicates exist");
+      toast.error("Please fill all stop names and ensure no duplicates exist", {
+        position: "top-right",
+        autoClose: 3000
+      });
       return;
     }
 
     setLoading(true);
+    setError(null);
 
     try {
       const stopsData = multipleStopsForm.stops.map((stop) => ({
@@ -193,24 +208,39 @@ const AddStop = () => {
         `${API_URI}/api/stops/bulk`,
         stopsData,
         {
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json"
+          },
           withCredentials: true,
         }
       );
 
-      toast.success(`${stopsData.length} stops created successfully!`);
-      setMultipleStopsForm({
-        stops: [{ stopName: "", status: "active" }],
-      });
-      setExistingMultipleStops([]);
+      if (response.data) {
+        toast.success(`${stopsData.length} stops created successfully!`, {
+          position: "top-right",
+          autoClose: 3000
+        });
+        setMultipleStopsForm({
+          stops: [{ stopName: "", status: "active" }],
+        });
+        setExistingMultipleStops([]);
+      }
 
+      // Refresh stops list
       const stopsResponse = await axios.get(`${API_URI}/api/stops/get`, {
         withCredentials: true,
       });
-      setAllStops(stopsResponse.data.stops);
+      if (stopsResponse.data?.stops) {
+        setAllStops(stopsResponse.data.stops);
+      }
     } catch (err) {
-      const errorDetails = err.response?.data?.details || err.message;
-      toast.error(`Failed to create stops: ${errorDetails}`);
+      console.error("Error creating stops:", err);
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || "Failed to create stops";
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 3000
+      });
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -44,10 +44,9 @@ const createTable = (doc, headers, data, options = {}) => {
     fontSize = 10,
     cellPadding = 5,
     headerFontSize = 11,
-    maxColumnWidths = {}, // Allow specific columns to be wider
+    maxColumnWidths = {}, 
   } = options;
 
-  // Calculate column widths - either equal distribution or custom widths
   let columnWidths = {};
   let availableWidth = width;
   let remainingColumns = headers.length;
@@ -93,9 +92,8 @@ const createTable = (doc, headers, data, options = {}) => {
   // Function to calculate text height
   const calculateTextHeight = (text, columnWidth) => {
     const textWidth = columnWidth - cellPadding * 2;
-    // Approximate number of lines based on text length and width
-    // This is a rough estimation - PDFKit's internal text wrapping is more complex
-    const averageCharsPerLine = textWidth / (fontSize * 0.5); // Assume average char width is 0.5 of font size
+    
+    const averageCharsPerLine = textWidth / (fontSize * 0.5); 
     const numLines = Math.ceil(text.length / averageCharsPerLine);
     return Math.max(
       minRowHeight,
@@ -246,7 +244,7 @@ export const generateReport = async (req, res) => {
       let routeIdToSearch = routeId;
       let routeDetails = null;
 
-      // If we have a routeId from the request, try to find the corresponding route
+     
       if (routeId) {
         const route = await Route.findOne({
           $or: [
@@ -261,7 +259,7 @@ export const generateReport = async (req, res) => {
 
         if (route) {
           console.log("Found route for route_modification:", route.routeName);
-          // Use the routeId field from the route document
+        
           routeIdToSearch = route.routeId;
           routeDetails = route;
         }
@@ -272,7 +270,7 @@ export const generateReport = async (req, res) => {
         ...(routeIdToSearch ? { entityId: routeIdToSearch } : {}),
       };
 
-      // Add date filters if provided
+      
       if (startDate && endDate) {
         query.timestamp = {
           $gte: new Date(startDate),
@@ -282,7 +280,7 @@ export const generateReport = async (req, res) => {
 
       const logs = await AuditLog.find(query)
         .populate("userId", "name email")
-        .sort({ timestamp: -1 }) // Sort by timestamp (newest first)
+        .sort({ timestamp: -1 }) 
         .lean();
 
       console.log("Found logs count:", logs.length);
@@ -294,7 +292,7 @@ export const generateReport = async (req, res) => {
         "Changes Made": (() => {
           if (!log.details) return "No specific changes recorded";
       
-          // Custom rendering for stop add/remove
+          
           if (["add_stop", "remove_stop"].includes(log.action)) {
             const { stopName, order, stopType } = log.details;
             const routeName = log.routeName || "Unknown";
@@ -434,7 +432,7 @@ export const generateReport = async (req, res) => {
 
     // Generate CSV response
     if (format === "csv") {
-      // Make sure we have at least one row of data, even if it's "No data available"
+     
       if (data.length === 0) {
         data.push(
           Object.fromEntries(
@@ -448,7 +446,7 @@ export const generateReport = async (req, res) => {
         );
       }
 
-      // Get route information first if needed
+      
       let routeName = "";
       if (routeId) {
         const route = await Route.findOne({
@@ -464,17 +462,17 @@ export const generateReport = async (req, res) => {
         routeName = route?.routeName || routeId;
       }
 
-      // Create CSV rows with proper alignment using array format
+     
       const csvRows = [
-        // A1: Title (in first column)
+        
         ["GoSync - Online Bus Ticket Booking System"],
-        // A2: Generated At (label and value in same row)
+        
         ["Generated At", formatDateToLocal(new Date())],
-        // A3: Report Type (label and value in same row)
+        
         ["Report Type", reportType.replace(/_/g, " ").toUpperCase()],
       ];
 
-      // Add period if exists (A4)
+      
       if (startDate && endDate) {
         csvRows.push([
           "Period",
@@ -484,15 +482,15 @@ export const generateReport = async (req, res) => {
         ]);
       }
 
-      // Add route if exists (next row)
+      
       if (routeId) {
         csvRows.push(["Route", routeName]);
       }
 
-      // Add empty row before headers
+      
       csvRows.push([]);
 
-      // Add table headers starting from A5 or A6 depending on previous rows
+    
       csvRows.push(fields);
 
       // Add data rows
@@ -500,8 +498,6 @@ export const generateReport = async (req, res) => {
         csvRows.push(fields.map((field) => row[field] || ""));
       });
 
-      // Convert to CSV string manually to maintain exact cell positions
-      // Convert to CSV string manually to maintain exact cell positions
       const csv = csvRows
         .map((row) => {
           const paddedRow = [...row];
@@ -513,7 +509,7 @@ export const generateReport = async (req, res) => {
             .map((cell) => {
               const stringCell = String(cell || "");
 
-              // If cell includes special characters, wrap in quotes and escape inner quotes
+             
               if (
                 stringCell.includes(",") ||
                 stringCell.includes('"') ||
@@ -542,12 +538,12 @@ export const generateReport = async (req, res) => {
       const stream = new PassThrough();
       doc.pipe(stream);
 
-      // Add logo or brand header
+      
       doc.fillColor("#ff6b00").fontSize(24).font("Helvetica-Bold");
       doc.text("GoSync - Online Bus Ticket Booking System", {
         align: "center",
       });
-      //doc.image('Frontend/public/assets/GoSync-Logo.png', 50, 20, { width: 100 }); // Use GoSync logo
+      
       doc.moveDown(0.5);
 
       // Report header
