@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   getAllStops, 
   updateStop, 
@@ -10,7 +10,6 @@ import {
   TextField,
   MenuItem,
   Select,
-  CircularProgress,
   Paper,
   Typography,
   Box,
@@ -21,7 +20,7 @@ import {
   Zoom,
   alpha
 } from "@mui/material";
-import { Edit, Delete, Save, Sync, PictureAsPdf, Search, ErrorOutline, Timer } from "@mui/icons-material";
+import { Edit, Delete, Save, Sync, PictureAsPdf, Search, ErrorOutline } from "@mui/icons-material";
 import { toast } from 'react-toastify';
 import Table from "../components/Table";
 import Button from '../components/Button';
@@ -33,572 +32,314 @@ import Loader from "../components/Loader";
 const styles = {
   pageContainer: {
     p: 3,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F8FAFC',
     minHeight: 'calc(100vh - 64px)',
     transition: 'all 0.3s ease'
   },
   mainPaper: {
     p: 4,
-    borderRadius: 3,
+    borderRadius: '16px',
     backgroundColor: '#fff',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-    transition: 'all 0.3s ease'
+    boxShadow: '0 4px 24px rgba(0,0,0,0.05)',
+    transition: 'all 0.3s ease',
+    overflow: 'hidden'
   },
   searchContainer: {
     display: 'flex',
     gap: 2,
-    mb: 3,
+    mb: 4,
     alignItems: 'center',
+    flexWrap: 'wrap',
     transition: 'all 0.3s ease'
   },
   searchBox: {
     display: 'flex',
     alignItems: 'center',
     flex: 1,
-    p: '2px 4px',
-    border: '1px solid #e0e0e0',
-    borderRadius: 2,
+    p: '8px 16px',
+    border: '2px solid #E2E8F0',
+    borderRadius: '12px',
+    backgroundColor: '#F8FAFC',
     transition: 'all 0.2s ease',
+    minWidth: '280px',
     '&:hover': {
-      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-      borderColor: '#E65100'
+      borderColor: '#E65100',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.05)'
+    },
+    '&:focus-within': {
+      borderColor: '#E65100',
+      boxShadow: '0 2px 12px rgba(230, 81, 0, 0.1)'
     }
   },
   actionButton: {
-    backgroundColor: '#FFC107', // Golden Yellow
-    color: '#212121', // Dark Charcoal
+    backgroundColor: '#FFF',
+    color: '#E65100',
+    borderRadius: '10px',
     minWidth: '40px',
+    border: '2px solid #E65100',
     transition: 'all 0.2s ease',
     '&:hover': {
-      backgroundColor: '#FFD600', // Bright Yellow
+      backgroundColor: '#FFF3E0',
       transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(255, 193, 7, 0.2)'
-    },
+      boxShadow: '0 4px 12px rgba(230, 81, 0, 0.1)'
+    }
   },
   editButton: {
-    backgroundColor: '#E65100', // Deep Orange
+    backgroundColor: '#E65100',
     color: 'white',
+    borderRadius: '10px',
     minWidth: '40px',
     transition: 'all 0.2s ease',
     '&:hover': {
-      backgroundColor: '#FF8F00', // Sunset Orange
+      backgroundColor: '#FF8F00',
       transform: 'translateY(-1px)',
       boxShadow: '0 4px 12px rgba(230, 81, 0, 0.2)'
-    },
+    }
   },
   deleteButton: {
-    backgroundColor: '#D32F2F', // A more prominent red color
-    color: 'white',
+    backgroundColor: '#FFF',
+    color: '#DC2626',
+    borderRadius: '10px',
     minWidth: '40px',
+    border: '2px solid #DC2626',
     transition: 'all 0.2s ease',
     '&:hover': {
-      backgroundColor: '#B71C1C', // Darker red on hover
+      backgroundColor: '#FEE2E2',
       transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(211, 47, 47, 0.3)'
-    },
+      boxShadow: '0 4px 12px rgba(220, 38, 38, 0.1)'
+    }
   },
   exportButton: {
-    backgroundColor: '#FFC107',
-    color: '#212121',
+    backgroundColor: '#FFF',
+    color: '#E65100',
+    borderRadius: '12px',
+    border: '2px solid #E65100',
+    padding: '8px 16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
     '&:hover': {
-      backgroundColor: '#FFD600',
+      backgroundColor: '#FFF3E0',
       transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(255, 193, 7, 0.2)'
+      boxShadow: '0 4px 12px rgba(230, 81, 0, 0.1)'
     },
     '&.Mui-disabled': {
-      backgroundColor: alpha('#FFC107', 0.12),
-      color: alpha('#212121', 0.26)
+      backgroundColor: '#F1F5F9',
+      borderColor: '#CBD5E1',
+      color: '#94A3B8'
     }
   },
   statusChip: (status) => ({
     px: 2,
     py: 1,
-    borderRadius: 2,
+    borderRadius: '8px',
     display: 'inline-flex',
     alignItems: 'center',
     fontSize: '0.875rem',
-    fontWeight: 500,
+    fontWeight: 600,
     textTransform: 'capitalize',
     backgroundColor: status === 'active' 
-      ? alpha('#4CAF50', 0.1)
-      : alpha('#F44336', 0.1),
-    color: status === 'active' ? '#2E7D32' : '#D32F2F',
+      ? '#DCFCE7'
+      : '#FEE2E2',
+    color: status === 'active' ? '#166534' : '#991B1B',
+    border: `1px solid ${status === 'active' ? '#BBF7D0' : '#FECACA'}`,
     transition: 'all 0.2s ease',
     '&:hover': {
       backgroundColor: status === 'active' 
-        ? alpha('#4CAF50', 0.2)
-        : alpha('#F44336', 0.2)
+        ? '#BBF7D0'
+        : '#FECACA'
     }
   }),
   tableContainer: {
-    borderRadius: 2,
+    borderRadius: '12px',
     overflow: 'hidden',
-    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+    boxShadow: '0 2px 16px rgba(0,0,0,0.04)',
     transition: 'all 0.3s ease',
-    '&:hover': {
-      boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+    backgroundColor: '#FFF',
+    border: '1px solid #E2E8F0',
+    '& .MuiTableCell-root': {
+      borderColor: '#E2E8F0',
+      padding: '16px',
+    },
+    '& .MuiTableHead-root': {
+      backgroundColor: '#F8FAFC',
+      '& .MuiTableCell-root': {
+        fontWeight: 600,
+        color: '#475569',
+        borderBottom: '2px solid #E2E8F0'
+      }
+    },
+    '& .MuiTableBody-root .MuiTableRow-root:hover': {
+      backgroundColor: '#F8FAFC'
     }
   },
-  pendingActionItem: {
-    opacity: 0.6,
-    position: 'relative',
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      inset: 0,
-      backgroundColor: 'rgba(0,0,0,0.05)',
-      zIndex: 1
+  pageHeader: {
+    mb: 4,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 1,
+    '& h5': {
+      fontSize: '1.5rem',
+      fontWeight: 700,
+      color: '#1E293B',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1
+    },
+    '& .description': {
+      color: '#64748B',
+      fontSize: '0.875rem'
+    }
+  },
+  noDataContainer: {
+    p: 6,
+    textAlign: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: '12px',
+    border: '2px dashed #CBD5E1',
+    '& .MuiTypography-root': {
+      color: '#64748B',
+      fontSize: '0.875rem'
     }
   }
 };
 
 function StopList() {
     const [stops, setStops] = useState([]);
-    
     const [searchTerm, setSearchTerm] = useState("");
     const [editingStop, setEditingStop] = useState({
-      id: null,
-      stopId: "",
-      stopName: "",
-      status: "active"
+        id: null,
+        stopId: "",
+        stopName: "",
+        status: "active"
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [page, setPage] = useState(1);
     const [rowsPerPage] = useState(10);
-    const [pendingActions, setPendingActions] = useState({});
-    const [activeCountdown, setActiveCountdown] = useState(null);
 
     // Fetch stops on component mount
     useEffect(() => {
-      fetchStops();
+        fetchStops();
     }, []);
 
     const fetchStops = async () => {
-      try {
-        setLoading(true);
-        const data = await getAllStops();
-        console.log("Received data:", data);
-        
-        const stopsData = Array.isArray(data) 
-          ? data 
-          : (Array.isArray(data?.stops) 
-            ? data.stops 
-            : []);
+        try {
+            setLoading(true);
+            const data = await getAllStops();
+            const stopsData = Array.isArray(data) 
+                ? data 
+                : (Array.isArray(data?.stops) 
+                    ? data.stops 
+                    : []);
             
-        setStops(stopsData.reverse());
-        setError(null);
-      } catch (err) {
-        console.error("Fetch error:", err);
-        setError(err.message || "Failed to load stops");
-        setStops([]);
-      } finally {
-        setLoading(false);
-      }
+            setStops(stopsData.reverse());
+            setError(null);
+        } catch (err) {
+            console.error("Fetch error:", err);
+            setError(err.message || "Failed to load stops");
+            setStops([]);
+        } finally {
+            setLoading(false);
+        }
     };
-
-    // Clear timeouts when component unmounts
-    useEffect(() => {
-      return () => {
-        Object.values(pendingActions).forEach(({timeoutId}) => {
-          if (timeoutId) clearTimeout(timeoutId);
-        });
-      };
-    }, [pendingActions]);
-
-    // Create a countdown timer effect
-    const [countdown, setCountdown] = useState(3);
-    
-    useEffect(() => {
-      let interval;
-      
-      if (activeCountdown) {
-        setCountdown(3);
-        interval = setInterval(() => {
-          setCountdown(prev => {
-            if (prev <= 1) {
-              clearInterval(interval);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      } else {
-        clearInterval(interval);
-      }
-      
-      return () => {
-        if (interval) clearInterval(interval);
-      };
-    }, [activeCountdown]);
 
     // Filter stops based on search term
     const filteredStops = Array.isArray(stops) 
-      ? stops.filter(stop => 
-          stop?.stopName?.toLowerCase().includes(searchTerm.toLowerCase())
+        ? stops.filter(stop => 
+            stop?.stopName?.toLowerCase().includes(searchTerm.toLowerCase())
         )
-      : [];
+        : [];
 
-    // Toast notification helpers
+    // Toast notification helper
     const showToast = (message, type = "success") => {
-      toast[type](message);
+        toast[type](message);
     };
 
-    const showToastWithUndo = (message, actionType, actionId) => {
-      toast(
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Timer style={{ fontSize: '18px' }} /> 
-            <span>{message} <strong>{countdown}</strong> seconds...</span>
-          </div>
-          <button
-            onClick={() => handleCancelAction(actionId)}
-            style={{
-              padding: '4px 12px',
-              backgroundColor: '#E65100',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              minWidth: '60px',
-              fontSize: '14px',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FF8F00'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#E65100'}
-          >
-            Cancel
-          </button>
-        </div>,
-        {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: false,
-          pauseOnHover: true,
-          draggable: true,
-          style: {
-            background: 'white',
-            color: '#000',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-          }
-        }
-      );
-    };
-
-    // Handle initiating delete action
+    // Handle delete action
     const handleDeleteStop = async (stopId) => {
-      if (!window.confirm("Are you sure you want to delete this stop?")) return;
-
-      try {
-        const actionKey = `delete-${stopId}`;
-        const stopToDelete = stops.find(stop => stop._id === stopId);
+        if (!window.confirm("Are you sure you want to delete this stop?")) return;
         
-        if (!stopToDelete) {
-          throw new Error("Stop not found");
+        try {
+            await deleteStop(stopId);
+            setStops(prev => prev.filter(stop => stop._id !== stopId));
+            showToast("Stop deleted successfully!", "success");
+        } catch (err) {
+            showToast(err.message || "Delete failed", "error");
+        }
+    };
+
+    // Handle edit initiation
+    const handleEditStop = (stop) => {
+        setEditingStop({
+            id: stop._id,
+            stopId: stop.stopId,
+            stopName: stop.stopName,
+            status: stop.status
+        });
+    };
+
+    // Handle update action
+    const handleUpdateStop = async () => {
+        if (!editingStop.stopName.trim()) {
+            showToast("Stop name cannot be empty", "error");
+            return;
         }
 
-        // Add stop to pending actions (marked for deletion)
-        setPendingActions(prev => ({
-          ...prev,
-          [actionKey]: { 
-            type: 'delete',
-            stopId,
-            originalData: stopToDelete,
-            timeoutId: null
-          }
-        }));
-        
-        // Set active countdown for UI
-        setActiveCountdown(actionKey);
-        
-        // Create a timeout for the actual deletion
-        const timeoutId = setTimeout(async () => {
-          try {
-            // Perform actual deletion after delay
-            await deleteStop(stopId);
-            
-            // Remove from stops list 
-            setStops(prev => prev.filter(stop => stop._id !== stopId));
-            
-            // Clean up the pending action
-            setPendingActions(prev => {
-              const { [actionKey]: _, ...rest } = prev;
-              return rest;
-            });
-            
-            // Show success toast
-            showToast("Stop deleted successfully!", "success");
-          } catch (err) {
-            console.error("Delete stop failed:", err);
-            showToast(err.message || "Failed to delete stop", "error");
-          } finally {
-            setActiveCountdown(null);
-          }
-        }, 3000);
-        
-        // Store the timeout ID
-        setPendingActions(prev => ({
-          ...prev,
-          [actionKey]: {
-            ...prev[actionKey],
-            timeoutId
-          }
-        }));
-        
-        // Show countdown toast
-        showToastWithUndo(
-          "Stop will be deleted in",
-          'delete',
-          actionKey
-        );
-      } catch (err) {
-        console.error("Delete operation failed:", err);
-        showToast(err.message || "Operation failed", "error");
-      }
-    };
-
-    // Handle initiating edit action
-    const handleEditStop = (stop) => {
-      setEditingStop({
-        id: stop._id,
-        stopId: stop.stopId,
-        stopName: stop.stopName,
-        status: stop.status
-      });
-    };
-
-    // Handle initiating update action
-    const handleUpdateStop = async () => {
-      if (!editingStop.stopName.trim()) {
-        showToast("Stop name cannot be empty", "error");
-        return;
-      }
-
-      try {
-        const actionKey = `edit-${editingStop.id}`;
-        const originalStop = stops.find(stop => stop._id === editingStop.id);
-        const updatedStopData = {
-          ...originalStop,
-          stopName: editingStop.stopName.trim(),
-          status: editingStop.status
-        };
-
-        // Add to pending actions
-        setPendingActions(prev => ({
-          ...prev,
-          [actionKey]: {
-            type: 'edit',
-            stopId: editingStop.id,
-            originalData: originalStop,
-            newData: updatedStopData,
-            timeoutId: null
-          }
-        }));
-
-        // Reset editing state
-        setEditingStop({
-          id: null,
-          stopId: "",
-          stopName: "",
-          status: "active"
-        });
-
-        // Set active countdown for UI
-        setActiveCountdown(actionKey);
-
-        // Create a timeout for the actual update
-        const timeoutId = setTimeout(async () => {
-          try {
-            // Make the API call
+        try {
             const updatedStop = await updateStop(editingStop.id, {
-              stopName: editingStop.stopName.trim(),
-              status: editingStop.status
+                stopName: editingStop.stopName.trim(),
+                status: editingStop.status
             });
 
-            // Update the actual data in the state
             setStops(prev => prev.map(stop =>
-              stop._id === editingStop.id ? {...stop, ...updatedStop} : stop
+                stop._id === editingStop.id ? {...stop, ...updatedStop} : stop
             ));
 
-            // Clean up the pending action
-            setPendingActions(prev => {
-              const { [actionKey]: _, ...rest } = prev;
-              return rest;
+            setEditingStop({
+                id: null,
+                stopId: "",
+                stopName: "",
+                status: "active"
             });
 
-            // Show success toast
             showToast("Stop updated successfully", "success");
-          } catch (err) {
+        } catch (err) {
             console.error("Update failed:", err);
             showToast(err.message || "Update failed", "error");
-          } finally {
-            setActiveCountdown(null);
-          }
-        }, 3000);
-
-        // Store the timeout ID
-        setPendingActions(prev => ({
-          ...prev,
-          [actionKey]: {
-            ...prev[actionKey],
-            timeoutId
-          }
-        }));
-
-        // Show countdown toast
-        showToastWithUndo(
-          "Stop will be updated in",
-          'edit',
-          actionKey
-        );
-      } catch (err) {
-        console.error("Update preparation failed:", err);
-        showToast(err.message || "Operation failed", "error");
-      }
+        }
     };
 
-    // Handle initiating toggle status action
+    // Handle toggle status action
     const handleToggleStatus = async (stopId) => {
-      try {
-        const actionKey = `toggle-${stopId}`;
-        const originalStop = stops.find(stop => stop._id === stopId);
-
-        if (!originalStop) {
-          throw new Error("Stop not found");
-        }
-
-        const newStatus = originalStop.status === 'active' ? 'inactive' : 'active';
-
-        // Add to pending actions
-        setPendingActions(prev => ({
-          ...prev,
-          [actionKey]: {
-            type: 'toggle',
-            stopId,
-            originalData: originalStop,
-            newStatus,
-            timeoutId: null
-          }
-        }));
-
-        // Set active countdown for UI
-        setActiveCountdown(actionKey);
-
-        // Create a timeout for the actual toggle
-        const timeoutId = setTimeout(async () => {
-          try {
-            // Make the API call
+        try {
             const updatedStop = await toggleStopStatus(stopId);
-
-            // Update the actual data in the state
             setStops(prev => prev.map(stop =>
-              stop._id === stopId ? {...stop, ...updatedStop} : stop
+                stop._id === stopId ? {...stop, ...updatedStop} : stop
             ));
-
-            // Clean up the pending action
-            setPendingActions(prev => {
-              const { [actionKey]: _, ...rest } = prev;
-              return rest;
-            });
-
-            // Show success toast
             showToast(`Status changed to ${updatedStop.status}`, "success");
-          } catch (err) {
+        } catch (err) {
             console.error("Toggle status failed:", err);
             showToast(err.message || "Status change failed", "error");
-          } finally {
-            setActiveCountdown(null);
-          }
-        }, 3000);
-
-        // Store the timeout ID
-        setPendingActions(prev => ({
-          ...prev,
-          [actionKey]: {
-            ...prev[actionKey],
-            timeoutId
-          }
-        }));
-
-        // Show countdown toast
-        showToastWithUndo(
-          "Status will be changed in",
-          'toggle',
-          actionKey
-        );
-      } catch (err) {
-        console.error("Toggle operation failed:", err);
-        showToast(err.message || "Operation failed", "error");
-      }
-    };
-
-    // Handle canceling a pending action
-    const handleCancelAction = (actionId) => {
-      const action = pendingActions[actionId];
-      
-      if (!action) return;
-      
-      // Clear the timeout to prevent the action
-      if (action.timeoutId) {
-        clearTimeout(action.timeoutId);
-      }
-      
-      // Reset the state if it was an edit action
-      if (action.type === 'edit') {
-        setEditingStop({
-          id: null,
-          stopId: "",
-          stopName: "",
-          status: "active"
-        });
-      }
-      
-      // Remove from pending actions
-      setPendingActions(prev => {
-        const { [actionId]: _, ...rest } = prev;
-        return rest;
-      });
-      
-      // Reset active countdown
-      setActiveCountdown(null);
-      
-      // Show confirmation toast
-      showToast(`${action.type} action cancelled`, "success");
-    };
-
-    // Check if a stop has a pending action
-    const hasPendingAction = (stopId) => {
-      return Object.values(pendingActions).some(
-        action => action.stopId === stopId
-      );
-    };
-
-    // Get the pending action type for a stop
-    const getPendingActionType = (stopId) => {
-      const action = Object.values(pendingActions).find(
-        action => action.stopId === stopId
-      );
-      return action ? action.type : null;
+        }
     };
 
     const handleCancelEdit = () => {
-      setEditingStop({
-        id: null,
-        stopId: "",
-        stopName: "",
-        status: "active"
-      });
+        setEditingStop({
+            id: null,
+            stopId: "",
+            stopName: "",
+            status: "active"
+        });
     };
 
     const handlePageChange = (event, newPage) => {
-      setPage(newPage);
+        setPage(newPage);
     };
 
     const getPaginatedStops = () => {
-      const startIndex = (page - 1) * rowsPerPage;
-      return filteredStops.slice(startIndex, startIndex + rowsPerPage);
+        const startIndex = (page - 1) * rowsPerPage;
+        return filteredStops.slice(startIndex, startIndex + rowsPerPage);
     };
 
     const generatePDF = () => {
@@ -776,12 +517,10 @@ function StopList() {
                             header: "Stop Name",
                             accessor: "stopName", 
                             render: (stop) => {
-                              const pendingActionType = getPendingActionType(stop._id);
-                              const isPending = hasPendingAction(stop._id);
                               const isEditing = editingStop.id === stop._id;
                               
                               return (
-                                <Box sx={isPending ? styles.pendingActionItem : {}}>
+                                <Box>
                                   {isEditing ? (
                                     <TextField
                                       value={editingStop.stopName}
@@ -804,21 +543,9 @@ function StopList() {
                                       }}
                                     />
                                   ) : (
-                                    <Box sx={{ position: 'relative' }}>
-                                      <Typography sx={{ fontWeight: 500 }}>
-                                        {stop.stopName}
-                                      </Typography>
-                                      {pendingActionType === 'delete' && (
-                                        <Typography variant="caption" sx={{ color: '#D32F2F', fontStyle: 'italic' }}>
-                                          Pending deletion...
-                                        </Typography>
-                                      )}
-                                      {pendingActionType === 'edit' && (
-                                        <Typography variant="caption" sx={{ color: '#E65100', fontStyle: 'italic' }}>
-                                          Pending update...
-                                        </Typography>
-                                      )}
-                                    </Box>
+                                    <Typography sx={{ fontWeight: 500 }}>
+                                      {stop.stopName}
+                                    </Typography>
                                   )}
                                 </Box>
                               );
@@ -828,12 +555,10 @@ function StopList() {
                             header: "Status",
                             accessor: "status",
                             render: (stop) => {
-                              const pendingActionType = getPendingActionType(stop._id);
-                              const isPending = hasPendingAction(stop._id);
                               const isEditing = editingStop.id === stop._id;
                               
                               return (
-                                <Box sx={isPending ? styles.pendingActionItem : {}}>
+                                <Box>
                                   {isEditing ? (
                                     <Select
                                       value={editingStop.status}
@@ -856,30 +581,20 @@ function StopList() {
                                       <MenuItem value="inactive">Inactive</MenuItem>
                                     </Select>
                                   ) : (
-                                    <Zoom in={true} style={{ transitionDelay: '100ms' }}>
-                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Box sx={styles.statusChip(stop.status)}>
-                                          {stop.status}
-                                        </Box>
-                                        {!isPending && (
-                                          <Tooltip title={`Toggle to ${stop.status === 'active' ? 'inactive' : 'active'}`} arrow>
-                                            <Button
-                                              variant="secondary"
-                                              onClick={() => handleToggleStatus(stop._id)}
-                                              className="min-w-[40px] p-2"
-                                              disabled={isPending}
-                                            >
-                                              <Sync fontSize="small" />
-                                            </Button>
-                                          </Tooltip>
-                                        )}
-                                        {pendingActionType === 'toggle' && (
-                                          <Typography variant="caption" sx={{ color: '#E65100', fontStyle: 'italic' }}>
-                                            Pending status change...
-                                          </Typography>
-                                        )}
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      <Box sx={styles.statusChip(stop.status)}>
+                                        {stop.status}
                                       </Box>
-                                    </Zoom>
+                                      <Tooltip title={`Toggle to ${stop.status === 'active' ? 'inactive' : 'active'}`} arrow>
+                                        <Button
+                                          variant="secondary"
+                                          onClick={() => handleToggleStatus(stop._id)}
+                                          className="min-w-[40px] p-2"
+                                        >
+                                          <Sync fontSize="small" />
+                                        </Button>
+                                      </Tooltip>
+                                    </Box>
                                   )}
                                 </Box>
                               );
@@ -889,7 +604,6 @@ function StopList() {
                             header: "Actions",
                             accessor: "actions",
                             render: (stop) => {
-                              const isPending = hasPendingAction(stop._id);
                               const isEditing = editingStop.id === stop._id;
                               
                               if (isEditing) {
@@ -916,70 +630,74 @@ function StopList() {
                               
                               return (
                                 <div className="flex space-x-2">
-                                  <Tooltip title={isPending ? "Action pending" : "Edit stop"} arrow>
-                                    <span> {/* Wrapper to make disabled tooltip work */}
-                                      <Button 
-                                        variant="primary"
-                                        onClick={() => handleEditStop(stop)}
-                                        className="min-w-[40px] p-2"
-                                        disabled={isPending}
-                                      >
-                                        <Edit fontSize="small" />
-                                      </Button>
-                                    </span>
+                                  <Tooltip title="Edit stop" arrow>
+                                    <Button 
+                                      variant="primary"
+                                      onClick={() => handleEditStop(stop)}
+                                      className="min-w-[40px] p-2"
+                                    >
+                                      <Edit fontSize="small" />
+                                    </Button>
                                   </Tooltip>
-                                  <Tooltip title={isPending ? "Action pending" : "Delete stop"} arrow>
-                                    <span> {/* Wrapper to make disabled tooltip work */}
-                                      <Button
-                                        variant="danger" 
-                                        onClick={() => handleDeleteStop(stop._id)}
-                                        className="min-w-[40px] p-2"
-                                        disabled={isPending}
-                                        >
-                                          <Delete fontSize="small" />
-                                        </Button>
-                                                                            </span>
-                                                                          </Tooltip>
-                                                                        </div>
-                                                                      );
-                                                                    }
-                                                                  }
-                                                                ]}
-                                                                data={getPaginatedStops()}
-                                                                highlightOnHover
-                                                              />
-                                                              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                                                                <Pagination
-                                                                  count={Math.ceil(filteredStops.length / rowsPerPage)}
-                                                                  page={page}
-                                                                  onChange={handlePageChange}
-                                                                  color="primary"
-                                                                  shape="rounded"
-                                                                  size="large"
-                                                                  sx={{
-                                                                    '& .MuiPaginationItem-root': {
-                                                                      color: '#E65100',
-                                                                      '&.Mui-selected': {
-                                                                        backgroundColor: '#FFC107',
-                                                                        color: '#212121',
-                                                                        fontWeight: 500,
-                                                                        '&:hover': {
-                                                                          backgroundColor: '#FFD600'
-                                                                        }
-                                                                      }
-                                                                    }
-                                                                  }}
-                                                                />
-                                                              </Box>
-                                                            </>
-                                                          )}
-                                                        </Box>
-                                                      </Box>
-                                                    </Paper>
-                                                  </Fade>
-                                                </Box>
-                                              </AdminLayout>
-                                            );
-                                        }
-                                        
-                                        export default StopList;
+                                  <Tooltip title="Delete stop" arrow>
+                                    <Button
+                                      variant="danger" 
+                                      onClick={() => handleDeleteStop(stop._id)}
+                                      className="min-w-[40px] p-2"
+                                    >
+                                      <Delete fontSize="small" />
+                                    </Button>
+                                  </Tooltip>
+                                </div>
+                              );
+                            }
+                          }
+                        ]}
+                        data={getPaginatedStops()}
+                        highlightOnHover
+                      />
+                      <Box sx={{ 
+                        mt: 4, // Increased top margin
+                        mb: 2, // Added bottom margin
+                        display: 'flex', 
+                        justifyContent: 'center',
+                        position: 'relative', // Ensure proper stacking context
+                        zIndex: 1 // Ensure pagination stays above other elements
+                      }}>
+                        <Pagination
+                          count={Math.ceil(filteredStops.length / rowsPerPage)}
+                          page={page}
+                          onChange={handlePageChange}
+                          color="primary"
+                          shape="rounded"
+                          size="large"
+                          sx={{
+                            '& .MuiPaginationItem-root': {
+                              color: '#E65100',
+                              margin: '0 4px', // Add spacing between pagination items
+                              minWidth: '32px', // Ensure consistent width
+                              height: '32px', // Ensure consistent height
+                              '&.Mui-selected': {
+                                backgroundColor: '#FFC107',
+                                color: '#212121',
+                                fontWeight: 500,
+                                '&:hover': {
+                                  backgroundColor: '#FFD600'
+                                }
+                              }
+                            }
+                          }}
+                        />
+                      </Box>
+                    </>
+                  )}
+                </Box>
+              </Box>
+            </Paper>
+          </Fade>
+        </Box>
+      </AdminLayout>
+    );
+}
+
+export default StopList;
