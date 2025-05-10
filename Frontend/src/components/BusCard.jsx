@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Bus, Clock, Star, X, MapPin } from "lucide-react";
+import UserRouteHeatmapIframe from "./UserRouteHeatmapIframe"; // Updated import
 
 const BusCard = ({ bus, onViewSeat }) => {
   const [showPoints, setShowPoints] = useState(false);
   const [seatsData, setSeatsData] = useState(null);
   const [loadingSeats, setLoadingSeats] = useState(true);
+  const [showPath, setShowPath] = useState(false);
 
   // Format time (12:00:00 -> 12:00 AM/PM)
   const formatTime = (timeString) => {
@@ -29,7 +31,9 @@ const BusCard = ({ bus, onViewSeat }) => {
     const [hours, minutes] = departureTime.split(":");
     const departureDateTime = new Date(departureDate);
     departureDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-    const closingTime = new Date(departureDateTime.getTime() - 6 * 60 * 60 * 1000); // 12 hours before
+    const closingTime = new Date(
+      departureDateTime.getTime() - 6 * 60 * 60 * 1000
+    ); // 12 hours before
     return `${formatDate(closingTime)}, ${formatTime(closingTime.toTimeString().split(" ")[0])}`;
   };
 
@@ -60,18 +64,25 @@ const BusCard = ({ bus, onViewSeat }) => {
   const availableSeats = useMemo(() => {
     if (!seatsData) return null;
     return seatsData.filter(
-      (seat) => !seat.isBooked && (!seat.reservedUntil || new Date(seat.reservedUntil) < new Date())
+      (seat) =>
+        !seat.isBooked &&
+        (!seat.reservedUntil || new Date(seat.reservedUntil) < new Date())
     ).length;
   }, [seatsData]);
 
   // Memoize booking closing calculation
   const bookingClosing = useMemo(() => {
-    return calculateBookingClosing(bus.schedule.departureDate, bus.schedule.departureTime);
+    return calculateBookingClosing(
+      bus.schedule.departureDate,
+      bus.schedule.departureTime
+    );
   }, [bus.schedule.departureDate, bus.schedule.departureTime]);
 
   // Filter stops by type
-  const boardingPoints = bus.route?.stops?.filter((stop) => stop?.stopType === "boarding") || [];
-  const droppingPoints = bus.route?.stops?.filter((stop) => stop?.stopType === "dropping") || [];
+  const boardingPoints =
+    bus.route?.stops?.filter((stop) => stop?.stopType === "boarding") || [];
+  const droppingPoints =
+    bus.route?.stops?.filter((stop) => stop?.stopType === "dropping") || [];
 
   return (
     <div className="rounded-lg overflow-hidden shadow-md mb-4 bg-white border border-gray-200">
@@ -94,7 +105,9 @@ const BusCard = ({ bus, onViewSeat }) => {
               <p className="text-sm text-gray-600">Date</p>
               <p>{formatDate(bus.schedule.departureDate)}</p>
               <p className="text-sm text-gray-600">Time</p>
-              <p className="font-bold">{formatTime(bus.schedule.departureTime)}</p>
+              <p className="font-bold">
+                {formatTime(bus.schedule.departureTime)}
+              </p>
             </div>
           </div>
           <div className="relative">
@@ -113,7 +126,9 @@ const BusCard = ({ bus, onViewSeat }) => {
               <p className="text-sm text-gray-600">Date</p>
               <p>{formatDate(bus.schedule.arrivalDate)}</p>
               <p className="text-sm text-gray-600">Time</p>
-              <p className="font-bold">{formatTime(bus.schedule.arrivalTime)}</p>
+              <p className="font-bold">
+                {formatTime(bus.schedule.arrivalTime)}
+              </p>
             </div>
           </div>
         </div>
@@ -134,7 +149,9 @@ const BusCard = ({ bus, onViewSeat }) => {
 
         {/* Price and seats */}
         <div className="flex flex-col items-end">
-          <p className="text-2xl font-bold text-deepOrange">Rs. {bus.fareAmount}.00</p>
+          <p className="text-2xl font-bold text-deepOrange">
+            Rs. {bus.fareAmount}.00
+          </p>
           <div className="mt-2">
             <p className="text-center text-sm text-gray-600">Available Seats</p>
             {loadingSeats ? (
@@ -161,8 +178,11 @@ const BusCard = ({ bus, onViewSeat }) => {
           <MapPin size={16} />
           {showPoints ? "Hide Points" : "Boarding/Dropping Points"}
         </button>
-        <button className="py-2 px-4 hover:bg-lightYellow text-darkCharcoal text-center">
-          Bus Photos
+        <button
+          className="py-2 px-4 hover:bg-lightYellow text-darkCharcoal text-center"
+          onClick={() => setShowPath(!showPath)}
+        >
+          {showPath ? "Hide Heatmap" : "View Your Most Used Routes"}
         </button>
         <button
           className="py-2 px-4 bg-deepOrange text-white font-semibold hover:bg-sunsetOrange text-center"
@@ -176,7 +196,9 @@ const BusCard = ({ bus, onViewSeat }) => {
       {showPoints && (
         <div className="bg-white p-4 border-t border-gray-200 transition-all duration-300 ease-in-out">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-deepOrange">Route Points</h3>
+            <h3 className="text-lg font-semibold text-deepOrange">
+              Route Points
+            </h3>
             <button
               onClick={() => setShowPoints(false)}
               className="text-gray-500 hover:text-deepOrange"
@@ -193,10 +215,14 @@ const BusCard = ({ bus, onViewSeat }) => {
                 {boardingPoints.length > 0 ? (
                   boardingPoints.map((point, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <span className="text-deepOrange font-medium">{index + 1}.</span>
+                      <span className="text-deepOrange font-medium">
+                        {index + 1}.
+                      </span>
                       <div>
                         <p className="font-medium">{point.stop.stopName}</p>
-                        <p className="text-sm text-gray-600">{point.stop.stopAddress}</p>
+                        <p className="text-sm text-gray-600">
+                          {point.stop.stopAddress}
+                        </p>
                       </div>
                     </li>
                   ))
@@ -213,10 +239,14 @@ const BusCard = ({ bus, onViewSeat }) => {
                 {droppingPoints.length > 0 ? (
                   droppingPoints.map((point, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <span className="text-deepOrange font-medium">{index + 1}.</span>
+                      <span className="text-deepOrange font-medium">
+                        {index + 1}.
+                      </span>
                       <div>
                         <p className="font-medium">{point.stop.stopName}</p>
-                        <p className="text-sm text-gray-600">{point.stop.stopAddress}</p>
+                        <p className="text-sm text-gray-600">
+                          {point.stop.stopAddress}
+                        </p>
                       </div>
                     </li>
                   ))
@@ -225,6 +255,26 @@ const BusCard = ({ bus, onViewSeat }) => {
                 )}
               </ul>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Path section */}
+      {showPath && (
+        <div className="bg-white p-4 border-t border-gray-200 transition-all duration-300 ease-in-out">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-deepOrange">
+              Your Most Used Travel Routes
+            </h3>
+            <button
+              onClick={() => setShowPath(false)}
+              className="text-gray-500 hover:text-deepOrange"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div className="h-[400px] w-full">
+            <UserRouteHeatmapIframe />
           </div>
         </div>
       )}

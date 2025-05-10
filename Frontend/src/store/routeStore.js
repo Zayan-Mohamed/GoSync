@@ -5,8 +5,17 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const useRouteStore = create((set) => ({
   routes: [],
-  currentRoute: null,
   routeStops: [],
+  currentRoute: null,
+  loading: false,
+  error: null,
+  
+  clearCurrentRoute: () => set({ 
+    currentRoute: null, 
+    routeStops: [] 
+  }),
+
+  setRouteStops: (stops) => set({ routeStops: stops }),
 
   // Fetch all routes
   fetchRoutes: async () => {
@@ -85,17 +94,6 @@ const useRouteStore = create((set) => ({
     }
   },
 
-  // Get stops for a specific route
-  // getStopsForRoute: async (routeId) => {
-  //   try {
-  //     const response = await axios.get(`${API_URL}/api/routes/${routeId}/stops`);
-  //     set({ routeStops: response.data.stops });
-  //     return response.data.stops;
-  //   } catch (error) {
-  //     console.error("Error fetching route stops:", error);
-  //     throw error;
-  //   }
-  // },
   getStopsForRoute: async (routeId) => {
     try {
       // Add validation
@@ -139,65 +137,6 @@ const useRouteStore = create((set) => ({
       throw error;
     }
   },
-  // Add a stop to a route
-//   addStopToRoute: async (routeId, stopData) => {
-//   try {
-//     set({ loading: true, error: null });
-
-//     const response = await axios.post(
-//       `${API_URL}/api/routes/add-stop`,
-//       stopData
-//     );
-
-//     set(state => ({
-//       routes: state.routes.map(route => 
-//         (route._id === routeId || route.routeId === routeId)
-//           ? { ...route, stops: [...route.stops, response.data.addedStop] }
-//           : route
-//       ),
-//       loading: false
-//     }));
-
-//     return response.data;
-//   } catch (error) {
-//     set({ 
-//       error: error.response?.data?.message || "Failed to add stop",
-//       loading: false 
-//     });
-//     throw error;
-//   }
-// },
-
- // Add stop to route
-//  addStopToRoute: async (routeId, stopData) => {
-//   try {
-//     set({ loading: true, error: null });
-    
-//     const response = await axios.post(
-//       `${API_URL}/api/routes/add-stop`,
-//       stopData
-//     );
-
-//     // Optimistic update
-//     set(state => ({
-//       routes: state.routes.map(route => 
-//         (route._id === routeId || route.routeId === routeId)
-//           ? { ...route, stops: [...route.stops, response.data.addedStop] }
-//           : route
-//       ),
-//       routeStops: [...state.routeStops, response.data.addedStop],
-//       loading: false
-//     }));
-
-//     return response.data;
-//   } catch (error) {
-//     set({ 
-//       error: error.response?.data?.error || 'Failed to add stop',
-//       loading: false 
-//     });
-//     throw error;
-//   }
-// },
 
 // In your route store (Zustand)
 addStopToRoute: async (routeId, stopData) => {
@@ -281,53 +220,85 @@ addStopToRoute: async (routeId, stopData) => {
   },
 
 
-  deleteStopFromRoute: async (routeId, stopId) => {
-    try {
-      set({ loading: true, error: null });
-
-        // Optimistically remove the stop
-    set((state) => ({
-      routes: state.routes.map((route) =>
+ // Fix for the deleteStopFromRoute function
+deleteStopFromRoute: async (routeId, stopId) => {
+  try {
+    set({ loading: true, error: null });
+    
+    // Defensive approach - first check if the route and stops exist before filtering
+    set((state) => {
+      // Find the route to update
+      const routeToUpdate = state.routes.find(route => 
         route._id === routeId || route.routeId === routeId
-          ? {
-              ...route,
-              stops: route.stops.filter((stop) => 
-                (stop._id?.toString() !== stopId) && 
-                (stop.stop?.toString() !== stopId)
-              ),
-            }
-          : route
-      ),
-    }));
-
+      );
+      
+      // Only update if route exists and has stops
+      if (routeToUpdate && Array.isArray(routeToUpdate.stops)) {
+        return {
+          routes: state.routes.map((route) =>
+            route._id === routeId || route.routeId === routeId
+              ? {
+                  ...route,
+                  stops: route.stops.filter((stop) =>
+                    (stop._id?.toString() !== stopId) &&
+                    (stop.stop?.toString() !== stopId)
+                  ),
+                }
+              : route
+          ),
+        };
+      }
+      
+      // Also update routeStops for immediate UI update
+      return {
+        routeStops: state.routeStops.filter((stop) => 
+          (stop._id?.toString() !== stopId) && 
+          (stop.stop?._id?.toString() !== stopId)
+        )
+      };
+    });
+    
+    // Make API call to delete the stop
     const response = await axios.delete(
       `${API_URL}/api/routes/routes/${routeId}/stops/${stopId}`
     );
-
-    // More flexible response handling
+    
+    // Get the updated data from response
     const updatedRoute = response.data.route || response.data;
     
-    // Confirm update - handle both direct route object and nested response
-    set((state) => ({
-      routes: state.routes.map((route) =>
+    // Update state with the API response
+    set((state) => {
+      // First update the routes array
+      const updatedRoutes = state.routes.map((route) =>
         (route._id === routeId || route.routeId === routeId)
-          ? (updatedRoute.stops ? updatedRoute : { ...route, stops: updatedRoute.stops })
+          ? {
+              ...route,
+              stops: updatedRoute.stops || []
+            }
           : route
-      ),
-      loading: false,
-    }));
-
-      return updatedRoute;
-    } catch (error) {
-      console.error("Error deleting stop from route:", error);
-      set({ 
-        error: error.response?.data?.error || error.message || "Failed to delete stop",
-        loading: false 
-      });
-      throw error;
-    }
-  },
-
+      );
+      
+      // Then update routeStops separately to ensure UI consistency
+      return {
+        routes: updatedRoutes,
+        routeStops: updatedRoute.stops || state.routeStops.filter(s => 
+          (s._id?.toString() !== stopId) && 
+          (s.stop?._id?.toString() !== stopId)
+        ),
+        loading: false,
+      };
+    });
+    
+    return updatedRoute;
+  } catch (error) {
+    console.error("Error deleting stop from route:", error);
+    set({
+      error: error.response?.data?.error || error.message || "Failed to delete stop",
+      loading: false
+    });
+    throw error;
+  }
+},
   // Create a new route
   createRoute: async (routeData) => {
     try {

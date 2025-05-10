@@ -1,18 +1,21 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import AdminLayout from "../layouts/AdminLayout";
+import { toast } from "react-toastify";
+import GoSyncLoader from "../components/Loader";
+import { motion } from "framer-motion";
 
 const AddStop = () => {
   // State for single stop form
   const [singleStopForm, setSingleStopForm] = useState({
     stopName: "",
-    status: "active"
+    status: "active",
   });
   const [existingSingleStop, setExistingSingleStop] = useState(null);
 
   // State for multiple stops form
   const [multipleStopsForm, setMultipleStopsForm] = useState({
-    stops: [{ stopName: "", status: "active" }]
+    stops: [{ stopName: "", status: "active" }],
   });
   const [existingMultipleStops, setExistingMultipleStops] = useState([]);
 
@@ -22,7 +25,7 @@ const AddStop = () => {
   const [activeTab, setActiveTab] = useState("single");
   const [allStops, setAllStops] = useState([]);
 
-  const API_URI = import.meta.env.VITE_API_URL
+  const API_URI = import.meta.env.VITE_API_URL;
 
   // Clear messages when switching tabs
   const handleTabChange = (tab) => {
@@ -36,7 +39,7 @@ const AddStop = () => {
     const fetchStops = async () => {
       try {
         const response = await axios.get(`${API_URI}/api/stops/get`, {
-          withCredentials: true
+          withCredentials: true,
         });
         if (response.data && Array.isArray(response.data.stops)) {
           setAllStops(response.data.stops);
@@ -50,17 +53,17 @@ const AddStop = () => {
 
   // Check for existing stop (case-insensitive)
   const checkExistingStop = (stopName) => {
-    return allStops.find(stop => 
-      stop.stopName.toLowerCase() === stopName.trim().toLowerCase()
+    return allStops.find(
+      (stop) => stop.stopName.toLowerCase() === stopName.trim().toLowerCase()
     );
   };
 
   // Handle single stop form changes with validation
   const handleSingleStopChange = async (e) => {
     const { name, value } = e.target;
-    setSingleStopForm(prev => ({
+    setSingleStopForm((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
     if (name === "stopName" && value.trim() !== "") {
@@ -77,12 +80,12 @@ const AddStop = () => {
     const updatedStops = [...multipleStopsForm.stops];
     updatedStops[index] = {
       ...updatedStops[index],
-      [name]: value
+      [name]: value,
     };
 
-    setMultipleStopsForm(prev => ({
+    setMultipleStopsForm((prev) => ({
       ...prev,
-      stops: updatedStops
+      stops: updatedStops,
     }));
 
     if (name === "stopName") {
@@ -98,11 +101,11 @@ const AddStop = () => {
 
   // Add another stop field to multiple stops form
   const addStopField = () => {
-    setMultipleStopsForm(prev => ({
+    setMultipleStopsForm((prev) => ({
       ...prev,
-      stops: [...prev.stops, { stopName: "", status: "active" }]
+      stops: [...prev.stops, { stopName: "", status: "active" }],
     }));
-    setExistingMultipleStops(prev => [...prev, null]);
+    setExistingMultipleStops((prev) => [...prev, null]);
   };
 
   // Remove a stop field from multiple stops form
@@ -110,9 +113,9 @@ const AddStop = () => {
     if (multipleStopsForm.stops.length > 1) {
       const updatedStops = [...multipleStopsForm.stops];
       updatedStops.splice(index, 1);
-      setMultipleStopsForm(prev => ({
+      setMultipleStopsForm((prev) => ({
         ...prev,
-        stops: updatedStops
+        stops: updatedStops,
       }));
 
       const updatedExisting = [...existingMultipleStops];
@@ -123,25 +126,22 @@ const AddStop = () => {
 
   // Check if all multiple stops are valid (not empty and not duplicates)
   const areMultipleStopsValid = () => {
-    return multipleStopsForm.stops.every((stop, index) => 
-      stop.stopName.trim() !== "" && 
-      !existingMultipleStops[index]
+    return multipleStopsForm.stops.every(
+      (stop, index) =>
+        stop.stopName.trim() !== "" && !existingMultipleStops[index]
     );
   };
-  
 
-  // Submit single stop form
+  // Enhanced form submission for single stop
   const handleSingleStopSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (existingSingleStop) {
-      setError(`Stop "${existingSingleStop.stopName}" already exists`);
+      toast.error(`Stop "${existingSingleStop.stopName}" already exists`);
       return;
     }
 
     setLoading(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       const response = await axios.post(
@@ -149,118 +149,127 @@ const AddStop = () => {
         singleStopForm,
         {
           headers: { "Content-Type": "application/json" },
-          withCredentials: true
+          withCredentials: true,
         }
       );
 
-      setSuccess("Stop created successfully!");
+      toast.success("Stop created successfully!");
       setSingleStopForm({
         stopName: "",
-        status: "active"
+        status: "active",
       });
       setExistingSingleStop(null);
-      // Refresh stops list after creation
+
       const stopsResponse = await axios.get(`${API_URI}/api/stops/get`, {
-        withCredentials: true
+        withCredentials: true,
       });
       setAllStops(stopsResponse.data.stops);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to create stop");
+      toast.error(err.response?.data?.error || "Failed to create stop");
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Submit multiple stops form
+  // Enhanced form submission for multiple stops
   const handleMultipleStopsSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!areMultipleStopsValid()) {
-      setError("Please fill all stop names and ensure no duplicates exist");
+      toast.error("Please fill all stop names and ensure no duplicates exist");
       return;
     }
-  
+
     setLoading(true);
-    setError(null);
-    setSuccess(null);
-  
+
     try {
-      // Prepare the data in correct format
-      const stopsData = multipleStopsForm.stops.map(stop => ({
+      const stopsData = multipleStopsForm.stops.map((stop) => ({
         stopName: stop.stopName.trim(),
-        status: stop.status
+        status: stop.status,
       }));
-  
-      console.log("Sending stops data:", stopsData); // Debug log
-  
+
       const response = await axios.post(
         `${API_URI}/api/stops/bulk`,
-        stopsData,  // Send array directly
+        stopsData,
         {
           headers: { "Content-Type": "application/json" },
-          withCredentials: true
+          withCredentials: true,
         }
       );
-  
-      setSuccess(response.data.message || `${stopsData.length} stops created successfully!`);
+
+      toast.success(`${stopsData.length} stops created successfully!`);
       setMultipleStopsForm({
-        stops: [{ stopName: "", status: "active" }]
+        stops: [{ stopName: "", status: "active" }],
       });
       setExistingMultipleStops([]);
-      
-      // Refresh stops list
+
       const stopsResponse = await axios.get(`${API_URI}/api/stops/get`, {
-        withCredentials: true
+        withCredentials: true,
       });
       setAllStops(stopsResponse.data.stops);
     } catch (err) {
       const errorDetails = err.response?.data?.details || err.message;
-      console.error("Full error:", err);
-      setError(`Failed to create stops: ${errorDetails}`);
+      toast.error(`Failed to create stops: ${errorDetails}`);
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading)
+    return (
+      <AdminLayout>
+        <div className="p-6">
+          {" "}
+          <GoSyncLoader />{" "}
+        </div>
+      </AdminLayout>
+    );
   return (
     <AdminLayout>
-     <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center">Add Stop</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-2xl mx-auto p-8 bg-white rounded-xl shadow-lg"
+      >
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
+          Add Bus Stop
+        </h2>
 
-        {/* Tab Navigation */}
-      <div className="flex mb-6 border-b">
-        <button
-          className={`py-2 px-4 font-medium ${activeTab === "single" ? "text-deepOrange border-b-2 border-deepOrange" : "text-gray-500"}`}
-          onClick={() => handleTabChange("single")}
-        >
-          Single Stop
-        </button>
-        <button
-          className={`py-2 px-4 font-medium ${activeTab === "multiple" ? "text-deepOrange border-b-2 border-deepOrange" : "text-gray-500"}`}
-          onClick={() => handleTabChange("multiple")}
-        >
-          Multiple Stops
-        </button>
-      </div>
-
-      {/* Success and Error Messages */}
-      {success && (
-        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
-          {success}
+        <div className="flex mb-8 bg-gray-100 rounded-lg p-1">
+          <button
+            className={`flex-1 py-3 px-6 rounded-lg transition-all duration-200 font-medium ${
+              activeTab === "single"
+                ? "bg-white text-deepOrange shadow-md"
+                : "text-gray-600 hover:bg-gray-200"
+            }`}
+            onClick={() => handleTabChange("single")}
+          >
+            Single Stop
+          </button>
+          <button
+            className={`flex-1 py-3 px-6 rounded-lg transition-all duration-200 font-medium ${
+              activeTab === "multiple"
+                ? "bg-white text-deepOrange shadow-md"
+                : "text-gray-600 hover:bg-gray-200"
+            }`}
+            onClick={() => handleTabChange("multiple")}
+          >
+            Multiple Stops
+          </button>
         </div>
-      )}
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-          {error}
-        </div>
-      )}
 
-      {/* Single Stop Form */}
-      {activeTab === "single" && (
-        <form onSubmit={handleSingleStopSubmit}>
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
+        {activeTab === "single" && (
+          <motion.form
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            onSubmit={handleSingleStopSubmit}
+            className="space-y-6"
+          >
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
                 Stop Name
               </label>
               <input
@@ -268,7 +277,9 @@ const AddStop = () => {
                 name="stopName"
                 value={singleStopForm.stopName}
                 onChange={handleSingleStopChange}
-                className={`w-full p-3 border ${existingSingleStop ? "border-red-500" : "border-gray-300"} rounded-md`}
+                className={`w-full p-3 border ${
+                  existingSingleStop ? "border-red-500" : "border-gray-300"
+                } rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200`}
                 required
               />
               {existingSingleStop && (
@@ -278,106 +289,131 @@ const AddStop = () => {
               )}
             </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
                 Status
               </label>
               <select
                 name="status"
                 value={singleStopForm.status}
                 onChange={handleSingleStopChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200"
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
             </div>
 
-            <div className="flex justify-center">
-            <button
-              type="submit"
-              className={`bg-deepOrange text-white px-6 py-2 rounded-md hover:bg-sunsetOrange focus:outline-none ${existingSingleStop ? "opacity-50 cursor-not-allowed" : ""}`}
-              disabled={loading || existingSingleStop}
-            >
-              {loading ? "Creating..." : "Create Stop"}
-            </button>
-          </div>
-        </form>
-      )}
+            <div className="flex justify-center pt-4">
+              <button
+                type="submit"
+                className={`w-full md:w-auto px-8 py-3 bg-deepOrange text-white rounded-lg hover:bg-sunsetOrange transform hover:scale-105 transition-all duration-200 ${
+                  existingSingleStop ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                disabled={loading || existingSingleStop}
+              >
+                {loading ? "Creating..." : "Create Stop"}
+              </button>
+            </div>
+          </motion.form>
+        )}
 
-        {/* Multiple Stops Form */}
         {activeTab === "multiple" && (
-        <form onSubmit={handleMultipleStopsSubmit}>
+          <motion.form
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            onSubmit={handleMultipleStopsSubmit}
+            className="space-y-6"
+          >
             {multipleStopsForm.stops.map((stop, index) => (
-              <div key={index} className="mb-4 p-4 border rounded-lg relative">
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="p-6 bg-gray-50 rounded-lg relative border border-gray-200"
+              >
                 {multipleStopsForm.stops.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeStopField(index)}
-                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition-colors duration-200"
                   >
                     ×
                   </button>
                 )}
 
-                <div className="mb-3">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Stop Name
-                  </label>
-                  <input
-                    type="text"
-                    name="stopName"
-                    value={stop.stopName}
-                    onChange={(e) => handleMultipleStopChange(index, e)}
-                    className={`w-full p-3 border ${existingMultipleStops[index] ? "border-red-500" : "border-gray-300"} rounded-md`}
-                    required
-                  />
-                  {existingMultipleStops[index] && (
-                    <p className="text-red-500 text-sm mt-1">
-                      Stop "{existingMultipleStops[index].stopName}" already exists
-                    </p>
-                  )}
-                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Stop Name
+                    </label>
+                    <input
+                      type="text"
+                      name="stopName"
+                      value={stop.stopName}
+                      onChange={(e) => handleMultipleStopChange(index, e)}
+                      className={`w-full p-3 border ${
+                        existingMultipleStops[index]
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200`}
+                      required
+                    />
+                    {existingMultipleStops[index] && (
+                      <p className="text-red-500 text-sm mt-1">
+                        Stop "{existingMultipleStops[index].stopName}" already
+                        exists
+                      </p>
+                    )}
+                  </div>
 
-                <div className="mb-3">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={stop.status}
-                    onChange={(e) => handleMultipleStopChange(index, e)}
-                    className="w-full p-3 border border-gray-300 rounded-md"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      name="status"
+                      value={stop.status}
+                      onChange={(e) => handleMultipleStopChange(index, e)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deepOrange focus:border-transparent transition-all duration-200"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
 
-          <div className="flex justify-between mb-6">
-            <button
-              type="button"
-              onClick={addStopField}
-              className="text-deepOrange hover:text-sunsetOrange"
-            >
-              + Add Another Stop
-            </button>
-          </div>
+            <div className="flex justify-between items-center">
+              <button
+                type="button"
+                onClick={addStopField}
+                className="text-deepOrange hover:text-sunsetOrange flex items-center space-x-2 transition-colors duration-200"
+              >
+                <span>+</span>
+                <span>Add Another Stop</span>
+              </button>
+            </div>
 
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              className={`bg-deepOrange text-white px-6 py-2 rounded-md hover:bg-sunsetOrange focus:outline-none ${!areMultipleStopsValid() ? "opacity-50 cursor-not-allowed" : ""}`}
-              disabled={loading || !areMultipleStopsValid()}
-            >
-              {loading ? "Creating..." : "Create Stops"}
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-center pt-4">
+              <button
+                type="submit"
+                className={`w-full md:w-auto px-8 py-3 bg-deepOrange text-white rounded-lg hover:bg-sunsetOrange transform hover:scale-105 transition-all duration-200 ${
+                  !areMultipleStopsValid()
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+                disabled={loading || !areMultipleStopsValid()}
+              >
+                {loading ? "Creating..." : "Create Stops"}
+              </button>
+            </div>
+          </motion.form>
         )}
-      </div>
+      </motion.div>
     </AdminLayout>
   );
 };

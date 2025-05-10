@@ -2,6 +2,8 @@ import Route from "../models/routeModel.js";
 import Stop from "../models/stopModel.js";
 import generateRouteId from "../utils/generateRouteId.js";
 import mongoose from "mongoose";
+import Booking from "../models/bookingModel.js";
+import { logAction } from "./auditLogController.js"; // Import the logAction function
 
 export const createRoute = async (req, res) => {
   try {
@@ -73,6 +75,34 @@ export const createRoute = async (req, res) => {
     });
 
     await newRoute.save();
+
+    // Prepare stops for logging
+    const formattedStopsForLog = await Promise.all(
+      formattedStops.map(async (s) => {
+        const stop = await Stop.findById(s.stop);
+        return {
+          stopId: stop?.stopId || s.stop.toString(),
+          order: s.order,
+        };
+      })
+    );
+
+    // Log the creation action
+    await logAction({
+      entityType: 'Route',
+      entityId: newRoute.routeId,
+      action: 'create',
+      userId: req.user?.id,
+      details: {
+        routeName,
+        startLocation,
+        endLocation,
+        totalDistance,
+        startLocationCoordinates,
+        endLocationCoordinates,
+        stops: formattedStopsForLog,
+      },
+    });
 
     res.status(201).json({
       message: "Route created successfully",
@@ -281,6 +311,20 @@ export const addStopToRoute = async (req, res) => {
 
     await route.save();
 
+    // Log the action
+    await logAction({
+      entityType: 'Route',
+      entityId: route.routeId || route._id.toString(),
+      action: 'add_stop',
+      userId: req.user?.id,
+      details: {
+        stopId: stop.stopId || stop._id.toString(),
+        stopName: stop.stopName,
+        order: newOrder,
+        stopType: stopType || "boarding",
+      },
+    });
+
     // Populate the stop details in the response
     const populatedRoute = await Route.populate(route, { path: "stops.stop" });
 
@@ -305,7 +349,7 @@ export const addStopToRoute = async (req, res) => {
 // Update getAllRoutes function
 export const getAllRoutes = async (req, res) => {
   try {
-    const routes = await Route.find().populate("stops.stop");
+    const routes = await Route.find().populate("stops.stop").sort({ createdAt: -1 });;
 
     // Format the routes to match the expected frontend structure
     const formattedRoutes = routes.map((route) => {
@@ -332,7 +376,7 @@ export const getAllRoutes = async (req, res) => {
         },
         stops: sortedStops, // Return sorted stops
       };
-    });
+    }).reverse();
 
     res.status(200).json({ routes: formattedRoutes });
   } catch (error) {
@@ -461,6 +505,27 @@ export const updateRoute = async (req, res) => {
       { new: true, runValidators: true } // Return updated document
     );
 
+    // Log the update action
+    await logAction({
+      entityType: 'Route',
+      entityId: updatedRoute.routeId || updatedRoute._id.toString(),
+      action: 'update',
+      userId: req.user?.id,
+      details: {
+        routeName: updatedRoute.routeName,
+        ...updateData,
+        ...(updateData.stops && {
+          stops: await Promise.all(
+            updateData.stops.map(async (s) => ({
+              stopId: (await Stop.findById(s.stop))?.stopId || s.stop.toString(),
+              order: s.order,
+              stopType: s.stopType,
+            }))
+          ),
+        }),
+      },
+    });
+
     res.status(200).json({
       message: "Route updated successfully",
       route: updatedRoute,
@@ -507,7 +572,6 @@ export const getStopsForRoute = async (req, res) => {
     });
   }
 };
-// Toggle the status of the route (active/inactive)
 export const toggleRouteStatus = async (req, res) => {
   try {
     const { routeId } = req.params;
@@ -516,14 +580,28 @@ export const toggleRouteStatus = async (req, res) => {
     if (!route) return res.status(404).json({ error: "Route not found" });
 
     // Toggle the status
-    route.status = route.status === "active" ? "inactive" : "active";
+    const newStatus = route.status === "active" ? "inactive" : "active";
+    route.status = newStatus;
     await route.save();
+
+    // Log the action
+    await logAction({
+      entityType: 'Route',
+      entityId: route.routeId,
+      action: 'toggle_status',
+      userId: req.user?.id,
+      details: {
+        routeName: route.routeName,
+        newStatus,
+      },
+    });
 
     res.status(200).json({ message: "Route status toggled", route });
   } catch (error) {
+    console.error("Error toggling route status:", error);
     res
       .status(500)
-      .json({ error: "Error toggling route status", details: error });
+      .json({ error: "Error toggling route status", details: error.message });
   }
 };
 
@@ -583,8 +661,11 @@ export const deleteStopFromRoute = async (req, res) => {
       });
     }
 
-    // Get the order of the stop to be deleted
+    // Get the order and stop details for logging
     const deletedStopOrder = stopToDelete.order;
+    const stop = await Stop.findOne({
+      $or: [{ _id: stopId }, { stopId: stopId }],
+    });
 
     // Remove stop from the route's stops array
     route.stops = route.stops.filter((s) => {
@@ -609,6 +690,19 @@ export const deleteStopFromRoute = async (req, res) => {
     // Save the updated route
     const updatedRoute = await route.save();
 
+    // Log the action
+    await logAction({
+      entityType: 'Route',
+      entityId: route.routeId || route._id.toString(),
+      action: 'remove_stop',
+      userId: req.user?.id,
+      details: {
+        stopId: stop?.stopId || stopId,
+        stopName: stop?.stopName || 'Unknown',
+        order: deletedStopOrder,
+      },
+    });
+
     // Send a success response
     return res.status(200).json({
       message: "Stop successfully removed from route",
@@ -623,7 +717,6 @@ export const deleteStopFromRoute = async (req, res) => {
   }
 };
 
-// delete a route
 export const deleteRoute = async (req, res) => {
   try {
     const { routeId } = req.params;
@@ -638,11 +731,24 @@ export const deleteRoute = async (req, res) => {
     if (!route) {
       return res.status(404).json({ error: "Route not found" });
     }
+
+    // Log the action before deletion
+    await logAction({
+      entityType: 'Route',
+      entityId: route.routeId || route._id.toString(),
+      action: 'delete',
+      userId: req.user?.id,
+      details: {
+        routeName: route.routeName,
+      },
+    });
+
     // Delete the route
     await Route.findByIdAndDelete(routeId);
 
     res.status(200).json({ message: "Route deleted successfully" });
   } catch (error) {
+    console.error("Error deleting route:", error);
     res
       .status(500)
       .json({ error: "Error deleting route", details: error.message });
@@ -693,7 +799,7 @@ export const updateStopType = async (req, res) => {
 
 //
 
-export const addMultipleStopsWithTypes = async (req, res) => {
+export const addMultipleStops = async (req, res) => {
   try {
     const { routeId, stops } = req.body; // stops is an array of { stopId, order, stopType }
     const validStopTypes = ["boarding", "dropping"];
@@ -899,6 +1005,298 @@ export const updateStopInRoute = async (req, res) => {
   }
 };
 
+export const getRouteAnalytics = async (req, res) => {
+  try {
+    const { status, startDate, endDate } = req.query;
+
+    const routeQuery = {};
+    if (status) routeQuery.status = status;
+
+    const bookingQuery = { status: 'confirmed' };
+    if (startDate && endDate) {
+      bookingQuery.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    const [
+      totalRoutesResult,
+      activeRoutesResult,
+      inactiveRoutesResult,
+      bookingsByRoute,
+      bookingsOverTime,
+      topRoutes,
+      mostPopularRouteResult,
+      avgStopsPerRouteResult,
+      allRoutes,
+    ] = await Promise.all([
+      Route.countDocuments(routeQuery),
+      Route.countDocuments({ ...routeQuery, status: 'active' }),
+      Route.countDocuments({ ...routeQuery, status: 'inactive' }),
+      Booking.aggregate([
+        { $match: bookingQuery },
+        {
+          $lookup: {
+            from: 'schedules',
+            localField: 'scheduleId',
+            foreignField: '_id',
+            as: 'schedule',
+          },
+        },
+        { $unwind: '$schedule' },
+        {
+          $lookup: {
+            from: 'routes',
+            localField: 'schedule.routeId',
+            foreignField: '_id',
+            as: 'route',
+          },
+        },
+        { $unwind: '$route' },
+        {
+          $match: routeQuery.status ? { 'route.status': routeQuery.status } : {},
+        },
+        {
+          $group: {
+            _id: '$schedule.routeId',
+            bookingCount: { $sum: 1 },
+            routeName: { $first: '$route.routeName' },
+          },
+        },
+        {
+          $project: {
+            routeName: 1,
+            bookingCount: 1,
+            _id: 0,
+          },
+        },
+        { $sort: { bookingCount: -1 } },
+      ]),
+      Booking.aggregate([
+        { $match: bookingQuery },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Booking.aggregate([
+        { $match: bookingQuery },
+        {
+          $lookup: {
+            from: 'schedules',
+            localField: 'scheduleId',
+            foreignField: '_id',
+            as: 'schedule',
+          },
+        },
+        { $unwind: '$schedule' },
+        {
+          $lookup: {
+            from: 'routes',
+            localField: 'schedule.routeId',
+            foreignField: '_id',
+            as: 'route',
+          },
+        },
+        { $unwind: '$route' },
+        {
+          $match: routeQuery.status ? { 'route.status': routeQuery.status } : {},
+        },
+        {
+          $group: {
+            _id: '$schedule.routeId',
+            routeName: { $first: '$route.routeName' },
+            status: { $first: '$route.status' },
+            stopCount: { $first: { $size: '$route.stops' } },
+            bookingCount: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            routeName: 1,
+            status: 1,
+            stopCount: 1,
+            bookingCount: 1,
+            _id: 0,
+          },
+        },
+        { $sort: { bookingCount: -1 } },
+        { $limit: 5 },
+      ]),
+      Booking.aggregate([
+        { $match: bookingQuery },
+        {
+          $lookup: {
+            from: 'schedules',
+            localField: 'scheduleId',
+            foreignField: '_id',
+            as: 'schedule',
+          },
+        },
+        { $unwind: '$schedule' },
+        {
+          $lookup: {
+            from: 'routes',
+            localField: 'schedule.routeId',
+            foreignField: '_id',
+            as: 'route',
+          },
+        },
+        { $unwind: '$route' },
+        {
+          $match: routeQuery.status ? { 'route.status': routeQuery.status } : {},
+        },
+        {
+          $group: {
+            _id: '$schedule.routeId',
+            routeName: { $first: '$route.routeName' },
+            bookingCount: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            routeName: 1,
+            bookingCount: 1,
+            _id: 0,
+          },
+        },
+        { $sort: { bookingCount: -1 } },
+        { $limit: 1 },
+      ]),
+      Route.aggregate([
+        { $match: routeQuery },
+        {
+          $group: {
+            _id: null,
+            avgStops: { $avg: { $size: '$stops' } },
+          },
+        },
+        {
+          $project: {
+            avgStopsPerRoute: '$avgStops',
+            _id: 0,
+          },
+        },
+      ]),
+      Route.find(routeQuery)
+        .select('_id routeName startLocationCoordinates endLocationCoordinates startLocation endLocation status stops totalDistance')
+        .populate('stops.stop')
+        .lean(),
+    ]);
+
+    const mostPopularRoute = mostPopularRouteResult[0] || { routeName: 'No data', bookingCount: 0 };
+    const avgStopsPerRoute = avgStopsPerRouteResult[0]?.avgStopsPerRoute || 0;
+
+    const formattedRoutes = allRoutes.map(route => ({
+      _id: route._id,
+      routeId: route.routeId,
+      routeName: route.routeName,
+      startLocation: route.startLocation,
+      endLocation: route.endLocation,
+      status: route.status || 'active',
+      startLocationCoordinates: route.startLocationCoordinates || { latitude: 0, longitude: 0 },
+      endLocationCoordinates: route.endLocationCoordinates || { latitude: 0, longitude: 0 },
+      totalDistance: route.totalDistance || 0,
+      stops: route.stops.map(stop => ({
+        stopId: stop.stop._id,
+        stopName: stop.stop.stopName,
+        order: stop.order,
+        stopType: stop.stopType,
+      })),
+    }));
+
+    res.status(200).json({
+      totalRoutes: totalRoutesResult,
+      activeRoutes: activeRoutesResult,
+      inactiveRoutes: inactiveRoutesResult,
+      mostPopularRoute,
+      avgStopsPerRoute,
+      bookingsByRoute,
+      bookingsOverTime,
+      topRoutes: topRoutes.map(route => ({
+        ...route,
+        routeId: route._id // Ensure routeId is included
+      })),
+      routes: formattedRoutes,
+    });
+  } catch (error) {
+    console.error('Route analytics error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
 
 
+export const reorderRouteStops = async (req, res) => {
+  try {
+    const { routeId } = req.params;
+    const { stops } = req.body;
 
+    if (!Array.isArray(stops)) {
+      return res.status(400).json({ error: 'Invalid stops data format' });
+    }
+
+    // Find the route with more flexible id matching
+    const route = await Route.findOne({
+      $or: [
+        { _id: mongoose.Types.ObjectId.isValid(routeId) ? new mongoose.Types.ObjectId(routeId) : null },
+        { routeId: routeId }
+      ]
+    }).populate('stops.stop');
+
+    if (!route) {
+      return res.status(404).json({ error: 'Route not found' });
+    }
+
+    // Create a map for quick lookup using both possible ID formats
+    const orderMap = new Map();
+    stops.forEach(({ stopId, order }) => {
+      orderMap.set(stopId.toString(), order);
+      if (mongoose.Types.ObjectId.isValid(stopId)) {
+        orderMap.set(new mongoose.Types.ObjectId(stopId).toString(), order);
+      }
+    });
+
+    // Reorder stops with better type handling
+    route.stops = route.stops.map((s) => {
+      const stopId = s.stop?._id ? s.stop._id.toString() : s.stop.toString();
+      if (orderMap.has(stopId)) {
+        const stop = s.toObject();
+        return {
+          ...stop,
+          order: parseInt(orderMap.get(stopId))
+        };
+      }
+      return s;
+    });
+
+    // Sort the stops array by the new order
+    route.stops.sort((a, b) => a.order - b.order);
+
+    // Validate that all orders are present and unique
+    const orders = route.stops.map(s => s.order);
+    const uniqueOrders = new Set(orders);
+    if (orders.length !== uniqueOrders.size) {
+      return res.status(400).json({ error: 'Invalid order sequence - duplicate orders detected' });
+    }
+
+    await route.save();
+
+    // Send back the updated route data
+    const updatedRoute = await Route.findById(route._id).populate('stops.stop');
+    
+    res.status(200).json({ 
+      message: 'Stop order updated successfully',
+      route: updatedRoute
+    });
+  } catch (error) {
+    console.error('Error updating stop order:', error);
+    res.status(500).json({ 
+      error: 'Error updating stop order',
+      details: error.message
+    });
+  }
+};

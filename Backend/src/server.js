@@ -21,6 +21,9 @@ import busOperatorRoutes from "./routes/busOperatorRoutes.js";
 import busRouteRoutes from"./routes/busRouteRoutes.js";
 import notRoutes from "./routes/notRoutes.js";
 
+import reportRoutes from "./routes/reportRoutes.js";
+import heatmapRoutes from "./routes/heatmapRoutes.js";
+ // Import the new routes
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -112,9 +115,11 @@ app.use("/api/stops", stopRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/buses", busRoutes);
 app.use("/api/shed", shedRoutes);
+app.use('/api/reports', reportRoutes);
 app.use("/api/operator", busOperatorRoutes);
 app.use("/api/busRoute",busRouteRoutes);
 app.use("/api", notRoutes);
+app.use("/api/user", heatmapRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 5000;
