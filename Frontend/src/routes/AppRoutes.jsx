@@ -38,6 +38,8 @@ import ScheduleManagement from "../pages/ScheduleManagement.jsx";
 import AddSchedule from "../pages/AddSchedule.jsx";
 import EditSchedule from "../pages/EditSchedule.jsx";
 import ScheduleAnalytics from "../pages/ScheduleAnalytics.jsx";
+import ScheduleArchives from "../pages/ScheduleArchives.jsx";
+import BusSchedules from "../pages/BusSchedules.jsx";
 
 import SeatManagement from "../pages/SeatManagement.jsx";
 import AddSeat from "../pages/AddSeat.jsx";
@@ -111,8 +113,8 @@ const AppRoutes = () => {
               element={<EditSchedule />}
             />
             <Route path="/schedule-analytics" element={<ScheduleAnalytics />} />
+            <Route path="/schedule-archives" element={<ScheduleArchives />} />
             <Route path="/add-route" element={<AddRoute />} />
-
             <Route path="/seat-management" element={<SeatManagement />} />
             <Route path="/add-seat" element={<AddSeat />} />
             <Route path="/edit-seat/:seatId" element={<EditSeat />} />
@@ -141,6 +143,7 @@ const AppRoutes = () => {
             <Route path="/booking-history" element={<BookingHistory />} />
             <Route path="/reserved" element={<Reserved />} />
             <Route path="/cancel-ticket" element={<CancelTicket />} />
+            <Route path="/bus-schedules" element={<BusSchedules />} />
             <Route
               path="/booking-confirmation"
               element={<div>Booking Confirmed</div>}

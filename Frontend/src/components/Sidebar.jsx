@@ -89,11 +89,8 @@ const Sidebar = () => {
           icon: <FiCalendar />,
         },
         { to: "/add-schedule", label: "Insert Schedule", icon: <FiPlus /> },
-        {
-          to: "/schedule-analytics",
-          label: "Schedule Analytics",
-          icon: <BsGraphUpArrow />,
-        },
+        { to: "/schedule-analytics", label: "Schedule Analytics", icon: <BsGraphUpArrow /> },
+        { to: "/schedule-archives", label: "Schedule Archives", icon: <CgNotes /> },
       ],
     },
     {

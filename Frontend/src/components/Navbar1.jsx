@@ -10,10 +10,9 @@ import {
   FiSearch,
   FiClock,
   FiBook,
-
- 
-
-  
+  FiCheck,
+  FiTrash2,
+  FiCalendar,
 } from "react-icons/fi";
 import useAuthStore from "../store/authStore";
 import NotificationBell from "./NotificationBell";
@@ -99,6 +98,14 @@ const Navbar1 = () => {
         {/* Notifications */}
         {/* <NotificationBell /> */}
         <NotificationBell role="passenger" />
+
+        <button
+          onClick={() => navigate("/bus-schedules")}
+          className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+          aria-label="Schedules"
+        >
+          <FiCalendar size={24} className="text-gray-600" />
+        </button>
 
         <button
           onClick={() => navigate("/settings")}
