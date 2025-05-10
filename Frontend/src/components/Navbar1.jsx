@@ -1,129 +1,38 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState,useRef } from "react";
 import gosyncLogo from "/assets/GoSync-Logo_Length2.png";
 import { useNavigate } from "react-router-dom";
 import {
   FiXCircle,
   FiLogOut,
-  FiBell,
   FiSettings,
   FiUser,
+  FiChevronDown,
   FiSearch,
   FiClock,
   FiBook,
-  FiChevronDown,
-  FiCheck,
-  FiTrash2,
+
+ 
+
+  
 } from "react-icons/fi";
 import useAuthStore from "../store/authStore";
-import axios from "axios";
-import io from "socket.io-client";
+import NotificationBell from "./NotificationBell";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_URI = import.meta.env.VITE_API_URL;
-const socket = io(`${API_URI}`);
+
+
+
+
 
 const Navbar1 = () => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [hasUnread, setHasUnread] = useState(false);
+ 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // Refs for clickaway detection
-  const notificationRef = useRef(null);
   const actionMenuRef = useRef(null);
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
-        setShowDropdown(false);
-      }
-      if (
-        actionMenuRef.current &&
-        !actionMenuRef.current.contains(event.target)
-      ) {
-        setIsDropdownOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const [notifResponse, msgResponse] = await Promise.all([
-          axios.get(`${API_URI}/api/notifications`),
-          axios.get(`${API_URI}/api/shed/messages`),
-        ]);
-
-        const notificationsData = notifResponse.data
-          .filter(
-            (notif) =>
-              !notif.expiredAt || new Date(notif.expiredAt) > new Date()
-          )
-          .map((notif) => ({
-            ...notif,
-            type: "notification",
-            timestamp: new Date(notif.createdAt).getTime(),
-            read: notif.read || false,
-          }));
-
-        const sentMessages = msgResponse.data.data
-          .filter((msg) => msg.status === "sent")
-          .map((msg) => ({
-            ...msg,
-            type: "message",
-            timestamp: new Date(`${msg.shedDate}T${msg.shedTime}:00`).getTime(),
-            read: false,
-          }));
-
-        const allNotifications = [...notificationsData, ...sentMessages].sort(
-          (a, b) => b.timestamp - a.timestamp
-        );
-
-        setNotifications(allNotifications);
-        if (allNotifications.some((notif) => !notif.read)) {
-          setHasUnread(true);
-        }
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      }
-    };
-
-    fetchNotifications();
-
-    socket.on("newNotification", (newNotif) => {
-      if (!newNotif.expiredAt || new Date(newNotif.expiredAt) > new Date()) {
-        setNotifications((prev) => {
-          const updatedList = [
-            {
-              ...newNotif,
-              timestamp: new Date(newNotif.createdAt).getTime(),
-              read: false,
-            },
-            ...prev,
-          ];
-          return updatedList.sort((a, b) => b.timestamp - a.timestamp);
-        });
-        setHasUnread(true);
-      }
-    });
-
-    return () => socket.off("newNotification");
-  }, []);
-
   const handleCancelTicket = () => {
     navigate("/cancel-ticket");
     setIsDropdownOpen(false);
@@ -142,60 +51,6 @@ const Navbar1 = () => {
   const handleBookingHistory = () => {
     navigate("/booking-history");
     setIsDropdownOpen(false);
-  };
-
-  const toggleDropdown = () => {
-    setShowDropdown((prev) => !prev);
-    if (!showDropdown) {
-      setHasUnread(false);
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      await axios.put(
-        `${API_URI}/api/notifications/mark-all-read`,
-        {},
-        { withCredentials: true }
-      );
-      setNotifications((prev) =>
-        prev.map((notif) => ({ ...notif, read: true }))
-      );
-      setHasUnread(false);
-    } catch (error) {
-      console.error("Error marking notifications as read:", error);
-    }
-  };
-
-  const deleteAllNotifications = async () => {
-    try {
-      await axios.delete(`${API_URI}/api/notifications/clear-all`, {
-        withCredentials: true,
-      });
-      setNotifications([]);
-      setHasUnread(false);
-    } catch (error) {
-      console.error("Error clearing notifications:", error);
-    }
-  };
-
-  const formatNotificationTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 60) {
-      return diffMins <= 1 ? "Just now" : `${diffMins} mins ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h ago`;
-    } else if (diffDays < 7) {
-      return `${diffDays}d ago`;
-    } else {
-      return date.toLocaleDateString();
-    }
   };
 
   return (
@@ -240,91 +95,10 @@ const Navbar1 = () => {
       </div>
 
       {/* Right: Buttons */}
-      <div className="flex items-center space-x-2 md:space-x-4">
-        <div className="relative" ref={notificationRef}>
-          <button
-            onClick={toggleDropdown}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 relative"
-            aria-label="Notifications"
-          >
-            <FiBell
-              size={24}
-              className={hasUnread ? "text-deepOrange" : "text-gray-600"}
-            />
-            {hasUnread && (
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                {notifications.filter((n) => !n.read).length}
-              </span>
-            )}
-          </button>
-
-          <AnimatePresence>
-            {showDropdown && (
-              <motion.div
-                className="absolute right-0 top-12 w-80 bg-white shadow-lg rounded-lg overflow-hidden z-50 border border-gray-200"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="p-3 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                  <h3 className="font-semibold text-lg text-gray-800">
-                    Notifications
-                  </h3>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={markAllAsRead}
-                      className="p-1 hover:bg-gray-200 rounded text-sm flex items-center gap-1 text-green-600"
-                      title="Mark all as read"
-                    >
-                      <FiCheck size={16} />
-                    </button>
-                    <button
-                      onClick={deleteAllNotifications}
-                      className="p-1 hover:bg-gray-200 rounded text-sm flex items-center gap-1 text-red-600"
-                      title="Clear all"
-                    >
-                      <FiTrash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">
-                      No notifications
-                    </div>
-                  ) : (
-                    <ul className="divide-y divide-gray-100">
-                      {notifications.map((notif, index) => (
-                        <li
-                          key={index}
-                          className={`p-3 hover:bg-gray-50 transition-colors ${!notif.read ? "bg-blue-50" : ""}`}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1 pr-2">
-                              <p
-                                className={`text-sm ${!notif.read ? "font-medium" : ""}`}
-                              >
-                                {notif.message}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {formatNotificationTime(notif.timestamp)}
-                              </p>
-                            </div>
-                            {!notif.read && (
-                              <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
-                            )}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+      <div className="flex items-center space-x-4">
+        {/* Notifications */}
+        {/* <NotificationBell /> */}
+        <NotificationBell role="passenger" />
 
         <button
           onClick={() => navigate("/settings")}

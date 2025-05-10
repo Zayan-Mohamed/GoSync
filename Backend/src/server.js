@@ -10,6 +10,7 @@ import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import noticeRoutes from "./routes/noticeRoutes.js";
 import seatRoutes from "./routes/seatRoutes.js";
 import stopRoutes from "./routes/stopRoutes.js";
 import routeRoutes from "./routes/routeRoutes.js";
@@ -18,6 +19,9 @@ import busRoutes from "./routes/busRoutes.js";
 import scheduleRoutes from "./routes/scheduleRoutes.js";
 import shedRoutes from "./routes/shedRoutes.js";
 import busOperatorRoutes from "./routes/busOperatorRoutes.js";
+import busRouteRoutes from"./routes/busRouteRoutes.js";
+import notRoutes from "./routes/notRoutes.js";
+
 import reportRoutes from "./routes/reportRoutes.js";
 import heatmapRoutes from "./routes/heatmapRoutes.js";
  // Import the new routes
@@ -105,6 +109,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/notices", noticeRoutes);
 app.use("/api/seats", seatRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/routes", routeRoutes);
@@ -114,6 +119,8 @@ app.use("/api/buses", busRoutes);
 app.use("/api/shed", shedRoutes);
 app.use('/api/reports', reportRoutes);
 app.use("/api/operator", busOperatorRoutes);
+app.use("/api/busRoute",busRouteRoutes);
+app.use("/api", notRoutes);
 app.use("/api/user", heatmapRoutes);
 
 // Start Server
@@ -121,3 +128,5 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 export default io;
+
+

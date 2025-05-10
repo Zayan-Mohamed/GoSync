@@ -66,6 +66,7 @@ const BusCard = ({ bus, onViewSeat }) => {
     return seatsData.filter(
       (seat) =>
         !seat.isBooked &&
+        !seat.isDisabled &&
         (!seat.reservedUntil || new Date(seat.reservedUntil) < new Date())
     ).length;
   }, [seatsData]);

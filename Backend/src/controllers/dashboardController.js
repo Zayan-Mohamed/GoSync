@@ -257,6 +257,231 @@ export const getDashboardStats = async (req, res) => {
 };
 
 /**
+ * Get filtered dashboard statistics by time period
+ * @route GET /api/dashboard
+ * @access Private (Admin only)
+ */
+export const getFilteredDashboardStats = async (req, res) => {
+  try {
+    const { period = "month" } = req.query;
+
+    const today = new Date();
+    let startDate;
+
+    // Calculate start date based on period parameter
+    switch (period) {
+      case "day":
+        startDate = new Date(today);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case "week":
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 7);
+        break;
+      case "month":
+        startDate = new Date(today);
+        startDate.setMonth(today.getMonth() - 1);
+        break;
+      case "year":
+        startDate = new Date(today);
+        startDate.setFullYear(today.getFullYear() - 1);
+        break;
+      default:
+        startDate = new Date(today);
+        startDate.setMonth(today.getMonth() - 1); // Default to month
+    }
+
+    // Match condition for date filtering
+    const dateMatch = { createdAt: { $gte: startDate } };
+
+    // Parallel fetching of all required stats
+    const [
+      users,
+      totalBookings,
+      confirmedBookings,
+      cancelledBookings,
+      pendingPayments,
+      totalRevenue,
+      seats,
+      buses,
+      routes,
+      schedules,
+      operators,
+      notifications,
+      bookingsByDay,
+      revenueByBus,
+      topRoutes,
+      recentBookings,
+      latestSchedules,
+    ] = await Promise.all([
+      // User stats
+      User.find({ createdAt: { $gte: startDate } }).lean(),
+
+      // Booking stats within period
+      Booking.countDocuments(dateMatch),
+      Booking.countDocuments({ ...dateMatch, status: "confirmed" }),
+      Booking.countDocuments({ ...dateMatch, status: "cancelled" }),
+      Booking.countDocuments({ ...dateMatch, paymentStatus: "pending" }),
+
+      // Revenue stats within period
+      Booking.aggregate([
+        { $match: { ...dateMatch, status: "confirmed" } },
+        { $group: { _id: null, total: { $sum: "$fareTotal" } } },
+      ]),
+
+      // All seats (not filtered by date as they don't have timestamps)
+      Seat.find().lean(),
+
+      // Fleet stats (not filtered by date)
+      Bus.find().lean(),
+      Route.find().lean(),
+      Schedule.find().lean(),
+      BusOperator.find().lean(),
+
+      // Notification stats within period
+      Notification.find(dateMatch).lean(),
+
+      // Booking trends by day for selected period
+      Booking.aggregate([
+        { $match: dateMatch },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+
+      // Revenue by bus within period
+      Booking.aggregate([
+        { $match: { ...dateMatch, status: "confirmed" } },
+        { $group: { _id: "$busId", totalRevenue: { $sum: "$fareTotal" } } },
+        {
+          $lookup: {
+            from: "buses",
+            localField: "_id",
+            foreignField: "_id",
+            as: "bus",
+          },
+        },
+        { $unwind: "$bus" },
+        { $project: { busNumber: "$bus.busNumber", totalRevenue: 1 } },
+        { $sort: { totalRevenue: -1 } },
+        { $limit: 10 },
+      ]),
+
+      // Popular routes within period
+      Booking.aggregate([
+        { $match: { ...dateMatch, status: "confirmed" } },
+        {
+          $lookup: {
+            from: "buses",
+            localField: "busId",
+            foreignField: "_id",
+            as: "bus",
+          },
+        },
+        { $unwind: "$bus" },
+        {
+          $lookup: {
+            from: "routes",
+            localField: "bus.routeId",
+            foreignField: "routeId",
+            as: "route",
+          },
+        },
+        { $unwind: "$route" },
+        { $group: { _id: "$route.routeName", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 5 },
+      ]),
+
+      // Recent bookings
+      Booking.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate("userId", "name email")
+        .populate("busId", "busNumber busRouteNumber routeId")
+        .populate("seats", "seatNumber")
+        .lean(),
+
+      // Latest schedules
+      Schedule.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate("busId", "busNumber busType")
+        .populate("routeId", "routeName startLocation endLocation")
+        .lean(),
+    ]);
+
+    // Process bookings for route data
+    const enrichedBookings = await Promise.all(
+      recentBookings.map(async (booking) => {
+        const route = await Route.findOne({
+          routeId: booking.busId.routeId,
+        }).lean();
+        return {
+          ...booking,
+          from: route?.startLocation || "Unknown",
+          to: route?.endLocation || "Unknown",
+          seatNumbers: booking.seats.map((seat) => seat.seatNumber),
+        };
+      })
+    );
+
+    // Process seat stats
+    const totalSeats = seats.length;
+    const bookedSeats = seats.filter((s) => s.isBooked).length;
+    const reservedSeats = seats.filter(
+      (s) => s.reservedUntil && new Date(s.reservedUntil) > new Date()
+    ).length;
+    const availableSeats = totalSeats - bookedSeats - reservedSeats;
+
+    // Count new users in the selected period
+    const newUsers = users.length;
+
+    // Build response object
+    const response = {
+      totalUsers: await User.countDocuments(), // Total users count
+      newUsers: newUsers,
+      totalBookings: totalBookings,
+      confirmedBookings: confirmedBookings,
+      cancelledBookings: cancelledBookings,
+      pendingPayments: pendingPayments,
+      totalRevenue: totalRevenue[0]?.total || 0,
+      routesCount: routes.length,
+      fleetCount: buses.length,
+      schedulesCount: schedules.length,
+      operatorsCount: operators.length,
+      bookingsByDay: bookingsByDay,
+      topRoutes: topRoutes,
+      revenueByBus: revenueByBus,
+      recentBookings: enrichedBookings,
+      recentSchedules: latestSchedules,
+      seatStats: {
+        total: totalSeats,
+        booked: bookedSeats,
+        reserved: reservedSeats,
+        available: availableSeats,
+        occupancyRate: totalSeats
+          ? ((bookedSeats / totalSeats) * 100).toFixed(2) + "%"
+          : "0%",
+      },
+      periodFilter: period,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Error fetching filtered dashboard stats:", error);
+    res.status(500).json({
+      message: "Failed to fetch dashboard statistics",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Get system health statistics
  * @route GET /api/dashboard/health
  * @access Private (Admin only)

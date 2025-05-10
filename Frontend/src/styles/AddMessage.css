@@ -1,18 +1,18 @@
 .form-container {
   width: 100%;
-  max-width: 550px; /* Reduced the max width to make the form smaller */
+  max-width: 550px;
   margin: 0 auto;
-  padding: 50px; /* Reduced padding */
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  
+  padding: 30px;
+  background-color: #fff8e1; /* soft yellow background */
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(253, 118, 0, 0.2); /* light orange shadow */
 }
 
 .form-title {
   text-align: center;
-  font-size: 1.25rem; /* Reduced font size */
-  margin-bottom: 15px; /* Reduced margin */
+  font-size: 1.25rem;
+  margin-bottom: 15px;
+  color: #fd7600e2; /* vibrant orange */
 }
 
 .message-form {
@@ -21,26 +21,51 @@
 }
 
 .message-form .form-label {
-  font-weight: bold;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #fd7600e2; /* orange for label */
 }
 
 .message-form textarea,
 .message-form input,
 .message-form select,
 .message-form .react-datepicker__input-container input {
-  border-radius: 5px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ffeb3b; /* yellow border */
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.message-form textarea:focus,
+.message-form input:focus,
+.message-form select:focus,
+.message-form .react-datepicker__input-container input:focus {
+  border-color: #fd7600e2; /* orange focus */
+  outline: none;
+  background-color: #fffde7; /* light yellow on focus */
+}
+
+button[type="submit"] {
+  background-color: #fd7600e2;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 15px;
+}
+
+button[type="submit"]:hover {
+  background-color: #e95f00;
 }
 
 button:disabled {
   background-color: #ccc;
   border-color: #ccc;
-}
-
-button {
-  margin-top: 15px; /* Reduced margin-top */
-  padding: 8px 12px; /* Reduced padding */
-  font-size: 0.9rem; /* Slightly smaller font size */
-  border-radius: 5px;
 }
 
 .react-datepicker-wrapper {
@@ -49,7 +74,7 @@ button {
 
 .react-datepicker__input-container input {
   width: 100%;
-  padding: 6px; /* Reduced padding */
-  font-size: 0.9rem; /* Slightly smaller font size */
+  padding: 6px;
+  font-size: 0.9rem;
   border-radius: 5px;
 }

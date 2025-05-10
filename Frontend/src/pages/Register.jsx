@@ -5,6 +5,89 @@ import axios from "../services/authService";
 import { Link } from "react-router-dom";
 import gosyncLogo from "/assets/GoSync-Logo.png";
 import { motion, AnimatePresence } from "framer-motion";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { TextField, InputAdornment } from "@mui/material";
+import { styled } from "@mui/material/styles";
+
+// Styled component for Material UI phone input
+const StyledPhoneInput = styled(PhoneInput)(({ theme }) => ({
+  "& .form-control": {
+    width: "82%",
+    marginLeft: "70px",
+    height: "40px",
+    fontSize: "16px",
+    borderRadius: "8px",
+    padding: "8px 0px 0px 80px", // Increased left padding to ensure space for flag and code
+    transition: "all 0.3s ease",
+  },
+  "& .flag-dropdown": {
+    borderTopLeftRadius: "8px",
+    borderBottomLeftRadius: "8px",
+    borderRight: "1px solid #e2e8f0",
+    background: "transparent",
+    width: "auto",
+    overflow: "visible",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    height: "100%",
+  },
+  "& .selected-flag": {
+    padding: "0 12px",
+    width: "auto",
+    minWidth: "40px", // Ensure enough width for flag and code
+    display: "flex",
+    alignItems: "center",
+    "&:focus": {
+      backgroundColor: "transparent",
+    },
+    "&:hover": {
+      backgroundColor: "transparent",
+    },
+    "& .flag": {
+      marginRight: "8px", // Add space between flag and code
+    },
+    "& .country-code": {
+      marginLeft: "4px",
+      padding: "0 16px 16px 0",
+      color: "#374151",
+      fontSize: "16px",
+      fontWeight: 500,
+    },
+    "& .arrow": {
+      display: "none", // Hide default arrow to avoid layout issues
+    },
+  },
+  "& .country-list": {
+    margin: "4px 0",
+    padding: "0",
+    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+    borderRadius: "8px",
+    "& .country": {
+      padding: "10px 8px",
+      display: "flex",
+      alignItems: "center",
+    },
+    "& .country-name": {
+      marginLeft: "8px",
+    },
+    "& .dial-code": {
+      color: "#666",
+      marginLeft: "auto",
+    },
+  },
+  "&.phone-focused .form-control": {
+    borderColor: "none",
+    boxShadow: "none",
+  },
+  "&.phone-filled .form-control": {
+    borderColor: "#none",
+  },
+  "& .selected-flag:hover, & .selected-flag:focus": {
+    backgroundColor: "transparent",
+  },
+}));
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -40,7 +123,7 @@ const Register = () => {
     password: false,
   });
   const [busPosition, setBusPosition] = useState({ x: 0, y: 0 });
-  const [busDirection, setBusDirection] = useState({ x: 1, y: 1 }); // Add state for direction
+  const [busDirection, setBusDirection] = useState({ x: 1, y: 1 });
 
   const navigate = useNavigate();
 
@@ -58,11 +141,9 @@ const Register = () => {
       const maxWidth = window.innerWidth - 100;
       const maxHeight = window.innerHeight - 100;
 
-      // Update position based on current position and direction
       let newX = busPosition.x + busDirection.x * 50;
       let newY = busPosition.y + busDirection.y * 30;
 
-      // Check boundaries and reverse direction if needed
       let newDirectionX = busDirection.x;
       let newDirectionY = busDirection.y;
 
@@ -185,6 +266,7 @@ const Register = () => {
 
     strength.score = Object.values(newCriteria).filter(Boolean).length;
 
+    
     switch (strength.score) {
       case 1:
         strength.color = "bg-red-500";
@@ -221,8 +303,15 @@ const Register = () => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
+    // Ensure phone is in E.164 format (starts with +)
+    const formData = { ...form };
+    if (formData.phone && !formData.phone.startsWith("+")) {
+      formData.phone = "+" + formData.phone;
+    }
+
     try {
-      await axios.post("/api/auth/register", form);
+      await axios.post("/api/auth/register", formData);
       setRegisterSuccess(true);
       setTimeout(() => {
         navigate("/login");
@@ -404,7 +493,7 @@ const Register = () => {
                     : "border-gray-300"
               }`}
               required
-              animate={inputFocus.name ? { scale: 1.01 } : { scale: 1 }}
+              animate={inputFocus.name ? { scale: 1.01 } : { scale: 1}}
             />
 
             <motion.div
@@ -504,57 +593,72 @@ const Register = () => {
                   initial="hidden"
                   animate="visible"
                   exit="exit"
-                  className="absolute text-xs font-medium text-brightYellow z-10 left-2 bg-white px-1"
+                  className="absolute text-xs font-medium text-brightYellow z-20 left-2 bg-white px-1"
+                  style={{ top: "-10px" }}
                 >
                   Phone
                 </motion.label>
               ) : null}
             </AnimatePresence>
 
-            <motion.input
-              type="tel"
-              placeholder={inputFocus.phone ? "" : "Phone"}
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              onFocus={() => setInputFocus({ ...inputFocus, phone: true })}
-              onBlur={() => setInputFocus({ ...inputFocus, phone: false })}
-              className={`w-full p-2 pl-5 border rounded-lg focus:outline-none transition-all duration-300 ${
-                inputFocus.phone
-                  ? "border-brightYellow ring-2 ring-brightYellow/30 shadow-md"
-                  : inputValue.phone
-                    ? "border-green-400"
-                    : "border-gray-300"
-              }`}
-              required
-              animate={inputFocus.phone ? { scale: 1.01 } : { scale: 1 }}
-            />
+            <div className="relative">
+              <StyledPhoneInput
+                country={"lk"}
+                value={form.phone}
+                onChange={(phone) => setForm({ ...form, phone: "+" + phone })}
+                onFocus={() => setInputFocus({ ...inputFocus, phone: true })}
+                onBlur={() => setInputFocus({ ...inputFocus, phone: false })}
+                containerClass="w-full"
+                inputClass={`w-full p-2 pl-8 border-1  rounded-lg focus:outline-none transition-all duration-300 ${
+                  inputFocus.phone
+                    ? "border-brightYellow"
+                    : inputValue.phone
+                      ? "border-green-400"
+                      : "border-gray-300"
+                }`}
+                buttonClass="absolute top-0 left-0 h-full focus:outline-none border-r border-gray-300 px-2 flex items-center justify-center rounded-l-lg"
+                dropdownClass="absolute z-50 bg-white shadow-lg rounded-lg mt-8 left-0 w-[300px] max-h-[200px] overflow-y-auto"
+                searchClass="p-2 border-b"
+                countryCodeEditable={false}
+                enableSearch={true}
+                disableSearchIcon={false}
+                required
+                specialLabel=""
+                preferredCountries={["lk", "in", "us", "gb"]}
+              />
 
-            <motion.div
-              className={`absolute left-0 bottom-0 h-0.5 ${
-                inputValue.phone && !inputFocus.phone
-                  ? "bg-green-400"
-                  : "bg-brightYellow"
-              }`}
-              initial={{ width: "0%" }}
-              animate={{
-                width: inputFocus.phone || inputValue.phone ? "100%" : "0%",
-              }}
-              transition={{ duration: 0.3 }}
-            />
-
-            <AnimatePresence>
-              {inputValue.phone && !inputFocus.phone && (
-                <motion.span
-                  className="absolute right-3 top-4 text-green-500"
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                  variants={iconVariants}
-                >
-                  ✓
-                </motion.span>
+              {/* Add focus ring effect consistent with other inputs */}
+              {inputFocus.phone && (
+                <div className="absolute inset-0 rounded-lg ring-2 ring-brightYellow/30 shadow-md pointer-events-none"></div>
               )}
-            </AnimatePresence>
+
+              <motion.div
+                className={`absolute left-0 bottom-0 h-1 w-full ${
+                  inputValue.phone && !inputFocus.phone
+                    ? "bg-green-400"
+                    : "bg-brightYellow"
+                }`}
+                initial={{ width: "0%" }}
+                animate={{
+                  width: inputFocus.phone || inputValue.phone ? "100%" : "0%",
+                }}
+                transition={{ duration: 0.3 }}
+              />
+
+              <AnimatePresence>
+                {inputValue.phone && !inputFocus.phone && (
+                  <motion.span
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 z-10"
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={iconVariants}
+                  >
+                    ✓
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
 
           <motion.div className="relative" variants={childVariants}>
@@ -664,7 +768,7 @@ const Register = () => {
                 animate={{ scale: criteria.uppercase ? [1, 1.3, 1] : 1 }}
                 transition={{ duration: 0.3 }}
               ></motion.span>
-              1 uppercase letter
+              Uppercase letter
             </motion.p>
             <motion.p
               className={`flex items-center ${
@@ -680,7 +784,7 @@ const Register = () => {
                 animate={{ scale: criteria.number ? [1, 1.3, 1] : 1 }}
                 transition={{ duration: 0.3 }}
               ></motion.span>
-              1 number
+              Number
             </motion.p>
             <motion.p
               className={`flex items-center ${
@@ -696,102 +800,47 @@ const Register = () => {
                 animate={{ scale: criteria.specialChar ? [1, 1.3, 1] : 1 }}
                 transition={{ duration: 0.3 }}
               ></motion.span>
-              1 special character
+              Special character
             </motion.p>
           </motion.div>
 
           <motion.button
+            type="submit"
+            className={`w-full py-2 px-4 rounded-lg text-white font-bold transition-all duration-300 ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : registerSuccess
+                  ? "bg-green-500"
+                  : "bg-deepOrange hover:bg-brightYellow hover:shadow-lg"
+            }`}
+            disabled={isLoading}
             variants={buttonVariants}
             initial="idle"
-            whileHover="hover"
-            whileTap="tap"
             animate={
-              registerSuccess ? "success" : isLoading ? "loading" : "idle"
+              isLoading ? "loading" : registerSuccess ? "success" : "idle"
             }
-            type="submit"
-            disabled={isLoading || registerSuccess}
-            className="w-full p-2 bg-deepOrange text-white font-bold rounded-lg transition-all transform duration-300 shadow-md relative overflow-hidden mt-2"
+            whileHover={!isLoading && !registerSuccess ? "hover" : ""}
+            whileTap={!isLoading && !registerSuccess ? "tap" : ""}
           >
-            <span className="relative z-10 flex items-center justify-center">
-              {isLoading ? (
-                <>
-                  <motion.svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </motion.svg>
-                  Creating Account...
-                </>
-              ) : registerSuccess ? (
-                <>
-                  <motion.span
-                    animate={{ rotate: [0, 360] }}
-                    transition={{ duration: 0.5 }}
-                    className="mr-2"
-                  >
-                    ✓
-                  </motion.span>
-                  Success!
-                </>
-              ) : (
-                "Create Account"
-              )}
-            </span>
-            <motion.div
-              className="absolute inset-0 bg-sunsetOrange"
-              initial={{ scaleX: 0 }}
-              whileHover={{ scaleX: 1 }}
-              transition={{ duration: 0.3 }}
-              style={{ transformOrigin: "left" }}
-            />
+            {isLoading
+              ? "Registering..."
+              : registerSuccess
+                ? "Success!"
+                : "Register"}
           </motion.button>
         </motion.form>
 
-        <motion.div
-          className="mt-2 flex justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <motion.div
-            className="w-full h-0.5 bg-gray-100"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          />
-        </motion.div>
-
         <motion.p
+          className="text-sm text-center text-gray-500 mt-4"
           variants={childVariants}
-          className="text-center text-sm mt-2 text-gray-600"
         >
           Already have an account?{" "}
-          <motion.span
-            whileHover={{ color: "#FF6B00", scale: 1.05 }}
-            transition={{ duration: 0.2 }}
+          <Link
+            to="/login"
+            className="text-brightYellow hover:text-deepOrange font-medium"
           >
-            <Link
-              to="/login"
-              className="text-brightYellow font-medium hover:text-deepOrange transition-colors"
-            >
-              Login
-            </Link> 
-          </motion.span>
+            Log in
+          </Link>
         </motion.p>
       </motion.div>
     </div>
