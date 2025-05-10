@@ -5,31 +5,34 @@ import jwt from "jsonwebtoken";
 export const registerUser = async (req, res) => {
   const { name, email, phone, password } = req.body;
 
-  //Validate input fields
+  // Validate input fields
   if (!name || !email || !phone || !password) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  //Ensure phone is numeric
-  if (isNaN(phone)) {
+  // Validate phone in E.164 format (e.g., +12025550123)
+  if (!/^\+\d{10,15}$/.test(phone)) {
     return res
       .status(400)
-      .json({ message: "Phone number must be a valid number" });
+      .json({
+        message: "Phone number must be in E.164 format (e.g., +12025550123)",
+      });
   }
 
-  //Check if user already exists by email or phone
+  // Check if user already exists by email or phone
   const userExists = await User.findOne({ $or: [{ email }, { phone }] });
   if (userExists) {
     return res
       .status(400)
       .json({ message: "Email or phone number already in use" });
   }
+
   console.log("Password before hashing:", password);
-  //Hash password
+  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
   console.log("Hashed Password before storing:", hashedPassword);
 
-  //Always assign "passenger" role unless created by an admin
+  // Always assign "passenger" role unless created by an admin
   const user = await User.create({
     name,
     email,
@@ -42,35 +45,11 @@ export const registerUser = async (req, res) => {
     _id: user._id,
     name: user.name,
     email: user.email,
-    password: user.password,
     phone: user.phone,
     role: user.role,
   });
 };
 
-export const protect = async (req, res, next) => {
-  let token = req.cookies.jwt;
-
-  if (!token) {
-    console.log("No token found in cookies");
-    return res.status(401).json({ message: "Unauthorized, no token" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded token:", decoded);
-    req.user = await User.findById(decoded.id).select("-password");
-    if (!req.user) {
-      return res.status(401).json({ message: "User not found" });
-    }
-    next();
-  } catch (error) {
-    console.error("Token verification error:", error);
-    res.status(401).json({ message: "Unauthorized, invalid token" });
-  }
-};
-
-//Login user & set token in an HTTP-only cookie
 export const authUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -80,13 +59,17 @@ export const authUser = async (req, res) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-  // Generate token
+  // Generate token with phone included
   const token = jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
     {
-      expiresIn: "30d",
-    }
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "30d" }
   );
 
   // If a profile picture URL exists, read the file and convert to Base64
@@ -96,17 +79,14 @@ export const authUser = async (req, res) => {
     user.profilePicture.includes("/uploads/profile-images/")
   ) {
     try {
-      // Extract filename from URL
       const filename = user.profilePicture.split("/").pop();
       const fs = await import("fs/promises");
       const path = await import("path");
       const { fileURLToPath } = await import("url");
 
-      // Setup ES module paths
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
 
-      // Construct full path to the profile image
       const imagePath = path.join(
         __dirname,
         "..",
@@ -116,22 +96,15 @@ export const authUser = async (req, res) => {
         "profile-images",
         filename
       );
-
       console.log(`Looking for profile image at: ${imagePath}`);
 
-      // Check if file exists before trying to read it
       try {
         await fs.access(imagePath);
-
-        // Read the file and convert to Base64
         const imageBuffer = await fs.readFile(imagePath);
-
-        // Determine mimetype from file extension
         const ext = path.extname(filename).toLowerCase();
-        let mimeType = "image/jpeg"; // default
+        let mimeType = "image/jpeg";
         if (ext === ".png") mimeType = "image/png";
         if (ext === ".gif") mimeType = "image/gif";
-
         profilePictureData = `data:${mimeType};base64,${imageBuffer.toString(
           "base64"
         )}`;
@@ -140,22 +113,20 @@ export const authUser = async (req, res) => {
         );
       } catch (err) {
         console.error("Profile image file not found:", imagePath);
-        // If the file doesn't exist, clear the profile picture URL to prevent future attempts
         user.profilePicture = "";
         await user.save();
       }
     } catch (err) {
       console.error("Error reading profile image:", err);
-      // Continue without the image data if there's an error
     }
   }
 
-  //Store token in a secure HTTP-only cookie
+  // Store token in a secure HTTP-only cookie
   res.cookie("jwt", token, {
-    httpOnly: true, //Prevents XSS attacks
-    secure: process.env.NODE_ENV === "production", //Use only in HTTPS in production
-    sameSite: "Strict", //Helps prevent CSRF
-    maxAge: 30 * 24 * 60 * 60 * 1000, //Expires in 30 days
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   });
 
   res.json({
@@ -175,8 +146,7 @@ export const authUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    console.log("User found:", user); // Debug
-    console.log("✅ /api/auth/update hit"); // Add this
+    console.log("User found:", user);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -194,9 +164,20 @@ export const updateUser = async (req, res) => {
           .json({ message: "Current password is incorrect" });
       }
     } else if (req.body.password) {
-      return res.status(400).json({
-        message: "Current password is required to set a new password",
-      });
+      return res
+        .status(400)
+        .json({
+          message: "Current password is required to set a new password",
+        });
+    }
+
+    // Validate phone if provided
+    if (req.body.phone && !/^\+\d{10,15}$/.test(req.body.phone)) {
+      return res
+        .status(400)
+        .json({
+          message: "Phone number must be in E.164 format (e.g., +12025550123)",
+        });
     }
 
     // Update user data
@@ -204,26 +185,20 @@ export const updateUser = async (req, res) => {
     user.email = req.body.email || user.email;
     user.phone = req.body.phone || user.phone;
 
-    // Profile picture - store the URL
     if (req.body.profilePicture) {
       user.profilePicture = req.body.profilePicture;
     }
 
-    // Address
     if (req.body.address) {
       user.address = req.body.address;
     }
 
-    // Update notification preferences
     if (req.body.notificationPreferences !== undefined) {
       user.notificationPreferences = req.body.notificationPreferences;
     }
 
-    // Update password if provided and current password validated
     if (req.body.password) {
       user.password = await bcrypt.hash(req.body.password, 10);
-
-      // Log password change for security
       user.securityLog = user.securityLog || [];
       user.securityLog.push({
         action: "password_change",
@@ -232,11 +207,9 @@ export const updateUser = async (req, res) => {
       });
     }
 
-    console.log("User data before saving:", user); // Debug
-
+    console.log("User data before saving:", user);
     await user.save();
 
-    // Remove sensitive data before sending response
     const userResponse = user.toObject();
     delete userResponse.password;
     delete userResponse.securityLog;
@@ -256,24 +229,21 @@ export const updateUser = async (req, res) => {
 export const logout = async (req, res) => {
   res.clearCookie("jwt", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // Ensure secure in production
+    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
   });
 
   res.status(200).json({ message: "Logged out successfully" });
 };
 
-// Get user profile details
 export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select(
       "-password -securityLog"
     );
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
     res.json(user);
   } catch (error) {
     console.error("Error fetching user profile:", error);
@@ -283,11 +253,9 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
-// Change password with verification
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-
     if (!currentPassword || !newPassword) {
       return res
         .status(400)
@@ -295,12 +263,10 @@ export const changePassword = async (req, res) => {
     }
 
     const user = await User.findById(req.user.id);
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Verify current password
     const isPasswordValid = await bcrypt.compare(
       currentPassword,
       user.password
@@ -309,10 +275,7 @@ export const changePassword = async (req, res) => {
       return res.status(400).json({ message: "Current password is incorrect" });
     }
 
-    // Update password
     user.password = await bcrypt.hash(newPassword, 10);
-
-    // Add to security log
     user.securityLog = user.securityLog || [];
     user.securityLog.push({
       action: "password_change",
@@ -321,7 +284,6 @@ export const changePassword = async (req, res) => {
     });
 
     await user.save();
-
     res.json({ message: "Password changed successfully" });
   } catch (error) {
     console.error("Error changing password:", error);
@@ -331,7 +293,6 @@ export const changePassword = async (req, res) => {
   }
 };
 
-// Update notification preferences
 export const updateNotificationPreferences = async (req, res) => {
   try {
     const {
@@ -339,9 +300,7 @@ export const updateNotificationPreferences = async (req, res) => {
       sms: smsNotifications,
       push: pushNotifications,
     } = req.body;
-
     const user = await User.findById(req.user.id);
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -362,29 +321,27 @@ export const updateNotificationPreferences = async (req, res) => {
     };
 
     await user.save();
-
     res.json({
       message: "Notification preferences updated successfully",
       preferences: user.notificationPreferences,
     });
   } catch (error) {
     console.error("Error updating notification preferences:", error);
-    res.status(500).json({
-      message: "Error updating notification preferences",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({
+        message: "Error updating notification preferences",
+        error: error.message,
+      });
   }
 };
 
-// Get security activity log
 export const getSecurityLog = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("securityLog");
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
     res.json({ securityLog: user.securityLog || [] });
   } catch (error) {
     console.error("Error fetching security log:", error);
@@ -394,19 +351,16 @@ export const getSecurityLog = async (req, res) => {
   }
 };
 
-// Upload profile image
 export const uploadProfileImage = async (req, res) => {
   try {
     console.log("Profile image upload started");
     console.log("Request file:", req.file);
 
-    // req.file is populated by multer middleware
     if (!req.file) {
       console.error("No file found in request");
       return res.status(400).json({ message: "No image file provided" });
     }
 
-    // Print file details for debugging
     console.log("File details:", {
       filename: req.file.filename,
       mimetype: req.file.mimetype,
@@ -420,30 +374,22 @@ export const uploadProfileImage = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Read the file from disk and convert to Base64
     const fs = await import("fs/promises");
     const imageBuffer = await fs.readFile(req.file.path);
     const base64Image = `data:${
       req.file.mimetype
     };base64,${imageBuffer.toString("base64")}`;
 
-    // Create URL for the uploaded file - FIXED: use the actual server port (5000)
     const port = process.env.PORT || 5000;
     const baseUrl = `http://localhost:${port}`;
-
-    // Path relative to the server
     const relativePath = `/uploads/profile-images/${req.file.filename}`;
     const imageUrl = `${baseUrl}${relativePath}`;
 
     console.log(`Generated image URL: ${imageUrl}`);
 
-    // Save previous profile picture URL for logging
     const previousProfilePicture = user.profilePicture;
-
-    // Update user's profile picture with both URL and Base64 data
     user.profilePicture = imageUrl;
 
-    // Add to security log
     user.securityLog = user.securityLog || [];
     user.securityLog.push({
       action: "profile_picture_update",
@@ -456,7 +402,6 @@ export const uploadProfileImage = async (req, res) => {
       `User profile updated. Previous picture: ${previousProfilePicture}, New picture: ${imageUrl}`
     );
 
-    // Verify the update was successful by fetching the user again
     const verifiedUser = await User.findById(req.user.id);
     if (verifiedUser.profilePicture !== imageUrl) {
       console.error("Profile picture update verification failed!");
@@ -474,14 +419,12 @@ export const uploadProfileImage = async (req, res) => {
     });
   } catch (error) {
     console.error("Error uploading profile image:", error);
-    res.status(500).json({
-      message: "Error uploading profile image",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ message: "Error uploading profile image", error: error.message });
   }
 };
 
-// Get profile image as Base64
 export const getProfileImageBase64 = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -489,17 +432,14 @@ export const getProfileImageBase64 = async (req, res) => {
       return res.status(404).json({ message: "No profile image found" });
     }
 
-    // Extract filename from URL
     const filename = user.profilePicture.split("/").pop();
     const fs = await import("fs/promises");
     const path = await import("path");
     const { fileURLToPath } = await import("url");
 
-    // Setup ES module paths
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
 
-    // Construct full path to the profile image
     const imagePath = path.join(
       __dirname,
       "..",
@@ -509,38 +449,29 @@ export const getProfileImageBase64 = async (req, res) => {
       "profile-images",
       filename
     );
-
     console.log(`Looking for profile image at: ${imagePath}`);
 
     try {
       await fs.access(imagePath);
-
-      // Read the file and convert to Base64
       const imageBuffer = await fs.readFile(imagePath);
-
-      // Determine mimetype from file extension
       const ext = path.extname(filename).toLowerCase();
-      let mimeType = "image/jpeg"; // default
+      let mimeType = "image/jpeg";
       if (ext === ".png") mimeType = "image/png";
       if (ext === ".gif") mimeType = "image/gif";
-
       const base64Image = `data:${mimeType};base64,${imageBuffer.toString(
         "base64"
       )}`;
       console.log("Successfully loaded profile image as Base64");
 
-      res.json({
-        profilePictureData: base64Image,
-      });
+      res.json({ profilePictureData: base64Image });
     } catch (err) {
       console.error("Profile image file not found:", imagePath);
       res.status(404).json({ message: "Image file not found" });
     }
   } catch (error) {
     console.error("Error getting profile image:", error);
-    res.status(500).json({
-      message: "Error getting profile image",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ message: "Error getting profile image", error: error.message });
   }
 };

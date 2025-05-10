@@ -23,7 +23,6 @@ const Navbar = () => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
   const handleLogout = () => {

@@ -4,14 +4,29 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Navbar1 from "./Navbar1";
 import Footer1 from "./Footer1";
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Polyline,
+} from "react-leaflet";
 import L from "leaflet";
 import Loader from "./Loader";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 
 const Payment = () => {
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  // Make sure API_URL is properly formatted with http:// prefix
+  const API_URL = (() => {
+    let url = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    // Ensure URL has http:// or https:// prefix
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = `http://${url}`;
+    }
+    return url;
+  })();
+
   const { state } = useLocation();
   const navigate = useNavigate();
   const { busId, scheduleId, selectedSeats, bookingSummary } = state || {};
@@ -23,7 +38,10 @@ const Payment = () => {
   useEffect(() => {
     const fetchRouteData = async () => {
       try {
-        const busResponse = await axios.get(`${API_URL}/api/buses/buses/${busId}`, { withCredentials: true });
+        const busResponse = await axios.get(
+          `${API_URL}/api/buses/buses/${busId}`,
+          { withCredentials: true }
+        );
         const bus = busResponse.data;
         console.log("Bus data:", bus);
         if (!bus) throw new Error("Bus not found");
@@ -38,7 +56,11 @@ const Payment = () => {
 
         setRouteData(route);
       } catch (err) {
-        setError(err.response?.data?.error || err.message || "Error fetching route data");
+        setError(
+          err.response?.data?.error ||
+            err.message ||
+            "Error fetching route data"
+        );
         console.error("Fetch error:", err);
       } finally {
         setMapLoading(false);
@@ -52,7 +74,18 @@ const Payment = () => {
     setLoading(true);
     try {
       const paymentStatus = "paid"; // Hardcoded for successful payment; replace with payment gateway response if applicable
-      console.log("Sending payment update:", { bookingId: bookingSummary.bookingId, paymentStatus });
+
+      // Debug the API URL
+      console.log("API_URL:", API_URL);
+      console.log(
+        "Full request URL:",
+        `${API_URL}/api/bookings/update-payment`
+      );
+
+      console.log("Sending payment update:", {
+        bookingId: bookingSummary.bookingId,
+        paymentStatus,
+      });
 
       // Optional: Integrate payment gateway (e.g., Stripe)
       // const paymentResult = await processPaymentGateway();
@@ -60,7 +93,9 @@ const Payment = () => {
 
       const validStatuses = ["pending", "paid", "failed"];
       if (!validStatuses.includes(paymentStatus)) {
-        throw new Error(`Invalid payment status: ${paymentStatus}. Must be one of: ${validStatuses.join(", ")}`);
+        throw new Error(
+          `Invalid payment status: ${paymentStatus}. Must be one of: ${validStatuses.join(", ")}`
+        );
       }
 
       const paymentResponse = await axios.post(
@@ -69,25 +104,35 @@ const Payment = () => {
         { withCredentials: true }
       );
       console.log("Payment response:", paymentResponse.data);
-      toast.success(paymentResponse.data.message); // e.g., "Payment status updated and confirmation email sent with QR code"
+      toast.success(paymentResponse.data.message);
       navigate("/passenger");
     } catch (err) {
       console.error("Payment error:", err.response?.data || err);
-      const errorMessage = err.response?.data?.message || err.message || "Payment failed";
+      const errorMessage =
+        err.response?.data?.message || err.message || "Payment failed";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleBackButton = () => {
+    toast.info(
+      "Your booking is saved. You can complete payment from your dashboard."
+    );
+    navigate("/passenger");
+  };
+
   const startIcon = new L.Icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+    iconUrl:
+      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
     iconSize: [25, 41],
     iconAnchor: [12, 41],
   });
 
   const endIcon = new L.Icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+    iconUrl:
+      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
     iconSize: [25, 41],
     iconAnchor: [12, 41],
   });
@@ -97,7 +142,9 @@ const Payment = () => {
       <div className="min-h-screen bg-gray-100">
         <Navbar1 />
         <div className="container mx-auto py-6 px-4 text-center">
-          <h2 className="text-xl font-semibold text-gray-700">Invalid payment data</h2>
+          <h2 className="text-xl font-semibold text-gray-700">
+            Invalid payment data
+          </h2>
           <button
             onClick={() => navigate(-1)}
             className="mt-4 px-6 py-2 bg-deepOrange text-white rounded hover:bg-red-700"
@@ -112,12 +159,24 @@ const Payment = () => {
 
   const renderMap = () => {
     if (mapLoading) return <Loader />;
-    if (error || !routeData) return <p className="text-red-500">{error || "Unable to load route map"}</p>;
+    if (error || !routeData)
+      return (
+        <p className="text-red-500">{error || "Unable to load route map"}</p>
+      );
 
-    const { startLocation, endLocation, startLocationCoordinates, endLocationCoordinates } = routeData;
+    const {
+      startLocation,
+      endLocation,
+      startLocationCoordinates,
+      endLocationCoordinates,
+    } = routeData;
 
-    if (!startLocationCoordinates?.latitude || !startLocationCoordinates?.longitude ||
-        !endLocationCoordinates?.latitude || !endLocationCoordinates?.longitude) {
+    if (
+      !startLocationCoordinates?.latitude ||
+      !startLocationCoordinates?.longitude ||
+      !endLocationCoordinates?.latitude ||
+      !endLocationCoordinates?.longitude
+    ) {
       return <p className="text-red-500">Missing route coordinates</p>;
     }
 
@@ -128,11 +187,16 @@ const Payment = () => {
 
     const center = [
       (startLocationCoordinates.latitude + endLocationCoordinates.latitude) / 2,
-      (startLocationCoordinates.longitude + endLocationCoordinates.longitude) / 2,
+      (startLocationCoordinates.longitude + endLocationCoordinates.longitude) /
+        2,
     ];
 
     return (
-      <MapContainer center={center} zoom={8} style={{ height: "400px", width: "100%" }}>
+      <MapContainer
+        center={center}
+        zoom={8}
+        style={{ height: "400px", width: "100%" }}
+      >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -160,37 +224,53 @@ const Payment = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h3 className="text-lg font-medium mb-4 text-gray-700">Booking Summary</h3>
+            <h3 className="text-lg font-medium mb-4 text-gray-700">
+              Booking Summary
+            </h3>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600 font-medium">Booking ID:</span>
-                <span className="text-gray-800">{bookingSummary.bookingId}</span>
+                <span className="text-gray-800">
+                  {bookingSummary.bookingId}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 font-medium">Route:</span>
-                <span className="text-gray-800">{bookingSummary.from} to {bookingSummary.to}</span>
+                <span className="text-gray-800">
+                  {bookingSummary.from} to {bookingSummary.to}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 font-medium">Bus Number:</span>
-                <span className="text-gray-800">{bookingSummary.busNumber}</span>
+                <span className="text-gray-800">
+                  {bookingSummary.busNumber}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 font-medium">Seats:</span>
-                <span className="text-gray-800">{bookingSummary.seatNumbers.join(", ")}</span>
+                <span className="text-gray-800">
+                  {bookingSummary.seatNumbers.join(", ")}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 font-medium">Booked At:</span>
                 <span className="text-gray-800">{bookingSummary.bookedAt}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Payment Status:</span>
-                <span className={`text-${bookingSummary.paymentStatus === "pending" ? "yellow" : bookingSummary.paymentStatus === "paid" ? "green" : "red"}-600 font-semibold`}>
+                <span className="text-gray-600 font-medium">
+                  Payment Status:
+                </span>
+                <span
+                  className={`text-${bookingSummary.paymentStatus === "pending" ? "yellow" : bookingSummary.paymentStatus === "paid" ? "green" : "red"}-600 font-semibold`}
+                >
                   {bookingSummary.paymentStatus}
                 </span>
               </div>
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="text-gray-700 font-semibold">Total Fare:</span>
-                <span className="text-gray-900 font-bold text-lg">LKR. {bookingSummary.fareTotal}</span>
+                <span className="text-gray-900 font-bold text-lg">
+                  LKR. {bookingSummary.fareTotal}
+                </span>
               </div>
             </div>
             <motion.button
@@ -201,14 +281,36 @@ const Payment = () => {
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800"
               }`}
-              whileHover={!(loading || bookingSummary.paymentStatus === "paid") ? { scale: 1.05 } : {}}
-              whileTap={!(loading || bookingSummary.paymentStatus === "paid") ? { scale: 0.95 } : {}}
+              whileHover={
+                !(loading || bookingSummary.paymentStatus === "paid")
+                  ? { scale: 1.05 }
+                  : {}
+              }
+              whileTap={
+                !(loading || bookingSummary.paymentStatus === "paid")
+                  ? { scale: 0.95 }
+                  : {}
+              }
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
                   </svg>
                   Processing...
                 </span>
@@ -220,15 +322,17 @@ const Payment = () => {
             </motion.button>
           </motion.div>
           <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-lg font-medium mb-4 text-gray-700">Journey Route</h3>
+            <h3 className="text-lg font-medium mb-4 text-gray-700">
+              Journey Route
+            </h3>
             {renderMap()}
           </div>
         </div>
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBackButton}
           className="mt-6 px-6 py-2 bg-deepOrange text-white rounded hover:bg-red-700"
         >
-          Back to Seat Selection
+          Back to Dashboard
         </button>
       </div>
       <Footer1 />
