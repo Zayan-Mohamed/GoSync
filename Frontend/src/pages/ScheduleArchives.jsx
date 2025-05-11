@@ -5,6 +5,8 @@ import { format, parse, isValid, startOfMonth, endOfMonth, eachDayOfInterval } f
 import Sidebar from "../components/Sidebar";
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
+import AdminLayout  from "../layouts/AdminLayout";
+
 import { 
   BarChart, 
   Bar, 
@@ -498,8 +500,8 @@ const generateAnalyticsPDF = () => {
   );
 
   return (
+    <AdminLayout>
     <div className="flex h-screen">
-      <Sidebar />
       <div className="flex-1 p-10 overflow-y-auto">
         <h1 className="text-3xl font-bold mb-6">Schedule Archives</h1>
         
@@ -712,6 +714,7 @@ const generateAnalyticsPDF = () => {
         )}
       </div>
     </div>
+    </AdminLayout>
   );
 };
 

@@ -8,6 +8,7 @@ import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { FiDownload } from "react-icons/fi";
 import Navbar from "../components/Navbar";
+import AdminLayout  from "../layouts/AdminLayout";
 
 const ScheduleManagement = () => {
   const [schedules, setSchedules] = useState([]);
@@ -300,10 +301,9 @@ const ScheduleManagement = () => {
   );
 
   return (
+    <AdminLayout>
     <div className="flex h-screen">
-      <Sidebar />
       <div className="flex-1 bg-[#F5F5F5] min-h-screen">
-      <Navbar />
       <div className="flex-1 p-10 overflow-y-auto">
         <h1 className="text-3xl font-bold mb-6">Current Schedules</h1>
         
@@ -432,6 +432,7 @@ const ScheduleManagement = () => {
       </div>
      </div>
     </div>
+    </AdminLayout>
   );
 };
 
