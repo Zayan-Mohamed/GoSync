@@ -2,20 +2,38 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import AdminLayout from "../layouts/AdminLayout";
-import { Pie, Bar } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from "chart.js";
+import { Pie, Bar, Chart } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Title
+} from "chart.js";
 import GoSyncLoader from "../components/Loader";
 import { FiMapPin, FiTrendingUp, FiGlobe, FiDownload } from "react-icons/fi";
 import EmbeddedRouteMap from "../components/EmbeddedRouteMap";
-import { Marker, Polyline, Popup } from "react-leaflet";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
-ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
+// Register ChartJS components
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Title
+);
 
 const RouteAnalytics = () => {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState({ status: "", startDate: "", endDate: "" });
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [reportFilter, setReportFilter] = useState({
@@ -30,13 +48,19 @@ const RouteAnalytics = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const analyticsRes = await axios.get(`${API_URL}/api/routes/route-analytics`, {
+        setError(null);
+        console.log("Fetching route analytics...");
+        const response = await axios.get(`${API_URL}/api/routes/route-analytics`, {
           params: filter,
+          withCredentials: true
         });
-        setAnalytics(analyticsRes.data);
-        setLoading(false);
+        console.log("Analytics data received:", response.data);
+        setAnalytics(response.data);
       } catch (err) {
+        console.error("Error fetching route analytics:", err);
+        setError(err.response?.data?.message || "Failed to fetch route analytics");
         toast.error(err.response?.data?.message || "Failed to fetch route analytics");
+      } finally {
         setLoading(false);
       }
     };
@@ -195,10 +219,23 @@ const RouteAnalytics = () => {
     );
   };
 
-  if (loading) {
+  if (error) {
     return (
       <AdminLayout>
         <div className="p-6">
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
+            <strong className="font-bold">Error:</strong>
+            <span className="block sm:inline"> {error}</span>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="p-6 flex justify-center items-center min-h-screen">
           <GoSyncLoader />
         </div>
       </AdminLayout>
@@ -208,7 +245,11 @@ const RouteAnalytics = () => {
   if (!analytics) {
     return (
       <AdminLayout>
-        <div className="p-6">No route data available</div>
+        <div className="p-6">
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-600 px-4 py-3 rounded relative">
+            No route data available
+          </div>
+        </div>
       </AdminLayout>
     );
   }

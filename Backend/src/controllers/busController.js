@@ -177,8 +177,26 @@ export const searchBuses = async (req, res) => {
   try {
       const { fromLocation, toLocation, selectedDate } = req.body;
 
+      if (!fromLocation || !toLocation || !selectedDate) {
+          return res.status(400).json({ 
+              message: "Missing required fields", 
+              details: {
+                  fromLocation: !fromLocation,
+                  toLocation: !toLocation,
+                  selectedDate: !selectedDate
+              }
+          });
+      }
+
       // Format the date properly if it's not already
       const formattedDate = new Date(selectedDate);
+      if (isNaN(formattedDate.getTime())) {
+          return res.status(400).json({ 
+              message: "Invalid date format",
+              receivedDate: selectedDate
+          });
+      }
+
       const dateQuery = {
           $gte: new Date(formattedDate.setHours(0, 0, 0, 0)),
           $lt: new Date(formattedDate.setHours(23, 59, 59, 999))
@@ -188,18 +206,23 @@ export const searchBuses = async (req, res) => {
       const routes = await Route.find({})
           .populate({
               path: 'stops.stop',
-              model: 'Stop'
-          });
+              model: 'Stop',
+              select: 'stopName stopAddress coordinates' // Only select needed fields
+          }).lean(); // Convert to plain JavaScript objects
 
       // Filter routes that have fromLocation as boarding and toLocation as dropping
       const validRoutes = routes.filter(route => {
-          const fromStop = route.stops.find(stop => 
-              stop.stop.stopName === fromLocation && stop.stopType === 'boarding'
-          );
+          if (!route.stops || !Array.isArray(route.stops)) return false;
           
-          const toStop = route.stops.find(stop => 
-              stop.stop.stopName === toLocation && stop.stopType === 'dropping'
-          );
+          const fromStop = route.stops.find(stop => {
+              if (!stop || !stop.stop || !stop.stop.stopName) return false;
+              return stop.stop.stopName === fromLocation && stop.stopType === 'boarding';
+          });
+          
+          const toStop = route.stops.find(stop => {
+              if (!stop || !stop.stop || !stop.stop.stopName) return false;
+              return stop.stop.stopName === toLocation && stop.stopType === 'dropping';
+          });
           
           // Check if both stops exist and fromStop comes before toStop in order
           return fromStop && toStop && fromStop.order < toStop.order;
@@ -216,7 +239,7 @@ export const searchBuses = async (req, res) => {
       const buses = await Bus.find({ 
           routeId: { $in: routeIds },
           status: 'Active' // Only return active buses
-      });
+      }).lean();
 
       if (buses.length === 0) {
           return res.status(404).json({ 
@@ -228,7 +251,7 @@ export const searchBuses = async (req, res) => {
       const schedules = await Schedule.find({
           busId: { $in: buses.map(b => b._id) },
           departureDate: dateQuery
-      });
+      }).lean();
 
       if (schedules.length === 0) {
           return res.status(404).json({ 
@@ -241,17 +264,42 @@ export const searchBuses = async (req, res) => {
       
       for (const bus of buses) {
           const route = validRoutes.find(r => r.routeId === bus.routeId);
+          if (!route) continue; // Skip if route not found
+
           const busSchedules = schedules.filter(s => s.busId.equals(bus._id));
           
           for (const schedule of busSchedules) {
-              // Get the relevant stops
-              const fromStop = route.stops.find(stop => 
-                  stop.stop.stopName === fromLocation && stop.stopType === 'boarding'
-              );
+              // Get booked seats count for this schedule
+              const bookedSeatsCount = await Seat.countDocuments({
+                  busId: bus._id,
+                  scheduleId: schedule._id,
+                  isBooked: true
+              });
+
+              // Get reserved seats that haven't expired
+              const reservedSeatsCount = await Seat.countDocuments({
+                  busId: bus._id,
+                  scheduleId: schedule._id,
+                  isBooked: false,
+                  reservedUntil: { $gt: new Date() }
+              });
+
+              // Calculate available seats
+              const availableSeats = bus.capacity - (bookedSeatsCount + reservedSeatsCount);
               
-              const toStop = route.stops.find(stop => 
-                  stop.stop.stopName === toLocation && stop.stopType === 'dropping'
-              );
+              // Filter and format stops safely
+              const safeStops = route.stops
+                  .filter(stop => stop && stop.stop && stop.stop.stopName) // Remove any invalid stops
+                  .map(stop => ({
+                      stop: {
+                          stopId: stop.stop._id,
+                          stopName: stop.stop.stopName,
+                          stopAddress: stop.stop.stopAddress || '',
+                          coordinates: stop.stop.coordinates || {}
+                      },
+                      stopType: stop.stopType || 'boarding',
+                      order: stop.order
+                  }));
               
               searchResults.push({
                   busId: bus._id,
@@ -266,16 +314,7 @@ export const searchBuses = async (req, res) => {
                       routeName: route.routeName,
                       departureLocation: fromLocation,
                       arrivalLocation: toLocation,
-                      stops: route.stops.map(stop => ({
-                        stop: {
-                          stopId: stop.stop._id,
-                          stopName: stop.stop.stopName,
-                          stopAddress: stop.stop.stopAddress,
-                          coordinates: stop.stop.coordinates
-                        },
-                        stopType: stop.stopType,
-                        order: stop.order
-                      }))
+                      stops: safeStops
                   },
                   schedule: {
                       departureDate: schedule.departureDate,
@@ -284,7 +323,8 @@ export const searchBuses = async (req, res) => {
                       arrivalTime: schedule.arrivalTime,
                       duration: schedule.duration
                   },
-                  availableSeats: bus.capacity // You'll need to calculate actual available seats
+                  availableSeats,
+                  totalSeats: bus.capacity
               });
           }
       }
@@ -299,6 +339,10 @@ export const searchBuses = async (req, res) => {
 
   } catch (error) {
       console.error("Search buses error:", error);
-      res.status(500).json({ error: "Error searching buses", details: error.message });
-}
+      res.status(500).json({ 
+          error: "Error searching buses", 
+          details: error.message,
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+      });
+  }
 };
