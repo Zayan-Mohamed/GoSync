@@ -82,7 +82,7 @@ const AppRoutes = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/bus-management" element={<BusList />} />
           <Route path="/add-bus" element={<InsertBus />} />
-          <Route path="/analytics" element={<BusAnalytics />} />
+          <Route path="/bus-analytics" element={<BusAnalytics />} />
           <Route path="/bus-assign" element={<BusAssignmentPage />} />
           <Route path="/busop-man" element={<BusOperatorsList />} />
           <Route path="/stop-analytics" element={<StopAnalytics />} />

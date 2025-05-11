@@ -71,7 +71,7 @@ const Sidebar = () => {
       links: [
         { to: "/bus-management", label: "Current Buses", icon: <FiTruck /> },
         { to: "/add-bus", label: "Add Bus", icon: <FiPlus /> },
-        { to: "/analytics", label: "Bus Analytics", icon: <MdAutoGraph /> },
+        { to: "/bus-analytics", label: "Bus Analytics", icon: <MdAutoGraph /> },
         { to: "/bus-assign", label: "Bus Assignments", icon: <FiMap /> },
         { to: "/add-operorator", label: "Add Bus Operator", icon: <FiPlus /> },
         { to: "/busop-man", label: "Current Bus Operators", icon: <FiUserCheck /> },
