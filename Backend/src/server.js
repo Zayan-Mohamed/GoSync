@@ -6,6 +6,7 @@ import connectDB from "./config/db.js";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { setupWebSocket } from "./websocket.js";
+import { setIoInstance } from "./controllers/shedController.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
@@ -21,7 +22,7 @@ import shedRoutes from "./routes/shedRoutes.js";
 import busOperatorRoutes from "./routes/busOperatorRoutes.js";
 import busRouteRoutes from "./routes/busRouteRoutes.js";
 import notRoutes from "./routes/notRoutes.js";
-import { setupCronJobs } from "./utils/cronScheduler.js"; 
+import { setupCronJobs } from "./utils/cronScheduler.js";
 import logger from "./utils/logger.js";
 
 import reportRoutes from "./routes/reportRoutes.js";
@@ -48,27 +49,60 @@ const server = createServer(app);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Setup WebSocket
+// Setup WebSocket with proper server instance
 const io = setupWebSocket(server);
+
+// Share the io instance with controllers that need it
+setIoInstance(io);
+
+// Add io to app for use in request handlers
 app.set("io", io);
 
 // Set up cron jobs for automated tasks
 setupCronJobs();
 logger.info("Cron jobs initialized");
 
-// CORS Configuration
-const corsOptions = {
-  origin:
-    process.env.NODE_ENV === "production"
-      ? process.env.CLIENT_URL
-      : ["http://localhost:5173", "http://127.0.0.1:5173"],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
+// CORS Configuration - simplified approach to fix the origin matching issue
+const allowedOrigins = ["http://localhost", "http://127.0.0.1"];
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(process.env.CLIENT_URL);
+}
 
-// Apply CORS middleware
-app.use(cors(corsOptions));
+// Set up CORS middleware with a more direct approach
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  // Log CORS request details for debugging
+  console.log(
+    `CORS Request from: ${origin || "Unknown origin"}, Method: ${
+      req.method
+    }, Path: ${req.path}`
+  );
+
+  // Set CORS headers for all responses
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie"
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Expose-Headers", "set-cookie");
+  }
+
+  // Handle preflight OPTIONS requests
+  if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS preflight request");
+    res.status(200).end();
+    return;
+  }
+
+  next();
+});
 
 // Middleware
 app.use(cookieParser());
@@ -77,17 +111,32 @@ app.use(express.json());
 app.use(
   "/uploads",
   (req, res, next) => {
-    // Add CORS headers for image files
-    res.setHeader("Access-Control-Allow-Origin", corsOptions.origin);
-    res.setHeader("Access-Control-Allow-Methods", "GET");
+    // Set proper CORS headers for image files - use specific origin rather than function
+    const requestOrigin = req.headers.origin;
+
+    // Set proper origin or fall back to * for non-credential requests
+    if (
+      requestOrigin &&
+      (allowedOrigins.includes(requestOrigin) ||
+        allowedOrigins.includes(requestOrigin.replace(/:\d+$/, "")))
+    ) {
+      res.setHeader("Access-Control-Allow-Origin", requestOrigin);
+    } else {
+      res.setHeader("Access-Control-Allow-Origin", "http://localhost");
+    }
+
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept"
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
     );
     res.setHeader("X-Content-Type-Options", "nosniff"); // Prevent MIME type sniffing
 
     // Log requests for debugging
-    console.log(`[Static File] Requested: ${req.path}`);
+    console.log(
+      `[Static File] Requested: ${req.path}, Origin: ${requestOrigin}`
+    );
 
     // Set appropriate headers for images
     if (req.path.match(/\.(jpg|jpeg|png|gif)$/i)) {

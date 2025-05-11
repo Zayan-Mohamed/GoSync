@@ -1,11 +1,20 @@
 <!doctype html>
 <html lang="en">
-  
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="assets/GoSync-Logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GoSync</title>
+    <!-- Runtime environment configuration -->
+    <script src="/env-config.js"></script>
+    <script src="/update-config.js"></script>
+    <script>
+      // Initialize runtime configuration on page load
+      if (typeof updateRuntimeConfig === "function") {
+        updateRuntimeConfig();
+        console.log("Runtime API URL configured:", window.RUNTIME_API_URL);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

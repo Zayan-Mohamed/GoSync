@@ -1,88 +1,91 @@
-import twilio from 'twilio';
-import dotenv from 'dotenv';
-import path from 'path';
-import fs from 'fs';
+import twilio from "twilio";
+import dotenv from "dotenv";
+import path from "path";
+import fs from "fs";
 
 // Debug current working directory
-console.log('sendSMS.js - Current working directory:', process.cwd());
+console.log("sendSMS.js - Current working directory:", process.cwd());
 
-// Specify the path to .env file (in Backend directory)
-const envPath = path.resolve(process.cwd(), '.env');
-console.log('sendSMS.js - Looking for .env file at:', envPath);
+// Try loading env directly first - this will use env vars already set in Docker
+dotenv.config();
 
-// Check if .env file exists
-if (!fs.existsSync(envPath)) {
-  console.error('sendSMS.js - Error: .env file not found at:', envPath);
-  console.error('Please create a .env file in C:\\Users\\Zayan Mohamed\\Documents\\ProjectReact\\GoSync\\Backend with the following content:');
-  console.error(`
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_PHONE_NUMBER=+12025550123
-  `);
-  throw new Error('.env file not found');
+// Try various potential env file locations
+const envPaths = [
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(process.cwd(), ".env.prod"),
+  path.resolve(process.cwd(), "src", ".env"),
+];
+
+let envFileFound = false;
+
+// Try each potential path
+for (const envPath of envPaths) {
+  console.log("sendSMS.js - Checking for env file at:", envPath);
+  if (fs.existsSync(envPath)) {
+    console.log("sendSMS.js - Found env file at:", envPath);
+    dotenv.config({ path: envPath });
+    envFileFound = true;
+    break;
+  }
 }
 
-// // Attempt to read .env file contents for debugging
-// try {
-//   const envContent = fs.readFileSync(envPath, 'utf8');
-//   console.log('sendSMS.js - .env file contents (raw):', envContent);
-// } catch (error) {
-//   console.error('sendSMS.js - Error reading .env file:', error.message);
-//   throw new Error('Failed to read .env file');
-// }
-
-dotenv.config({ path: envPath });
+if (!envFileFound) {
+  console.log(
+    "sendSMS.js - No .env file found, using environment variables from container"
+  );
+}
 
 // Debug loaded environment variables
-console.log('sendSMS.js - Loaded environment variables:', {
-  TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID ? '****' : undefined,
-  TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN ? '****' : undefined,
+console.log("sendSMS.js - Loaded environment variables:", {
+  TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID ? "****" : undefined,
+  TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN ? "****" : undefined,
   TWILIO_PHONE_NUMBER: process.env.TWILIO_PHONE_NUMBER || undefined,
 });
 
-// Validate Twilio configuration
+// Verify required environment variables
 const requiredEnvVars = [
-  'TWILIO_ACCOUNT_SID',
-  'TWILIO_AUTH_TOKEN',
-  'TWILIO_PHONE_NUMBER',
+  "TWILIO_ACCOUNT_SID",
+  "TWILIO_AUTH_TOKEN",
+  "TWILIO_PHONE_NUMBER",
 ];
-
-const missingEnvVars = requiredEnvVars.filter(
-  (varName) => !process.env[varName]
-);
-
-if (missingEnvVars.length > 0) {
-  console.error(
-    'sendSMS.js - Missing required Twilio environment variables:',
-    missingEnvVars.join(', ')
+const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
+if (missingVars.length > 0) {
+  console.warn(
+    `sendSMS.js - Missing environment variables: ${missingVars.join(", ")}`
   );
-  throw new Error('Twilio configuration is incomplete');
 }
 
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// Create Twilio client
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+const client = accountSid && authToken ? twilio(accountSid, authToken) : null;
 
 export const sendSMS = async (to, message) => {
   try {
     // Validate phone number
     if (!to) {
-      throw new Error('Recipient phone number is required');
+      throw new Error("Recipient phone number is required");
     }
-    const phoneNumber = to.startsWith('+94') ? to : `+94${to}`;
+    const phoneNumber = to.startsWith("+94") ? to : `+94${to}`;
     // Basic phone number validation (Twilio expects E.164 format)
     if (!/^\+\d{10,15}$/.test(phoneNumber)) {
       throw new Error(`Invalid phone number format: ${phoneNumber}`);
     }
 
-    console.log('sendSMS.js - Sending SMS to:', phoneNumber, 'Message:', message);
-    const result = await twilioClient.messages.create({
+    console.log(
+      "sendSMS.js - Sending SMS to:",
+      phoneNumber,
+      "Message:",
+      message
+    );
+    const result = await client.messages.create({
       body: message,
-      from: process.env.TWILIO_PHONE_NUMBER,
+      from: twilioPhoneNumber,
       to: phoneNumber,
     });
-    console.log('sendSMS.js - Twilio Response:', {
+    console.log("sendSMS.js - Twilio Response:", {
       sid: result.sid,
       status: result.status,
       to: result.to,
@@ -90,7 +93,7 @@ export const sendSMS = async (to, message) => {
     });
     return result;
   } catch (error) {
-    console.error('sendSMS.js - Error sending SMS:', {
+    console.error("sendSMS.js - Error sending SMS:", {
       message: error.message,
       code: error.code,
       status: error.status,

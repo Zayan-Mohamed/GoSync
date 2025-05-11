@@ -1,22 +1,29 @@
-// import ShedMessage from "../models/shedModel.js";
-// import cron from "node-cron";
-// import { setupWebSocket } from "../websocket.js";
-
 import ShedMessage from "../models/shedModel.js"; // Adjust the path to your model
 import cron from "node-cron";
-import { setupWebSocket } from "../websocket.js";
+import server from "../server.js";
 
-const io = setupWebSocket();
+// Instead of initializing Socket.IO here, we'll use the instance from server.js
+let io;
+
+// Set the io object when it becomes available
+export const setIoInstance = (ioInstance) => {
+  io = ioInstance;
+  console.log("Socket.IO instance set in shedController");
+};
 
 export const shedMessage = async (req, res) => {
+  // Get the io instance from the request if not set yet
+  if (!io && req.app) {
+    io = req.app.get("io");
+  }
+
   try {
-    const { type,  subType, message, shedDate, shedTime, expiryDate } = req.body;
+    const { type, subType, message, shedDate, shedTime, expiryDate } = req.body;
 
     const newMessage = new ShedMessage({
       type,
       subType,
       message,
-    
       shedDate,
       shedTime,
       status: "pending",
@@ -26,13 +33,20 @@ export const shedMessage = async (req, res) => {
 
     await newMessage.save();
 
-    io.emit("newNotification", {
-      _id: newMessage._id,
-      message: `New message scheduled: ${newMessage.message}`,
-      status: "pending"
-    });
+    // Only emit if io is available
+    if (io) {
+      io.emit("newNotification", {
+        _id: newMessage._id,
+        message: `New message scheduled: ${newMessage.message}`,
+        status: "pending",
+      });
+    } else {
+      console.log("Socket.IO not available for emitting newNotification");
+    }
 
-    res.status(201).json({ success: true, message: "Message scheduled successfully!" });
+    res
+      .status(201)
+      .json({ success: true, message: "Message scheduled successfully!" });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -40,7 +54,10 @@ export const shedMessage = async (req, res) => {
 
 export const getAllShedMessages = async (req, res) => {
   try {
-    const messages = await ShedMessage.find().sort({ shedDate: -1, shedTime: -1 });
+    const messages = await ShedMessage.find().sort({
+      shedDate: -1,
+      shedTime: -1,
+    });
     res.status(200).json({ success: true, data: messages });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -50,19 +67,25 @@ export const getAllShedMessages = async (req, res) => {
 export const updateShedMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedMessage = await ShedMessage.findByIdAndUpdate(id, req.body, { 
-      new: true 
+    const updatedMessage = await ShedMessage.findByIdAndUpdate(id, req.body, {
+      new: true,
     });
 
     if (!updatedMessage) {
-      return res.status(404).json({ success: false, message: "Message not found!" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Message not found!" });
     }
 
-    io.emit("newNotification", {
-      _id: updatedMessage._id,
-      message: `Message updated: ${updatedMessage.message}`,
-      status: updatedMessage.status
-    });
+    if (io) {
+      io.emit("newNotification", {
+        _id: updatedMessage._id,
+        message: `Message updated: ${updatedMessage.message}`,
+        status: updatedMessage.status,
+      });
+    } else {
+      console.log("Socket.IO not available for emitting newNotification");
+    }
 
     res.status(200).json({ success: true, data: updatedMessage });
   } catch (error) {
@@ -76,15 +99,23 @@ export const deleteShedMessage = async (req, res) => {
     const deletedMessage = await ShedMessage.findByIdAndDelete(id);
 
     if (!deletedMessage) {
-      return res.status(404).json({ success: false, message: "Message not found!" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Message not found!" });
     }
 
-    io.emit("newNotification", {
-      _id: deletedMessage._id,
-      action: "delete"
-    });
+    if (io) {
+      io.emit("newNotification", {
+        _id: deletedMessage._id,
+        action: "delete",
+      });
+    } else {
+      console.log("Socket.IO not available for emitting newNotification");
+    }
 
-    res.status(200).json({ success: true, message: "Message deleted successfully!" });
+    res
+      .status(200)
+      .json({ success: true, message: "Message deleted successfully!" });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -108,11 +139,15 @@ cron.schedule("* * * * *", async () => {
       msg.status = "sent";
       await msg.save();
 
-      io.emit("newNotification", {
-        _id: msg._id,
-        message: `Scheduled Message Sent: ${msg.message}`,
-        status: "sent"
-      });
+      if (io) {
+        io.emit("newNotification", {
+          _id: msg._id,
+          message: `Scheduled Message Sent: ${msg.message}`,
+          status: "sent",
+        });
+      } else {
+        console.log("Socket.IO not available for emitting newNotification");
+      }
     }
 
     // Check for expired messages
@@ -125,11 +160,15 @@ cron.schedule("* * * * *", async () => {
       expiredMessage.status = "archived";
       await expiredMessage.save();
 
-      io.emit("newNotification", {
-        _id: expiredMessage._id,
-        message: `Message Archived: ${expiredMessage.message}`,
-        status: "archived"
-      });
+      if (io) {
+        io.emit("newNotification", {
+          _id: expiredMessage._id,
+          message: `Message Archived: ${expiredMessage.message}`,
+          status: "archived",
+        });
+      } else {
+        console.log("Socket.IO not available for emitting newNotification");
+      }
     }
   } catch (error) {
     console.error("Error in scheduled job:", error.message);
@@ -142,7 +181,9 @@ export const getShedMessageById = async (req, res) => {
     const message = await ShedMessage.findById(id);
 
     if (!message) {
-      return res.status(404).json({ success: false, message: "Message not found!" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Message not found!" });
     }
 
     res.status(200).json({ success: true, data: message });

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
-import "../styles/AddNoti.css";
+import "../styles/addNoti.css";
 import AdminLayout from "../layouts/AdminLayout";
 
 const UpdateMessage = () => {

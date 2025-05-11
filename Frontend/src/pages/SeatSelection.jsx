@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { io } from "socket.io-client";
 import useAuthStore from "../store/authStore";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
@@ -11,6 +10,7 @@ import Loader from "../components/Loader";
 import { FiUser } from "react-icons/fi";
 import { Bus, Info } from "lucide-react";
 import styles from "../styles/SeatSelection.module.css";
+import socket from "../utils/socket";
 
 const SeatSelection = () => {
   const location = useLocation();
@@ -22,9 +22,8 @@ const SeatSelection = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [socket, setSocket] = useState(null);
 
-  const API_URI = import.meta.env.VITE_API_URL;
+  const API_URI = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -56,15 +55,27 @@ const SeatSelection = () => {
 
     fetchSeats();
 
-    const newSocket = io(`${API_URI}`, { withCredentials: true });
-    setSocket(newSocket);
+    // Using the centralized socket instance
+    if (!socket) {
+      console.error("WebSocket connection unavailable");
+      return;
+    }
 
-    newSocket.on("connect", () => {
-      console.log("Socket connected:", newSocket.id);
-      newSocket.emit("joinTrip", { busId, scheduleId });
+    console.log(
+      "Using socket connection for seat selection:",
+      socket.id || "connecting..."
+    );
+
+    // Join the trip room
+    socket.emit("joinTrip", { busId, scheduleId });
+
+    // Add socket event listeners
+    socket.on("connect", () => {
+      console.log("Socket connected:", socket.id);
+      socket.emit("joinTrip", { busId, scheduleId });
     });
 
-    newSocket.on("seatUpdate", (data) => {
+    socket.on("seatUpdate", (data) => {
       console.log("Received seatUpdate:", data);
       if (data.seats && Array.isArray(data.seats)) {
         const sortedSeats = data.seats.sort((a, b) =>
@@ -88,13 +99,15 @@ const SeatSelection = () => {
       }
     });
 
-    newSocket.on("connect_error", (err) => {
-      console.error("Socket connection error:", err);
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error.message);
     });
 
     return () => {
-      newSocket.disconnect();
-      console.log("Socket disconnected");
+      // Clean up listeners but don't disconnect the shared socket
+      socket.off("seatUpdate");
+      socket.off("connect");
+      socket.off("connect_error");
     };
   }, [busId, scheduleId, navigate, isAuthenticated, user, API_URI]);
 
