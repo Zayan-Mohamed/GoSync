@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { FiCalendar, FiClock, FiMapPin, FiTruck } from "react-icons/fi";
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
+import AdminLayout  from "../layouts/AdminLayout";
 import Sidebar from "../components/Sidebar";
 
 const ScheduleAnalytics = () => {
@@ -188,8 +189,8 @@ const ScheduleAnalytics = () => {
   }
 
   return (
+    <AdminLayout>
     <div className="flex h-screen">
-      <Sidebar />
       <div className="flex-1 p-10 overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Schedule Analytics</h1>
@@ -420,6 +421,7 @@ const ScheduleAnalytics = () => {
         </div>
       </div>
     </div>
+    </AdminLayout>
   );
 };
 
