@@ -76,76 +76,77 @@ function AddBusOperators() {
       console.error("Add operator error:", err);
     }
   };
-
   return (
-    <div className="flex">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex-1 bg-[#F5F5F5] min-h-screen">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
-        <div className="p-6 max-w-xl mx-auto">
-          <Typography variant="h5" className="mb-4 font-bold">
-            Add New Bus Operator
-          </Typography>
-          {error && <p className="text-red-500 mb-2">{error}</p>}
-          {success && <p className="text-green-600 mb-2">{success}</p>}
-          <Paper className="p-4">
-            <form onSubmit={handleSubmit} className="grid gap-4">
-              <TextField
-                label="Name"
-                name="operatorName"
-                value={formData.operatorName}
-                onChange={handleChange}
-                required
-              />
-              <TextField
-                label="Phone"
-                name="operatorPhone"
-                value={formData.operatorPhone}
-                onChange={handleChange}
-                required
-              />
-              <TextField
-                label="License Number"
-                name="operatorLicenseNumber"
-                value={formData.operatorLicenseNumber}
-                onChange={handleChange}
-                required
-              />
-              <TextField
-                label="License End Date"
-                name="licenseEndDate"
-                type="date"
-                value={formData.licenseEndDate}
-                onChange={handleChange}
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-              <TextField
-                select
-                label="Role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <MenuItem value="Driver">Driver</MenuItem>
-                <MenuItem value="Conductor">Conductor</MenuItem>
-                <MenuItem value="staff">Staff</MenuItem>
-              </TextField>
-              <TextField
-                select
-                label="Status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                <MenuItem value="Active">Active</MenuItem>
-                <MenuItem value="Inactive">Inactive</MenuItem>
-              </TextField>
-              <Button variant="contained" color="primary" type="submit">
-                Add Operator
-              </Button>
-            </form>
-          </Paper>
+        <div className="flex-1 bg-[#F5F5F5] overflow-auto">
+          <div className="p-6 max-w-xl mx-auto">
+            <Typography variant="h5" className="mb-4 font-bold">
+              Add New Bus Operator
+            </Typography>
+            {error && <p className="text-red-500 mb-2">{error}</p>}
+            {success && <p className="text-green-600 mb-2">{success}</p>}
+            <Paper className="p-4">
+              <form onSubmit={handleSubmit} className="grid gap-4">
+                <TextField
+                  label="Name"
+                  name="operatorName"
+                  value={formData.operatorName}
+                  onChange={handleChange}
+                  required
+                />
+                <TextField
+                  label="Phone"
+                  name="operatorPhone"
+                  value={formData.operatorPhone}
+                  onChange={handleChange}
+                  required
+                />
+                <TextField
+                  label="License Number"
+                  name="operatorLicenseNumber"
+                  value={formData.operatorLicenseNumber}
+                  onChange={handleChange}
+                  required
+                />
+                <TextField
+                  label="License End Date"
+                  name="licenseEndDate"
+                  type="date"
+                  value={formData.licenseEndDate}
+                  onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+                <TextField
+                  select
+                  label="Role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                >
+                  <MenuItem value="Driver">Driver</MenuItem>
+                  <MenuItem value="Conductor">Conductor</MenuItem>
+                  <MenuItem value="staff">Staff</MenuItem>
+                </TextField>
+                <TextField
+                  select
+                  label="Status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                >
+                  <MenuItem value="Active">Active</MenuItem>
+                  <MenuItem value="Inactive">Inactive</MenuItem>
+                </TextField>
+                <Button variant="contained" color="primary" type="submit">
+                  Add Operator
+                </Button>
+              </form>
+            </Paper>
+          </div>
         </div>
       </div>
     </div>

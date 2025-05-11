@@ -36,8 +36,7 @@ const BusAnalytics = () => {
   ).length;
 
   const inactiveBuses = totalBuses - activeBuses;
-
-  const assignedBuses = buses.filter((bus) => bus.operatorId).length;
+  const assignedBuses = buses.filter((bus) => bus.operator !== null).length;
   const unassignedBuses = totalBuses - assignedBuses;
 
   const totalOperators = operators.length;
@@ -76,13 +75,12 @@ const BusAnalytics = () => {
       Unassigned: totalBuses - monthlyAssignedBuses,
     },
   ];
-
   return (
-    <div className="flex">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex-1 bg-[#F5F5F5] min-h-screen">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
-        <div className="p-6 space-y-8">
+        <div className="flex-1 bg-[#F5F5F5] overflow-auto p-6 space-y-8">
           <h2 className="text-2xl font-bold">Bus Analytics Dashboard</h2>
 
           {loading ? (
