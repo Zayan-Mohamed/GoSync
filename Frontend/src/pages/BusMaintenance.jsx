@@ -133,13 +133,12 @@ const BusMaintenance = () => {
       entry.reason.toLowerCase().includes(searchQuery.toLowerCase());
     return statusMatch && searchMatch;
   });
-
   return (
-    <div className="flex">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex-1 bg-[#F5F5F5] min-h-screen">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
-        <div className="p-4">
+        <div className="flex-1 bg-[#F5F5F5] overflow-auto p-4">
           <h2 className="text-xl font-bold mb-4">Bus Maintenance Management</h2>
 
           {errorMessage && (
