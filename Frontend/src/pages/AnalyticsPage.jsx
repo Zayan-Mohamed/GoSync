@@ -322,7 +322,7 @@ const AnalyticsPage = () => {
       <div ref={reportRef} style={{ padding: '30px', fontFamily: "'Inter', sans-serif", maxWidth: '1400px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ marginBottom: '25px', color: '#2c3e50', fontSize: '26px', fontWeight: '700' }}>
-            Notification Analytics Dashboard
+            Notification Analytics
           </h2>
           <div style={{ display: 'flex', gap: '10px' }}>
           <RangePicker
