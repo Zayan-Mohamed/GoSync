@@ -1,6 +1,6 @@
 # GoSync - Online Bus Ticket Booking System
 
-![GoSync Logo](Frontend/public/assets/GoSync.png)
+<img src="Frontend/public/assets/GoSync-Logo_Length2.png" alt="GoSync Logo" width="300" style="background-color: white; padding: 10px; border-radius: 5px;">
 
 ## Overview
 
