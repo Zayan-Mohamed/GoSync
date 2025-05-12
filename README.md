@@ -1,6 +1,6 @@
 # GoSync - Online Bus Ticket Booking System
 
-![GoSync Logo](Frontend/public/assets/GoSync-Logo_Length2.png)
+![GoSync Logo](Frontend/public/assets/GoSync.png)
 
 ## Overview
 
@@ -180,7 +180,7 @@ The project includes a GitHub Actions workflow for continuous integration and de
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/gosync.git
+   git clone https://github.com/Zayan-Mohamed/gosync.git
    cd gosync
    ```
 
@@ -237,7 +237,7 @@ The project includes a GitHub Actions workflow for continuous integration and de
 
 ## License
 
-[MIT License](LICENSE)
+[MIT License](LICENSE.md)
 
 ## Contact
 
