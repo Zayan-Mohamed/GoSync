@@ -1,6 +1,11 @@
 # GoSync - Online Bus Ticket Booking System
 
 <img src="Frontend/public/assets/GoSync-Logo_Length2.png" alt="GoSync Logo" width="300" style="background-color: white; padding: 10px; border-radius: 5px;">
+![License](https://img.shields.io/github/license/Zayan-Mohamed/gosync)
+![Node.js](https://img.shields.io/badge/Backend-Node.js-green)
+![React](https://img.shields.io/badge/Frontend-React-blue)
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-brightgreen)
+![Docker](https://img.shields.io/badge/Deployment-Docker-blue)
 
 ## Overview
 
